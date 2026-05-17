@@ -6,400 +6,177 @@
 <title>Smart Interiors – Measurement Entry</title>
 <script>
 // ════════════════════════════════════════
-// CONFIG — UPDATE THESE TWO LINES ONLY
-const SHEETS_URL   = 'https://script.google.com/macros/s/AKfycbzSECbcvDjCP7SFPJa6IbLiRT29PJ-H3r2sKIHrvL7gAogwqe5OwFeiKdnd3M7mK9Pv8w/exec';
+// CONFIG — UPDATE THESE LINES ONLY
+const SHEETS_URL   = 'https://script.google.com/macros/s/AKfycbx9VV_tzmKYu5YLIZHFyxvPUK5ttpwjY5SMUkkjG4Sbfmwmmw3cP1Ut5zq9qleKqvnBjA/exec';
 const WHATSAPP_URL = 'https://chat.whatsapp.com/KPQXS3b220vENMV9MCZQro';
 const DRIVE_FOLDER_ID = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
 // ════════════════════════════════════════
 </script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Noto+Sans:wght@400;600&display=swap');
-
   :root {
-    --orange: #FF6B00;
-    --bg: #F4F6FA;
-    --text: #1A1A2E;
-    --muted: #7A7A9D;
-    --border: #E0E4EF;
-    --green: #22C55E;
-    --red: #EF4444;
-    --blue: #3B82F6;
-    --wa: #25D366;
+    --orange:#FF6B00; --bg:#F4F6FA; --text:#1A1A2E; --muted:#7A7A9D;
+    --border:#E0E4EF; --green:#22C55E; --red:#EF4444; --blue:#3B82F6; --wa:#25D366;
   }
-
-  * { box-sizing:border-box; margin:0; padding:0; }
-
-  body {
-    font-family:'Noto Sans',sans-serif;
-    background:var(--bg); color:var(--text);
-    min-height:100vh; padding-bottom:60px;
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;}
+  header{background:var(--orange);color:white;padding:16px 20px 12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(255,107,0,0.3);}
+  .header-inner{display:flex;align-items:center;justify-content:center;position:relative;}
+  .header-text{flex:1;text-align:center;}
+  header h1{font-family:'Baloo 2',cursive;font-size:1.35rem;font-weight:800;}
+  header p{font-size:0.72rem;opacity:0.88;margin-top:2px;}
+  .btn-owner-approval{
+    position:absolute;right:0;top:50%;transform:translateY(-50%);
+    background:rgba(255,255,255,0.2);color:white;border:1.5px solid rgba(255,255,255,0.55);
+    border-radius:10px;padding:6px 10px;font-family:'Baloo 2',cursive;font-size:0.7rem;font-weight:700;
+    cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px;white-space:nowrap;
   }
-
-  header {
-    background:var(--orange); color:white;
-    padding:16px 20px 12px; text-align:center;
-    position:sticky; top:0; z-index:100;
-    box-shadow:0 2px 12px rgba(255,107,0,0.3);
+  .btn-owner-approval:active{background:rgba(255,255,255,0.35);}
+  .container{max-width:480px;margin:0 auto;padding:14px;}
+  .card{background:white;border-radius:16px;padding:18px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:1.5px solid var(--border);}
+  .card-title{font-family:'Baloo 2',cursive;font-size:0.95rem;font-weight:800;color:var(--orange);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  label{display:block;font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;margin-top:12px;}
+  label:first-of-type{margin-top:0;}
+  select,input[type="text"],input[type="date"],input[type="tel"],textarea{
+    width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:10px;
+    font-size:1rem;font-family:'Noto Sans',sans-serif;background:#FAFBFF;color:var(--text);
+    transition:border-color 0.2s;-webkit-appearance:none;appearance:none;
   }
-  header h1 { font-family:'Baloo 2',cursive; font-size:1.35rem; font-weight:800; }
-  header p  { font-size:0.72rem; opacity:0.88; margin-top:2px; }
-
-  .container { max-width:480px; margin:0 auto; padding:14px; }
-
-  .card {
-    background:white; border-radius:16px; padding:18px;
-    margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
-    border:1.5px solid var(--border);
-  }
-  .card-title {
-    font-family:'Baloo 2',cursive; font-size:0.95rem; font-weight:800;
-    color:var(--orange); margin-bottom:14px;
-    display:flex; align-items:center; gap:8px;
-  }
-
-  label {
-    display:block; font-size:0.75rem; font-weight:600;
-    color:var(--muted); text-transform:uppercase;
-    letter-spacing:0.5px; margin-bottom:5px; margin-top:12px;
-  }
-  label:first-of-type { margin-top:0; }
-
-  select, input[type="text"], input[type="date"],
-  input[type="tel"], textarea {
-    width:100%; padding:12px 13px;
-    border:1.5px solid var(--border); border-radius:10px;
-    font-size:1rem; font-family:'Noto Sans',sans-serif;
-    background:#FAFBFF; color:var(--text);
-    transition:border-color 0.2s;
-    -webkit-appearance:none; appearance:none;
-  }
-  select:focus,input:focus,textarea:focus {
-    outline:none; border-color:var(--orange); background:white;
-  }
-  select {
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FF6B00' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 13px center; padding-right:34px;
-  }
-  textarea { resize:vertical; min-height:65px; font-size:0.92rem; }
-
-  /* GPS */
-  .gps-bar {
-    display:flex; align-items:center; gap:8px;
-    background:#F0F7FF; border:1.5px solid #BFDBFE;
-    border-radius:10px; padding:10px 12px; margin-top:10px;
-  }
-  .gps-icon { font-size:1.1rem; flex-shrink:0; }
-  .gps-text { flex:1; font-size:0.78rem; color:var(--blue); line-height:1.4; }
-  .gps-text strong { display:block; font-size:0.8rem; }
-  .btn-gps {
-    background:var(--blue); color:white; border:none;
-    border-radius:8px; padding:7px 12px; font-size:0.75rem;
-    font-weight:700; cursor:pointer; flex-shrink:0; font-family:'Baloo 2',cursive;
-  }
-  .gps-status { font-size:0.72rem; margin-top:6px; color:var(--muted); line-height:1.5; }
-  .gps-status.ok  { color:var(--green); }
-  .gps-status.err { color:var(--red); }
-
-  /* Photo upload */
-  .photo-upload-area {
-    border:2px dashed var(--border); border-radius:12px;
-    padding:16px; text-align:center; cursor:pointer;
-    background:#FAFBFF; transition:border-color 0.2s;
-    margin-top:4px;
-  }
-  .photo-upload-area:hover { border-color:var(--orange); }
-  .photo-upload-area input { display:none; }
-  .photo-upload-icon { font-size:1.8rem; display:block; margin-bottom:6px; }
-  .photo-upload-text { font-size:0.8rem; color:var(--muted); line-height:1.5; }
-  .photo-upload-text strong { color:var(--orange); display:block; font-size:0.85rem; }
-  .photo-previews { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-  .photo-thumb {
-    width:72px; height:72px; border-radius:8px;
-    object-fit:cover; border:1.5px solid var(--border); position:relative;
-  }
-  .photo-thumb-wrap { position:relative; display:inline-block; }
-  .photo-remove {
-    position:absolute; top:-6px; right:-6px;
-    background:var(--red); color:white; border:none;
-    border-radius:50%; width:18px; height:18px;
-    font-size:0.65rem; cursor:pointer; line-height:18px; text-align:center;
-  }
-  .photo-upload-status {
-    font-size:0.72rem; margin-top:6px; color:var(--muted);
-    line-height:1.5; text-align:center;
-  }
-  .photo-upload-status.ok  { color:var(--green); }
-  .photo-upload-status.err { color:var(--red); }
-
-  /* Items */
-  .items-list { display:flex; flex-direction:column; gap:12px; margin-top:4px; }
-  .item-block { background:#F8F9FF; border:1.5px solid var(--border); border-radius:14px; overflow:hidden; }
-  .item-header {
-    background:linear-gradient(90deg,#FFF0E6,#FFF7F2);
-    padding:10px 14px; display:flex; justify-content:space-between; align-items:center;
-    border-bottom:1.5px solid #FFE0C8;
-  }
-  .item-label {
-    font-family:'Baloo 2',cursive; font-weight:800;
-    font-size:0.82rem; color:var(--orange); text-transform:uppercase; letter-spacing:0.4px;
-  }
-  .btn-remove-item {
-    background:none; border:1.5px solid var(--red); color:var(--red);
-    border-radius:7px; padding:3px 10px; font-size:0.72rem; font-weight:700; cursor:pointer;
-  }
-  .item-body { padding:12px 14px; }
-
-  /* Louver type row */
-  .louver-type-row { margin-top:10px; display:none; }
-  .direction-row { margin-top:10px; display:none; }
-
-  /* Meas rows */
-  .meas-rows { display:flex; flex-direction:column; gap:8px; }
-  .meas-row { display:flex; align-items:flex-start; gap:6px; margin-top:4px; }
-  .meas-num {
-    font-family:'Baloo 2',cursive; font-weight:800; font-size:0.75rem;
-    color:var(--muted); min-width:18px; text-align:center; padding-top:14px;
-  }
-  .meas-fields { flex:1; }
-  .meas-grid-2 { display:grid; grid-template-columns:1fr 20px 1fr; align-items:center; gap:4px; }
-  .meas-grid-3 { display:grid; grid-template-columns:1fr 14px 1fr 14px 1fr; align-items:center; gap:4px; }
-  .meas-grid-2 input, .meas-grid-3 input {
-    text-align:center; font-size:0.95rem; font-weight:600; padding:11px 6px;
-    background:#FFFBF7; border-color:#FFD4B0;
-  }
-  .meas-grid-2 input:focus, .meas-grid-3 input:focus { background:white; border-color:var(--orange); }
-
-  /* Middle field optional styling */
-  .meas-middle-optional {
-    background:#F8F8F8 !important;
-    border-color:#DDD !important;
-    color:var(--muted) !important;
-  }
-  .meas-middle-optional:focus {
-    background:white !important;
-    border-color:var(--orange) !important;
-    color:var(--text) !important;
-  }
-
-  .meas-sep { text-align:center; font-size:1rem; font-weight:800; color:var(--muted); }
-  .meas-labels { display:grid; gap:4px; margin-top:3px; }
-  .meas-labels-2 { grid-template-columns:1fr 20px 1fr; }
-  .meas-labels-3 { grid-template-columns:1fr 14px 1fr 14px 1fr; }
-  .fl { font-size:0.65rem; color:var(--orange); font-weight:700; text-transform:uppercase; text-align:center; letter-spacing:0.3px; }
-  .fl-x { visibility:hidden; }
-  .fl-optional { color:var(--muted) !important; }
-  .btn-del-meas { background:none; border:none; color:#CCC; font-size:1.1rem; cursor:pointer; padding:4px; margin-top:8px; }
-  .btn-del-meas:active { color:var(--red); }
-  .btn-add-meas {
-    width:100%; margin-top:8px; padding:9px; border:1.5px dashed #CCC;
-    background:white; color:var(--muted); border-radius:9px;
-    font-size:0.82rem; font-weight:700; font-family:'Baloo 2',cursive; cursor:pointer;
-  }
-  .btn-add-item {
-    width:100%; margin-top:6px; padding:14px; border:2px dashed var(--orange);
-    background:#FFF7F2; color:var(--orange); border-radius:13px;
-    font-size:0.95rem; font-weight:700; font-family:'Baloo 2',cursive; cursor:pointer;
-  }
-  .btn-add-item:active { background:#FFE5D0; }
-
-  /* Fraction helper */
-  .fraction-helper {
-    background:#FFF7F2; border:1.5px solid #FFD4B0;
-    border-radius:10px; padding:11px 13px; margin-top:12px;
-  }
-  .fh-title { font-size:0.72rem; font-weight:700; color:var(--orange); margin-bottom:8px; text-transform:uppercase; }
-  .fraction-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
-  .frac-btn { background:white; border:1.5px solid #FFD4B0; border-radius:7px; padding:7px 4px; text-align:center; cursor:pointer; }
-  .frac-btn:active { background:var(--orange); color:white; border-color:var(--orange); }
-  .frac-sym { font-size:0.95rem; font-weight:700; display:block; }
-  .frac-dec { font-size:0.62rem; color:var(--muted); display:block; margin-top:1px; }
-  .frac-hint { font-size:0.7rem; color:var(--muted); margin-top:7px; line-height:1.5; }
-
-  .btn-submit {
-    width:100%; padding:16px; background:var(--orange); color:white;
-    border:none; border-radius:14px; font-size:1.05rem; font-weight:800;
-    font-family:'Baloo 2',cursive; cursor:pointer;
-    box-shadow:0 4px 18px rgba(255,107,0,0.32); margin-top:4px;
-  }
-
-  /* Success */
-  .success-screen { display:none; padding:16px 0; }
-  .success-top { text-align:center; padding:16px; }
-  .success-icon { font-size:3rem; display:block; margin-bottom:10px; }
-  .success-screen h2 { font-family:'Baloo 2',cursive; font-size:1.4rem; color:var(--green); margin-bottom:6px; }
-  .success-screen .sub { color:var(--muted); font-size:0.82rem; line-height:1.5; margin-bottom:14px; }
-
-  .wa-box {
-    background:#E7F8EE; border:1.5px solid #86EFAC;
-    border-radius:14px; padding:16px; margin-bottom:14px;
-  }
-  .wa-title {
-    font-family:'Baloo 2',cursive; font-weight:800; color:#15803D;
-    font-size:0.9rem; margin-bottom:10px; display:flex; align-items:center; gap:6px;
-  }
-  .wa-summary {
-    background:white; border-radius:10px; padding:12px;
-    font-size:0.82rem; line-height:1.7; white-space:pre-wrap;
-    color:var(--text); border:1px solid #BBF7D0;
-    max-height:240px; overflow-y:auto; word-break:break-word;
-  }
-  .wa-buttons { display:flex; gap:8px; margin-top:10px; }
-  .btn-wa-send {
-    flex:1; padding:12px 8px; background:var(--wa); color:white; border:none;
-    border-radius:10px; font-family:'Baloo 2',cursive; font-size:0.9rem;
-    font-weight:800; cursor:pointer; display:flex; align-items:center;
-    justify-content:center; gap:6px; text-decoration:none;
-  }
-  .btn-copy {
-    flex:1; padding:12px 8px; background:#F0F0F0; color:var(--text); border:none;
-    border-radius:10px; font-family:'Baloo 2',cursive; font-size:0.9rem;
-    font-weight:700; cursor:pointer; display:flex; align-items:center;
-    justify-content:center; gap:6px;
-  }
-  .copy-confirm { text-align:center; font-size:0.75rem; color:#15803D; margin-top:6px; display:none; }
-
-  .success-actions { display:flex; gap:8px; padding:0 0 8px; }
-  .btn-new {
-    flex:1; padding:13px 10px; border-radius:12px;
-    font-family:'Baloo 2',cursive; font-size:0.9rem;
-    font-weight:700; border:none; cursor:pointer; color:white;
-    background:var(--orange);
-  }
-
-  .data-toggle { text-align:center; margin-top:10px; }
-  .data-toggle button {
-    background:none; border:1.5px solid var(--border); color:var(--muted);
-    padding:8px 18px; border-radius:20px; font-size:0.78rem; font-weight:600; cursor:pointer; margin:3px;
-  }
-  #data-panel { display:none; margin-top:14px; }
-
-  /* Entry cards — tappable */
-  .entry-card {
-    background:white; border-radius:12px; padding:13px;
-    margin-bottom:10px; border:1.5px solid var(--border); font-size:0.83rem;
-    cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .entry-card:active { box-shadow:0 2px 12px rgba(255,107,0,0.18); border-color:#FFD4B0; }
-  .ec-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-  .ec-worker { font-weight:700; color:var(--orange); font-family:'Baloo 2',cursive; }
-  .ec-date { font-size:0.7rem; color:var(--muted); }
-  .ec-meta { color:var(--muted); font-size:0.76rem; line-height:1.7; }
-  .ec-tap-hint { font-size:0.68rem; color:#BBBBD0; margin-top:5px; text-align:right; }
-
-  .no-entries { text-align:center; color:var(--muted); padding:20px; font-size:0.83rem; }
-  .loading-entries { text-align:center; color:var(--muted); padding:20px; font-size:0.83rem; }
-
-  /* ── ENTRY DETAIL MODAL ── */
-  .modal-overlay {
-    display:none; position:fixed; inset:0; z-index:9998;
-    background:rgba(26,26,46,0.65); backdrop-filter:blur(3px);
-    align-items:flex-end; justify-content:center;
-  }
-  .modal-overlay.active { display:flex; }
-  .modal-sheet {
-    background:white; border-radius:20px 20px 0 0;
-    width:100%; max-width:480px; max-height:88vh;
-    overflow-y:auto; padding:0 0 32px;
-    animation:slideUp 0.25s ease;
-  }
-  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-  .modal-handle {
-    width:40px; height:4px; background:var(--border);
-    border-radius:2px; margin:12px auto 0;
-  }
-  .modal-header {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:14px 18px 10px;
-    border-bottom:1.5px solid var(--border);
-    position:sticky; top:0; background:white; z-index:1;
-  }
-  .modal-title { font-family:'Baloo 2',cursive; font-weight:800; font-size:1rem; color:var(--orange); }
-  .modal-close {
-    background:var(--bg); border:none; border-radius:50%;
-    width:30px; height:30px; font-size:1rem; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .modal-body { padding:14px 18px; }
-  .modal-summary {
-    background:var(--bg); border-radius:10px; padding:12px;
-    font-size:0.82rem; line-height:1.8; white-space:pre-wrap;
-    color:var(--text); border:1.5px solid var(--border);
-    max-height:300px; overflow-y:auto; word-break:break-word;
-    margin-bottom:14px;
-  }
-  .modal-photos { margin-bottom:14px; }
-  .modal-photos-title {
-    font-family:'Baloo 2',cursive; font-weight:700; font-size:0.82rem;
-    color:var(--blue); margin-bottom:8px;
-  }
-  .modal-photo-link {
-    display:flex; align-items:center; gap:8px;
-    background:#EFF6FF; border:1px solid #BFDBFE; color:var(--blue);
-    border-radius:9px; padding:10px 13px; font-size:0.82rem;
-    text-decoration:none; margin-bottom:6px; font-weight:600;
-  }
-  .modal-actions { display:flex; gap:8px; }
-  .modal-btn {
-    flex:1; padding:12px 8px; border-radius:10px; border:none;
-    font-family:'Baloo 2',cursive; font-size:0.88rem; font-weight:800;
-    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
-  }
-  .modal-btn-copy { background:#F0F0F0; color:var(--text); }
-  .modal-btn-close { background:var(--orange); color:white; }
-
-  .required-star { color:var(--red); margin-left:2px; }
-  .error-msg { color:var(--red); font-size:0.75rem; margin-top:4px; display:none; }
-  .field-error { border-color:var(--red) !important; }
-
-  .info-box {
-    background:#FFF7ED; border:1.5px solid #FED7AA; border-radius:10px;
-    padding:10px 13px; font-size:0.75rem; color:#92400E; line-height:1.6; margin-top:8px;
-  }
-  .info-box strong { display:block; margin-bottom:2px; color:#C2410C; }
-
-  /* ── SAVING OVERLAY ── */
-  .saving-overlay {
-    display:none; position:fixed; inset:0; z-index:9999;
-    background:rgba(26,26,46,0.72); backdrop-filter:blur(3px);
-    flex-direction:column; align-items:center; justify-content:center; gap:20px;
-  }
-  .saving-overlay.active { display:flex; }
-  .saving-card {
-    background:white; border-radius:20px; padding:28px 32px;
-    text-align:center; max-width:300px; width:88%;
-    box-shadow:0 12px 40px rgba(0,0,0,0.2);
-  }
-  .saving-spinner {
-    width:48px; height:48px; border:4px solid #FFE0C8;
-    border-top-color:var(--orange); border-radius:50%;
-    animation:spin 0.8s linear infinite; margin:0 auto 14px;
-  }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .saving-title {
-    font-family:'Baloo 2',cursive; font-size:1.1rem; font-weight:800;
-    color:var(--text); margin-bottom:6px;
-  }
-  .saving-step {
-    font-size:0.78rem; color:var(--muted); line-height:1.6;
-    min-height:1.6em; transition:opacity 0.3s;
-  }
-  .saving-steps-track {
-    display:flex; justify-content:center; gap:6px; margin-top:14px;
-  }
-  .saving-dot {
-    width:8px; height:8px; border-radius:50%;
-    background:var(--border); transition:background 0.3s;
-  }
-  .saving-dot.done { background:var(--green); }
-  .saving-dot.active { background:var(--orange); }
+  select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);background:white;}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FF6B00' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
+  textarea{resize:vertical;min-height:65px;font-size:0.92rem;}
+  .gps-bar{display:flex;align-items:center;gap:8px;background:#F0F7FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:10px 12px;margin-top:10px;}
+  .gps-icon{font-size:1.1rem;flex-shrink:0;}
+  .gps-text{flex:1;font-size:0.78rem;color:var(--blue);line-height:1.4;}
+  .gps-text strong{display:block;font-size:0.8rem;}
+  .btn-gps{background:var(--blue);color:white;border:none;border-radius:8px;padding:7px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Baloo 2',cursive;}
+  .gps-status{font-size:0.72rem;margin-top:6px;color:var(--muted);line-height:1.5;}
+  .gps-status.ok{color:var(--green);} .gps-status.err{color:var(--red);}
+  .photo-upload-area{border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:#FAFBFF;transition:border-color 0.2s;margin-top:4px;}
+  .photo-upload-area:hover{border-color:var(--orange);}
+  .photo-upload-area input{display:none;}
+  .photo-upload-icon{font-size:1.8rem;display:block;margin-bottom:6px;}
+  .photo-upload-text{font-size:0.8rem;color:var(--muted);line-height:1.5;}
+  .photo-upload-text strong{color:var(--orange);display:block;font-size:0.85rem;}
+  .photo-previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .photo-thumb{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1.5px solid var(--border);}
+  .photo-thumb-wrap{position:relative;display:inline-block;}
+  .photo-remove{position:absolute;top:-6px;right:-6px;background:var(--red);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:0.65rem;cursor:pointer;line-height:18px;text-align:center;}
+  .photo-upload-status{font-size:0.72rem;margin-top:6px;color:var(--muted);line-height:1.5;text-align:center;}
+  .photo-upload-status.ok{color:var(--green);} .photo-upload-status.err{color:var(--red);}
+  .items-list{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+  .item-block{background:#F8F9FF;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;}
+  .item-header{background:linear-gradient(90deg,#FFF0E6,#FFF7F2);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid #FFE0C8;}
+  .item-label{font-family:'Baloo 2',cursive;font-weight:800;font-size:0.82rem;color:var(--orange);text-transform:uppercase;letter-spacing:0.4px;}
+  .btn-remove-item{background:none;border:1.5px solid var(--red);color:var(--red);border-radius:7px;padding:3px 10px;font-size:0.72rem;font-weight:700;cursor:pointer;}
+  .item-body{padding:12px 14px;}
+  .louver-type-row{margin-top:10px;display:none;}
+  .direction-row{margin-top:10px;display:none;}
+  .meas-rows{display:flex;flex-direction:column;gap:8px;}
+  .meas-row{display:flex;align-items:flex-start;gap:6px;margin-top:4px;}
+  .meas-num{font-family:'Baloo 2',cursive;font-weight:800;font-size:0.75rem;color:var(--muted);min-width:18px;text-align:center;padding-top:14px;}
+  .meas-fields{flex:1;}
+  .meas-grid-2{display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:4px;}
+  .meas-grid-3{display:grid;grid-template-columns:1fr 14px 1fr 14px 1fr;align-items:center;gap:4px;}
+  .meas-grid-2 input,.meas-grid-3 input{text-align:center;font-size:0.95rem;font-weight:600;padding:11px 6px;background:#FFFBF7;border-color:#FFD4B0;}
+  .meas-grid-2 input:focus,.meas-grid-3 input:focus{background:white;border-color:var(--orange);}
+  .meas-middle-optional{background:#F8F8F8 !important;border-color:#DDD !important;color:var(--muted) !important;}
+  .meas-middle-optional:focus{background:white !important;border-color:var(--orange) !important;color:var(--text) !important;}
+  .meas-sep{text-align:center;font-size:1rem;font-weight:800;color:var(--muted);}
+  .meas-labels{display:grid;gap:4px;margin-top:3px;}
+  .meas-labels-2{grid-template-columns:1fr 20px 1fr;}
+  .meas-labels-3{grid-template-columns:1fr 14px 1fr 14px 1fr;}
+  .fl{font-size:0.65rem;color:var(--orange);font-weight:700;text-transform:uppercase;text-align:center;letter-spacing:0.3px;}
+  .fl-x{visibility:hidden;} .fl-optional{color:var(--muted) !important;}
+  .btn-del-meas{background:none;border:none;color:#CCC;font-size:1.1rem;cursor:pointer;padding:4px;margin-top:8px;}
+  .btn-del-meas:active{color:var(--red);}
+  .btn-add-meas{width:100%;margin-top:8px;padding:9px;border:1.5px dashed #CCC;background:white;color:var(--muted);border-radius:9px;font-size:0.82rem;font-weight:700;font-family:'Baloo 2',cursive;cursor:pointer;}
+  .btn-add-item{width:100%;margin-top:6px;padding:14px;border:2px dashed var(--orange);background:#FFF7F2;color:var(--orange);border-radius:13px;font-size:0.95rem;font-weight:700;font-family:'Baloo 2',cursive;cursor:pointer;}
+  .btn-add-item:active{background:#FFE5D0;}
+  .fraction-helper{background:#FFF7F2;border:1.5px solid #FFD4B0;border-radius:10px;padding:11px 13px;margin-top:12px;}
+  .fh-title{font-size:0.72rem;font-weight:700;color:var(--orange);margin-bottom:8px;text-transform:uppercase;}
+  .fraction-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+  .frac-btn{background:white;border:1.5px solid #FFD4B0;border-radius:7px;padding:7px 4px;text-align:center;cursor:pointer;}
+  .frac-btn:active{background:var(--orange);color:white;border-color:var(--orange);}
+  .frac-sym{font-size:0.95rem;font-weight:700;display:block;}
+  .frac-dec{font-size:0.62rem;color:var(--muted);display:block;margin-top:1px;}
+  .frac-hint{font-size:0.7rem;color:var(--muted);margin-top:7px;line-height:1.5;}
+  .btn-submit{width:100%;padding:16px;background:var(--orange);color:white;border:none;border-radius:14px;font-size:1.05rem;font-weight:800;font-family:'Baloo 2',cursive;cursor:pointer;box-shadow:0 4px 18px rgba(255,107,0,0.32);margin-top:4px;}
+  .success-screen{display:none;padding:16px 0;}
+  .success-top{text-align:center;padding:16px;}
+  .success-icon{font-size:3rem;display:block;margin-bottom:10px;}
+  .success-screen h2{font-family:'Baloo 2',cursive;font-size:1.4rem;color:var(--green);margin-bottom:6px;}
+  .success-screen .sub{color:var(--muted);font-size:0.82rem;line-height:1.5;margin-bottom:14px;}
+  /* Quotation badge */
+  .quote-badge{background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border:1.5px solid #FED7AA;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:none;align-items:center;gap:12px;}
+  .quote-badge-icon{font-size:1.6rem;}
+  .quote-badge-text{flex:1;}
+  .quote-badge-title{font-family:'Baloo 2',cursive;font-weight:800;color:var(--orange);font-size:0.92rem;}
+  .quote-badge-sub{font-size:0.75rem;color:#92400E;margin-top:3px;line-height:1.5;}
+  .wa-box{background:#E7F8EE;border:1.5px solid #86EFAC;border-radius:14px;padding:16px;margin-bottom:14px;}
+  .wa-title{font-family:'Baloo 2',cursive;font-weight:800;color:#15803D;font-size:0.9rem;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .wa-summary{background:white;border-radius:10px;padding:12px;font-size:0.82rem;line-height:1.7;white-space:pre-wrap;color:var(--text);border:1px solid #BBF7D0;max-height:240px;overflow-y:auto;word-break:break-word;}
+  .wa-buttons{display:flex;gap:8px;margin-top:10px;}
+  .btn-wa-send{flex:1;padding:12px 8px;background:var(--wa);color:white;border:none;border-radius:10px;font-family:'Baloo 2',cursive;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;}
+  .btn-copy{flex:1;padding:12px 8px;background:#F0F0F0;color:var(--text);border:none;border-radius:10px;font-family:'Baloo 2',cursive;font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .copy-confirm{text-align:center;font-size:0.75rem;color:#15803D;margin-top:6px;display:none;}
+  .success-actions{display:flex;gap:8px;padding:0 0 8px;}
+  .btn-new{flex:1;padding:13px 10px;border-radius:12px;font-family:'Baloo 2',cursive;font-size:0.9rem;font-weight:700;border:none;cursor:pointer;color:white;background:var(--orange);}
+  .data-toggle{text-align:center;margin-top:10px;}
+  .data-toggle button{background:none;border:1.5px solid var(--border);color:var(--muted);padding:8px 18px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer;margin:3px;}
+  #data-panel{display:none;margin-top:14px;}
+  .entry-card{background:white;border-radius:12px;padding:13px;margin-bottom:10px;border:1.5px solid var(--border);font-size:0.83rem;cursor:pointer;transition:box-shadow 0.15s,border-color 0.15s;-webkit-tap-highlight-color:transparent;}
+  .entry-card:active{box-shadow:0 2px 12px rgba(255,107,0,0.18);border-color:#FFD4B0;}
+  .ec-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .ec-worker{font-weight:700;color:var(--orange);font-family:'Baloo 2',cursive;}
+  .ec-date{font-size:0.7rem;color:var(--muted);}
+  .ec-meta{color:var(--muted);font-size:0.76rem;line-height:1.7;}
+  .ec-tap-hint{font-size:0.68rem;color:#BBBBD0;margin-top:5px;text-align:right;}
+  .no-entries,.loading-entries{text-align:center;color:var(--muted);padding:20px;font-size:0.83rem;}
+  .modal-overlay{display:none;position:fixed;inset:0;z-index:9998;background:rgba(26,26,46,0.65);backdrop-filter:blur(3px);align-items:flex-end;justify-content:center;}
+  .modal-overlay.active{display:flex;}
+  .modal-sheet{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:0 0 32px;animation:slideUp 0.25s ease;}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;border-bottom:1.5px solid var(--border);position:sticky;top:0;background:white;z-index:1;}
+  .modal-title{font-family:'Baloo 2',cursive;font-weight:800;font-size:1rem;color:var(--orange);}
+  .modal-close{background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .modal-body{padding:14px 18px;}
+  .modal-summary{background:var(--bg);border-radius:10px;padding:12px;font-size:0.82rem;line-height:1.8;white-space:pre-wrap;color:var(--text);border:1.5px solid var(--border);max-height:300px;overflow-y:auto;word-break:break-word;margin-bottom:14px;}
+  .modal-photos{margin-bottom:14px;}
+  .modal-photos-title{font-family:'Baloo 2',cursive;font-weight:700;font-size:0.82rem;color:var(--blue);margin-bottom:8px;}
+  .modal-photo-link{display:flex;align-items:center;gap:8px;background:#EFF6FF;border:1px solid #BFDBFE;color:var(--blue);border-radius:9px;padding:10px 13px;font-size:0.82rem;text-decoration:none;margin-bottom:6px;font-weight:600;}
+  .modal-actions{display:flex;gap:8px;}
+  .modal-btn{flex:1;padding:12px 8px;border-radius:10px;border:none;font-family:'Baloo 2',cursive;font-size:0.88rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .modal-btn-copy{background:#F0F0F0;color:var(--text);}
+  .modal-btn-close{background:var(--orange);color:white;}
+  .required-star{color:var(--red);margin-left:2px;}
+  .error-msg{color:var(--red);font-size:0.75rem;margin-top:4px;display:none;}
+  .field-error{border-color:var(--red) !important;}
+  .info-box{background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:10px 13px;font-size:0.75rem;color:#92400E;line-height:1.6;margin-top:8px;}
+  .info-box strong{display:block;margin-bottom:2px;color:#C2410C;}
+  .saving-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(26,26,46,0.72);backdrop-filter:blur(3px);flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+  .saving-overlay.active{display:flex;}
+  .saving-card{background:white;border-radius:20px;padding:28px 32px;text-align:center;max-width:300px;width:88%;box-shadow:0 12px 40px rgba(0,0,0,0.2);}
+  .saving-spinner{width:48px;height:48px;border:4px solid #FFE0C8;border-top-color:var(--orange);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .saving-title{font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:6px;}
+  .saving-step{font-size:0.78rem;color:var(--muted);line-height:1.6;min-height:1.6em;transition:opacity 0.3s;}
+  .saving-steps-track{display:flex;justify-content:center;gap:6px;margin-top:14px;}
+  .saving-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background 0.3s;}
+  .saving-dot.done{background:var(--green);} .saving-dot.active{background:var(--orange);}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>📐 Smart Interiors</h1>
-  <p>Site Measurement Entry</p>
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>📐 Smart Interiors</h1>
+      <p>Site Measurement Entry</p>
+    </div>
+    <a class="btn-owner-approval" href="approval.html">📋 Approvals</a>
+  </div>
 </header>
 
 <!-- ENTRY DETAIL MODAL -->
@@ -434,66 +211,48 @@ const DRIVE_FOLDER_ID = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
       <div class="saving-dot active" id="sdot-0"></div>
       <div class="saving-dot" id="sdot-1"></div>
       <div class="saving-dot" id="sdot-2"></div>
+      <div class="saving-dot" id="sdot-3"></div>
     </div>
   </div>
 </div>
 
 <div class="container">
   <div id="form-section">
-
-    <!-- Site info -->
     <div class="card">
       <div class="card-title">👤 Team Member & Site Info</div>
-
       <label>Team Member <span class="required-star">*</span></label>
       <select id="worker">
         <option value="">-- Select --</option>
-        <option>Raju</option>
-        <option>Vasu</option>
-        <option>Chinna</option>
-        <option>Srinu</option>
-        <option>Sai</option>
+        <option>Raju</option><option>Vasu</option><option>Chinna</option><option>Srinu</option><option>Sai</option>
       </select>
       <div class="error-msg" id="err-worker">Please select team member</div>
-
       <label>Date <span class="required-star">*</span></label>
       <input type="date" id="date">
-
       <label>Location / Area Name <span class="required-star">*</span></label>
       <input type="text" id="location" placeholder="e.g. Sainagar, Plot No. 12">
       <div class="error-msg" id="err-location">Please enter location name</div>
-
-      <!-- GPS -->
       <div class="gps-bar">
         <span class="gps-icon">📍</span>
-        <div class="gps-text">
-          <strong>GPS Location</strong>
-          Saves exact pin — anyone can tap for directions later
-        </div>
+        <div class="gps-text"><strong>GPS Location</strong>Saves exact pin — anyone can tap for directions later</div>
         <button class="btn-gps" onclick="captureGPS()">Capture</button>
       </div>
       <div class="gps-status" id="gps-status">Not captured yet</div>
       <div id="gps-info-box" style="display:none;" class="info-box">
-        <strong>⚠️ GPS needs https:// to work</strong>
-        Open via the GitHub Pages link for GPS to work.
+        <strong>⚠️ GPS needs https:// to work</strong>Open via the GitHub Pages link for GPS to work.
       </div>
-
       <label>Customer Name</label>
       <input type="text" id="customer" placeholder="Can update later if unknown">
-
       <label>Customer Phone</label>
       <input type="tel" id="phone" placeholder="e.g. 98765 43210">
+      <label>Discount % <span style="font-size:0.68rem;color:var(--muted);text-transform:none;font-weight:400;letter-spacing:0;">(optional — for quotation)</span></label>
+      <input type="text" id="discount" placeholder="e.g. 10" inputmode="decimal">
     </div>
 
-    <!-- Products -->
     <div class="card">
       <div class="card-title">🪟 Products & Measurements</div>
-      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.5;">
-        Select product first, then add measurements. Mix different products in one job.
-      </p>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.5;">Select product first, then add measurements. Mix different products in one job.</p>
       <div class="items-list" id="items-list"></div>
       <button class="btn-add-item" onclick="addItem()">+ Add Product / Opening</button>
-
       <div class="fraction-helper">
         <div class="fh-title">⚡ Quick Fractions — tap a box first</div>
         <div class="fraction-grid">
@@ -510,7 +269,6 @@ const DRIVE_FOLDER_ID = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
       </div>
     </div>
 
-    <!-- Photo upload -->
     <div class="card">
       <div class="card-title">📷 Reference Photos <span style="font-size:0.75rem;font-weight:400;color:var(--muted);margin-left:4px;">(optional)</span></div>
       <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
@@ -532,7 +290,6 @@ const DRIVE_FOLDER_ID = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
     </div>
 
     <button class="btn-submit" onclick="submitForm()">✅ Save & Sync to Sheets</button>
-
     <div class="data-toggle">
       <button onclick="toggleData()">📋 View Saved Entries</button>
     </div>
@@ -546,16 +303,21 @@ const DRIVE_FOLDER_ID = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
       <h2>Saved!</h2>
       <p class="sub" id="success-detail"></p>
     </div>
+    <div class="quote-badge" id="quote-badge">
+      <span class="quote-badge-icon">📄</span>
+      <div class="quote-badge-text">
+        <div class="quote-badge-title">Quotation Created!</div>
+        <div class="quote-badge-sub" id="quote-badge-sub">Pending owner approval</div>
+      </div>
+    </div>
     <div class="wa-box">
       <div class="wa-title">💬 WhatsApp Summary</div>
       <div class="wa-summary" id="wa-summary"></div>
       <div class="wa-buttons">
-        <button class="btn-wa-send" onclick="openWhatsApp()">
-          <span>📲</span> Send to WhatsApp
-        </button>
+        <button class="btn-wa-send" onclick="openWhatsApp()"><span>📲</span> Send to WhatsApp</button>
         <button class="btn-copy" onclick="copySummary()">📋 Copy</button>
       </div>
-      <div class="copy-confirm" id="copy-confirm">✓ Message copied! Tap "Open Group & Paste" → paste in group</div>
+      <div class="copy-confirm" id="copy-confirm">✓ Copied!</div>
     </div>
     <div class="success-actions">
       <button class="btn-new" onclick="resetForm()">+ New Entry</button>
@@ -564,90 +326,78 @@ const DRIVE_FOLDER_ID = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
 </div>
 
 <script>
-// ── STATE ──
-let itemCount = 0;
-let lastFocused = null;
-let capturedLat = null;
-let capturedLng = null;
-let photoDataURLs = []; // stores base64 photos
-let photoFileNames = []; // stores filenames
+var itemCount = 0;
+var lastFocused = null;
+var capturedLat = null;
+var capturedLng = null;
+var photoDataURLs = [];
+var photoFileNames = [];
 
-const PRODUCTS = [
-  '-- Select Product --',
-  'UPVC Window',
-  'Aluminium Window',
-  'UPVC Door',
-  'Aluminium Door',
-  'PVC Door',
-  'WPC Door',
-  'Wood Door',
-  'Aluminium Partition',
-  'Louver',
-  'Other'
-];
-const DIRECTIONS = ['-- Door Direction --','RI — Right In','RO — Right Out','LI — Left In','LO — Left Out'];
-const LOUVER_TYPES = ['-- Louver Type --','Aluminium Louver','UPVC Louver'];
+var PRODUCTS = ['-- Select Product --','UPVC Window','Aluminium Window','UPVC Door','Aluminium Door','PVC Door','WPC Door','Wood Door','Aluminium Partition','Louver','Other'];
+var DIRECTIONS = ['-- Door Direction --','RI — Right In','RO — Right Out','LI — Left In','LO — Left Out'];
+var LOUVER_TYPES = ['-- Louver Type --','Aluminium Louver','UPVC Louver'];
 
-// Init
+// Price list — mirrors PriceList tab in billing sheet
+var PRICE_LIST = {
+  'UPVC Window':         { rate: 400,  type: 'sqft'  },
+  'Aluminium Window':    { rate: 550,  type: 'sqft'  },
+  'UPVC Door':           { rate: 400,  type: 'sqft'  },
+  'Aluminium Door':      { rate: 550,  type: 'sqft'  },
+  'PVC Door':            { rate: 2500, type: 'fixed' },
+  'WPC Door':            { rate: 4500, type: 'fixed' },
+  'Wood Door':           { rate: 3000, type: 'fixed' },
+  'Aluminium Partition': { rate: 450,  type: 'sqft'  },
+  'Louver':              { rate: 2500, type: 'fixed' },
+  'Other':               { rate: 0,    type: 'fixed' }
+};
+
 document.getElementById('date').value = new Date().toISOString().split('T')[0];
 addItem();
 
-// ── GPS ──
 function captureGPS() {
-  const status = document.getElementById('gps-status');
-  const infoBox = document.getElementById('gps-info-box');
+  var status = document.getElementById('gps-status');
+  var infoBox = document.getElementById('gps-info-box');
   if (window.location.protocol === 'file:') {
     status.className = 'gps-status err';
     status.textContent = '✗ GPS blocked — open via GitHub Pages link';
-    infoBox.style.display = 'block';
-    return;
+    infoBox.style.display = 'block'; return;
   }
   infoBox.style.display = 'none';
-  if (!navigator.geolocation) {
-    status.className = 'gps-status err';
-    status.textContent = '✗ GPS not supported on this device';
-    return;
-  }
-  status.className = 'gps-status';
-  status.textContent = '📡 Getting location...';
+  if (!navigator.geolocation) { status.className='gps-status err'; status.textContent='✗ GPS not supported'; return; }
+  status.className = 'gps-status'; status.textContent = '📡 Getting location...';
   navigator.geolocation.getCurrentPosition(
-    pos => {
+    function(pos) {
       capturedLat = pos.coords.latitude.toFixed(6);
       capturedLng = pos.coords.longitude.toFixed(6);
       status.className = 'gps-status ok';
-      status.textContent = `✓ Location saved: ${capturedLat}, ${capturedLng}`;
+      status.textContent = '✓ Location saved: ' + capturedLat + ', ' + capturedLng;
     },
-    err => {
+    function(err) {
       status.className = 'gps-status err';
-      let msg = '✗ ';
-      if (err.code === 1) msg += 'Allow location permission in Chrome settings.';
-      else if (err.code === 2) msg += 'Location unavailable. Try outdoors.';
-      else msg += 'Timed out. Try again.';
+      var msg = '✗ ';
+      if (err.code===1) msg += 'Allow location permission.';
+      else if (err.code===2) msg += 'Location unavailable.';
+      else msg += 'Timed out.';
       status.textContent = msg;
     },
     { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
   );
 }
 
-// ── PHOTO HANDLING ──
-// ── COMPRESS IMAGE IN BROWSER BEFORE STORING ──
-// Resizes to max 1200px, JPEG quality 0.72 → reduces 3-4MB photos to ~200-400KB
-// Why: Apps Script has a ~10MB POST limit; base64 adds 33% overhead, so raw >7MB fails
 function compressImage(file, maxPx, quality) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        // Scale down only if larger than maxPx on longest side
-        if (width > maxPx || height > maxPx) {
-          if (width >= height) { height = Math.round(height * maxPx / width); width = maxPx; }
-          else { width = Math.round(width * maxPx / height); height = maxPx; }
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else { w = Math.round(w * maxPx / h); h = maxPx; }
         }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.src = e.target.result;
@@ -657,305 +407,195 @@ function compressImage(file, maxPx, quality) {
 }
 
 function handlePhotos(event) {
-  const files = Array.from(event.target.files);
-  const statusEl = document.getElementById('photo-upload-status');
-  files.forEach(async file => {
-    const idx = photoDataURLs.length;
-    photoDataURLs.push(null);       // reserve slot
+  var files = Array.from(event.target.files);
+  var statusEl = document.getElementById('photo-upload-status');
+  files.forEach(function(file) {
+    var idx = photoDataURLs.length;
+    photoDataURLs.push(null);
     photoFileNames.push(file.name);
     statusEl.textContent = '🗜 Compressing photo...';
     statusEl.className = 'photo-upload-status';
-    const compressed = await compressImage(file, 1200, 0.72);
-    photoDataURLs[idx] = compressed;
-    // Show compressed size in KB for transparency
-    const kb = Math.round((compressed.length * 0.75) / 1024);
-    statusEl.textContent = `✓ Photo ready (${kb} KB after compression)`;
-    statusEl.className = 'photo-upload-status ok';
-    renderPhotoPreview(compressed, idx);
+    compressImage(file, 1200, 0.72).then(function(compressed) {
+      photoDataURLs[idx] = compressed;
+      var kb = Math.round((compressed.length * 0.75) / 1024);
+      statusEl.textContent = '✓ Photo ready (' + kb + ' KB)';
+      statusEl.className = 'photo-upload-status ok';
+      renderPhotoPreview(compressed, idx);
+    });
   });
   event.target.value = '';
 }
 
 function renderPhotoPreview(dataURL, index) {
-  const previews = document.getElementById('photo-previews');
-  const wrap = document.createElement('div');
+  var previews = document.getElementById('photo-previews');
+  var wrap = document.createElement('div');
   wrap.className = 'photo-thumb-wrap';
   wrap.id = 'photo-wrap-' + index;
-  wrap.innerHTML = `
-    <img src="${dataURL}" class="photo-thumb">
-    <button class="photo-remove" onclick="removePhoto(${index})">✕</button>
-  `;
+  wrap.innerHTML = '<img src="' + dataURL + '" class="photo-thumb"><button class="photo-remove" onclick="removePhoto(' + index + ')">✕</button>';
   previews.appendChild(wrap);
 }
 
 function removePhoto(index) {
-  photoDataURLs[index] = null;
-  photoFileNames[index] = null;
-  document.getElementById('photo-wrap-' + index)?.remove();
+  photoDataURLs[index] = null; photoFileNames[index] = null;
+  var el = document.getElementById('photo-wrap-' + index);
+  if (el) el.remove();
 }
 
-// ── UPLOAD PHOTOS TO DRIVE VIA APPS SCRIPT ──
-// Photos are sent as base64 to the Apps Script which saves them to Drive
-// and returns the shareable view links
 async function uploadPhotosToDrive(entryId) {
-  const validPhotos = photoDataURLs
-    .map((d, i) => d ? { data: d, name: photoFileNames[i] || `photo_${i+1}.jpg` } : null)
-    .filter(Boolean);
-
+  var validPhotos = photoDataURLs.map(function(d,i){ return d ? {data:d, name:photoFileNames[i]||('photo_'+(i+1)+'.jpg')} : null; }).filter(Boolean);
   if (!validPhotos.length) return [];
-
-  const statusEl = document.getElementById('photo-upload-status');
-  statusEl.className = 'photo-upload-status';
-  const links = [];
-
-  // Upload one photo at a time directly to Apps Script
-  // Reason: avoids payload size issues; each call is small and independent
-  for (let i = 0; i < validPhotos.length; i++) {
-    statusEl.textContent = `📤 Uploading photo ${i+1} of ${validPhotos.length}...`;
+  var statusEl = document.getElementById('photo-upload-status');
+  var links = [];
+  for (var i = 0; i < validPhotos.length; i++) {
+    statusEl.textContent = '📤 Uploading photo ' + (i+1) + ' of ' + validPhotos.length + '...';
     try {
-      const result = await callAppsScript({
-        action: 'uploadPhotos',
-        entryId: entryId,
-        folderId: DRIVE_FOLDER_ID,
-        photos: [validPhotos[i]]
-      });
-      console.log('Photo upload result:', result);
-      if (result.links && result.links[0]) {
-        links.push(result.links[0]);
-      } else if (result.error) {
-        console.error('Drive error:', result.error);
-      }
-    } catch(e) {
-      console.error('Photo upload error:', e);
-    }
+      var result = await callAppsScript({ action:'uploadPhotos', entryId:entryId, folderId:DRIVE_FOLDER_ID, photos:[validPhotos[i]] });
+      if (result.links && result.links[0]) links.push(result.links[0]);
+    } catch(e) { console.error('Photo upload error:', e); }
   }
-
-  if (links.length) {
-    statusEl.textContent = `✓ ${links.length} photo(s) uploaded to Drive`;
-    statusEl.className = 'photo-upload-status ok';
-  } else {
-    statusEl.textContent = '⚠️ Photo upload failed — check console';
-    statusEl.className = 'photo-upload-status err';
-  }
+  if (links.length) { statusEl.textContent = '✓ ' + links.length + ' photo(s) uploaded'; statusEl.className = 'photo-upload-status ok'; }
   return links;
 }
 
-// ── MEASUREMENT INPUT — ALLOW DIGITS, SPACE, SLASH ONLY ──
-// Reason: prevents letters being typed; still allows "47 1/4" fraction format
 function attachMeasInputRules(input) {
   input.addEventListener('keypress', function(e) {
-    const allowed = /[\d\s\/]/;
-    if (!allowed.test(e.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab'].includes(e.key)) {
-      e.preventDefault();
-    }
+    if (!/[\d\s\/]/.test(e.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab'].includes(e.key)) e.preventDefault();
   });
-  // Also strip any non-allowed chars on paste
   input.addEventListener('input', function() {
-    const cleaned = this.value.replace(/[^\d\s\/]/g, '');
-    if (cleaned !== this.value) {
-      const pos = this.selectionStart;
-      this.value = cleaned;
-      this.selectionStart = this.selectionEnd = pos;
-    }
-    // Auto-slash logic
-    const val = this.value;
-    const match = val.match(/^(.*?)(\d+) (\d+) $/);
-    if (match) {
-      const newVal = match[1] + match[2] + ' ' + match[3] + '/';
-      this.value = newVal;
-      this.selectionStart = this.selectionEnd = newVal.length;
-    }
+    var cleaned = this.value.replace(/[^\d\s\/]/g, '');
+    if (cleaned !== this.value) { var pos = this.selectionStart; this.value = cleaned; this.selectionStart = this.selectionEnd = pos; }
+    var match = this.value.match(/^(.*?)(\d+) (\d+) $/);
+    if (match) { var nv = match[1]+match[2]+' '+match[3]+'/'; this.value = nv; this.selectionStart = this.selectionEnd = nv.length; }
   });
   input.addEventListener('keydown', function(e) {
     if (e.key !== ' ' && e.key !== 'Spacebar') return;
-    const val = this.value;
-    const cursor = this.selectionStart;
-    const before = val.substring(0, cursor);
-    const m = before.match(/^(.*?)(\d+) (\d+)$/);
+    var cursor = this.selectionStart;
+    var before = this.value.substring(0, cursor);
+    var m = before.match(/^(.*?)(\d+) (\d+)$/);
     if (m && !before.includes('/')) {
       e.preventDefault();
-      const newVal = m[1] + m[2] + ' ' + m[3] + '/';
-      this.value = newVal + val.substring(cursor);
-      this.selectionStart = this.selectionEnd = newVal.length;
+      var nv = m[1]+m[2]+' '+m[3]+'/';
+      this.value = nv + this.value.substring(cursor);
+      this.selectionStart = this.selectionEnd = nv.length;
     }
   });
-  input.addEventListener('focus', () => { lastFocused = input; });
+  input.addEventListener('focus', function() { lastFocused = input; });
 }
 
-// ── ADD ITEM ──
 function addItem() {
   itemCount++;
-  const id = itemCount;
-  const list = document.getElementById('items-list');
-  const div = document.createElement('div');
-  div.className = 'item-block';
-  div.id = 'item-' + id;
-
-  div.innerHTML = `
-    <div class="item-header">
-      <span class="item-label">Opening ${id}</span>
-      <button class="btn-remove-item" onclick="removeItem(${id})">Remove</button>
-    </div>
-    <div class="item-body">
-      <label style="margin-top:0">Product Type *</label>
-      <select id="prod-${id}" onchange="onProdChange(${id})">
-        ${PRODUCTS.map(p => `<option value="${p==='-- Select Product --'?'':p}">${p}</option>`).join('')}
-      </select>
-      <div class="louver-type-row" id="louver-row-${id}">
-        <label>Louver Type *</label>
-        <select id="louver-${id}">
-          ${LOUVER_TYPES.map((t,i) => `<option value="${i===0?'':t}">${t}</option>`).join('')}
-        </select>
-      </div>
-      <div class="direction-row" id="dir-row-${id}">
-        <label>Door Direction *</label>
-        <select id="dir-${id}">
-          ${DIRECTIONS.map((d,i) => `<option value="${i===0?'':d.split(' ')[0]}">${d}</option>`).join('')}
-        </select>
-      </div>
-      <div id="meas-section-${id}" style="display:none; margin-top:10px;">
-        <label style="margin-top:0; margin-bottom:8px;">Measurements</label>
-        <div class="meas-rows" id="meas-rows-${id}"></div>
-        <button class="btn-add-meas" onclick="addMeasRow(${id})">+ Add Row</button>
-      </div>
-    </div>`;
-
+  var id = itemCount;
+  var list = document.getElementById('items-list');
+  var div = document.createElement('div');
+  div.className = 'item-block'; div.id = 'item-' + id;
+  var prodOpts = PRODUCTS.map(function(p){ return '<option value="'+(p==='-- Select Product --'?'':p)+'">'+p+'</option>'; }).join('');
+  var louverOpts = LOUVER_TYPES.map(function(t,i){ return '<option value="'+(i===0?'':t)+'">'+t+'</option>'; }).join('');
+  var dirOpts = DIRECTIONS.map(function(d,i){ return '<option value="'+(i===0?'':d.split(' ')[0])+'">'+d+'</option>'; }).join('');
+  div.innerHTML = '<div class="item-header"><span class="item-label">Opening '+id+'</span><button class="btn-remove-item" onclick="removeItem('+id+')">Remove</button></div>' +
+    '<div class="item-body">' +
+    '<label style="margin-top:0">Product Type *</label><select id="prod-'+id+'" onchange="onProdChange('+id+')">'+prodOpts+'</select>' +
+    '<div class="louver-type-row" id="louver-row-'+id+'"><label>Louver Type *</label><select id="louver-'+id+'">'+louverOpts+'</select></div>' +
+    '<div class="direction-row" id="dir-row-'+id+'"><label>Door Direction *</label><select id="dir-'+id+'">'+dirOpts+'</select></div>' +
+    '<div id="meas-section-'+id+'" style="display:none;margin-top:10px;"><label style="margin-top:0;margin-bottom:8px;">Measurements</label>' +
+    '<div class="meas-rows" id="meas-rows-'+id+'"></div><button class="btn-add-meas" onclick="addMeasRow('+id+')">+ Add Row</button></div>' +
+    '</div>';
   list.appendChild(div);
-  setTimeout(() => div.scrollIntoView({behavior:'smooth',block:'center'}), 80);
+  setTimeout(function(){ div.scrollIntoView({behavior:'smooth',block:'center'}); }, 80);
 }
 
-function removeItem(id) {
-  document.getElementById('item-'+id)?.remove();
-}
+function removeItem(id) { var el = document.getElementById('item-'+id); if(el) el.remove(); }
 
 function onProdChange(id) {
-  const prod = document.getElementById('prod-'+id).value;
-  const dirRow = document.getElementById('dir-row-'+id);
-  const louverRow = document.getElementById('louver-row-'+id);
-  const measSection = document.getElementById('meas-section-'+id);
-  const measRows = document.getElementById('meas-rows-'+id);
-
-  if (!prod) {
-    dirRow.style.display = 'none';
-    louverRow.style.display = 'none';
-    measSection.style.display = 'none';
-    return;
-  }
-
-  dirRow.style.display = prod === 'PVC Door' ? 'block' : 'none';
-  louverRow.style.display = prod === 'Louver' ? 'block' : 'none';
-
-  measSection.style.display = 'block';
-  measRows.innerHTML = '';
-  addMeasRow(id);
+  var prod = document.getElementById('prod-'+id).value;
+  var dirRow = document.getElementById('dir-row-'+id);
+  var louverRow = document.getElementById('louver-row-'+id);
+  var measSection = document.getElementById('meas-section-'+id);
+  var measRows = document.getElementById('meas-rows-'+id);
+  if (!prod) { dirRow.style.display='none'; louverRow.style.display='none'; measSection.style.display='none'; return; }
+  dirRow.style.display = prod==='PVC Door' ? 'block' : 'none';
+  louverRow.style.display = prod==='Louver' ? 'block' : 'none';
+  measSection.style.display = 'block'; measRows.innerHTML = ''; addMeasRow(id);
 }
 
-// ── ADD MEAS ROW ──
 function addMeasRow(itemId) {
-  const prod = document.getElementById('prod-'+itemId).value;
-  const isPVC = prod === 'PVC Door';
-  const rows = document.getElementById('meas-rows-'+itemId);
-  const rowNum = rows.children.length + 1;
-  const rid = `${itemId}_${Date.now()}`;
-
-  const div = document.createElement('div');
-  div.className = 'meas-row';
-  div.id = 'mrow-'+rid;
-
+  var prod = document.getElementById('prod-'+itemId).value;
+  var isPVC = prod === 'PVC Door';
+  var rows = document.getElementById('meas-rows-'+itemId);
+  var rowNum = rows.children.length + 1;
+  var rid = itemId + '_' + Date.now();
+  var div = document.createElement('div');
+  div.className = 'meas-row'; div.id = 'mrow-'+rid;
   if (isPVC) {
-    // PVC Door: H × Top × Bottom — Bottom is OPTIONAL
-    div.innerHTML = `
-      <span class="meas-num">${rowNum}</span>
-      <div class="meas-fields">
-        <div class="meas-grid-3">
-          <input type="text" id="mH-${rid}" placeholder="83" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
-          <span class="meas-sep">×</span>
-          <input type="text" id="mT-${rid}" placeholder="4 1/2" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
-          <span class="meas-sep">×</span>
-          <input type="text" id="mB-${rid}" placeholder="(optional)" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false" class="meas-middle-optional">
-        </div>
-        <div class="meas-labels meas-labels-3">
-          <span class="fl">H (Height)</span><span class="fl fl-x">×</span>
-          <span class="fl">Top</span><span class="fl fl-x">×</span>
-          <span class="fl fl-optional">Bottom (opt)</span>
-        </div>
-      </div>
-      <button class="btn-del-meas" onclick="delRow('${rid}',${itemId})">✕</button>`;
+    div.innerHTML = '<span class="meas-num">'+rowNum+'</span><div class="meas-fields">' +
+      '<div class="meas-grid-3">' +
+      '<input type="text" id="mH-'+rid+'" placeholder="83" inputmode="text" autocomplete="off" spellcheck="false">' +
+      '<span class="meas-sep">×</span>' +
+      '<input type="text" id="mT-'+rid+'" placeholder="4 1/2" inputmode="text" autocomplete="off" spellcheck="false">' +
+      '<span class="meas-sep">×</span>' +
+      '<input type="text" id="mB-'+rid+'" placeholder="(optional)" inputmode="text" autocomplete="off" spellcheck="false" class="meas-middle-optional">' +
+      '</div><div class="meas-labels meas-labels-3">' +
+      '<span class="fl">H (Height)</span><span class="fl fl-x">×</span><span class="fl">Top</span><span class="fl fl-x">×</span><span class="fl fl-optional">Bottom (opt)</span>' +
+      '</div></div><button class="btn-del-meas" onclick="delRow(\''+rid+'\','+itemId+')">✕</button>';
   } else {
-    // All other products: H × W
-    div.innerHTML = `
-      <span class="meas-num">${rowNum}</span>
-      <div class="meas-fields">
-        <div class="meas-grid-2">
-          <input type="text" id="mH-${rid}" placeholder="43 3/8" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
-          <span class="meas-sep">×</span>
-          <input type="text" id="mW-${rid}" placeholder="47 1/4" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
-        </div>
-        <div class="meas-labels meas-labels-2">
-          <span class="fl">H (Height)</span><span class="fl fl-x">×</span><span class="fl">W (Width)</span>
-        </div>
-      </div>
-      <button class="btn-del-meas" onclick="delRow('${rid}',${itemId})">✕</button>`;
+    div.innerHTML = '<span class="meas-num">'+rowNum+'</span><div class="meas-fields">' +
+      '<div class="meas-grid-2">' +
+      '<input type="text" id="mH-'+rid+'" placeholder="43 3/8" inputmode="text" autocomplete="off" spellcheck="false">' +
+      '<span class="meas-sep">×</span>' +
+      '<input type="text" id="mW-'+rid+'" placeholder="47 1/4" inputmode="text" autocomplete="off" spellcheck="false">' +
+      '</div><div class="meas-labels meas-labels-2">' +
+      '<span class="fl">H (Height)</span><span class="fl fl-x">×</span><span class="fl">W (Width)</span>' +
+      '</div></div><button class="btn-del-meas" onclick="delRow(\''+rid+'\','+itemId+')">✕</button>';
   }
-
   rows.appendChild(div);
-  div.querySelectorAll('input').forEach(inp => {
-    attachMeasInputRules(inp);
-  });
-  setTimeout(() => div.scrollIntoView({behavior:'smooth',block:'nearest'}), 60);
+  div.querySelectorAll('input').forEach(function(inp){ attachMeasInputRules(inp); });
+  setTimeout(function(){ div.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 60);
 }
 
 function delRow(rid, itemId) {
-  document.getElementById('mrow-'+rid)?.remove();
-  const rows = document.getElementById('meas-rows-'+itemId);
-  rows && Array.from(rows.children).forEach((r,i) => {
-    const n = r.querySelector('.meas-num'); if(n) n.textContent = i+1;
-  });
+  var el = document.getElementById('mrow-'+rid); if(el) el.remove();
+  var rows = document.getElementById('meas-rows-'+itemId);
+  if (rows) Array.from(rows.children).forEach(function(r,i){ var n=r.querySelector('.meas-num'); if(n) n.textContent=i+1; });
 }
 
-// ── FRACTION BUTTONS ──
 function ins(frac) {
   if (!lastFocused) { showToast('Tap a measurement box first'); return; }
-  const el = lastFocused, s = el.selectionStart, e = el.selectionEnd;
-  el.value = el.value.substring(0,s) + frac + el.value.substring(e);
-  el.focus(); el.selectionStart = el.selectionEnd = s + frac.length;
+  var el=lastFocused, s=el.selectionStart, e=el.selectionEnd;
+  el.value = el.value.substring(0,s)+frac+el.value.substring(e);
+  el.focus(); el.selectionStart = el.selectionEnd = s+frac.length;
 }
 
-// ── COLLECT ──
 function collectItems() {
-  const items = [];
-  document.querySelectorAll('.item-block').forEach(block => {
-    const id = block.id.replace('item-','');
-    const prod = document.getElementById('prod-'+id)?.value;
+  var items = [];
+  document.querySelectorAll('.item-block').forEach(function(block) {
+    var id = block.id.replace('item-','');
+    var prodEl = document.getElementById('prod-'+id);
+    var prod = prodEl && prodEl.value;
     if (!prod) return;
-    const isPVC = prod === 'PVC Door';
-    const isLouver = prod === 'Louver';
-    const dir = isPVC ? (document.getElementById('dir-'+id)?.value || '') : '';
-    const louverType = isLouver ? (document.getElementById('louver-'+id)?.value || '') : '';
-    const measurements = [];
-    document.getElementById('meas-rows-'+id)?.querySelectorAll('.meas-row').forEach(row => {
-      const rid = row.id.replace('mrow-','');
-      const h = document.getElementById('mH-'+rid)?.value.trim() || '';
-      const w = document.getElementById('mW-'+rid)?.value.trim() || '';
-      // PVC Door: Top required, Bottom optional
-      const t = isPVC ? (document.getElementById('mT-'+rid)?.value.trim() || '') : '';
-      const b = isPVC ? (document.getElementById('mB-'+rid)?.value.trim() || '—') : '';
-      if (isPVC) {
-        if (h || t) measurements.push({h, top:t, bottom:b});
-      } else {
-        if (h || w) measurements.push({h, w});
-      }
+    var isPVC = prod==='PVC Door', isLouver = prod==='Louver';
+    var dirEl = document.getElementById('dir-'+id);
+    var louverEl = document.getElementById('louver-'+id);
+    var dir = isPVC ? (dirEl&&dirEl.value||'') : '';
+    var louverType = isLouver ? (louverEl&&louverEl.value||'') : '';
+    var measurements = [];
+    var measRowsEl = document.getElementById('meas-rows-'+id);
+    if (measRowsEl) measRowsEl.querySelectorAll('.meas-row').forEach(function(row) {
+      var rid = row.id.replace('mrow-','');
+      var hEl=document.getElementById('mH-'+rid), wEl=document.getElementById('mW-'+rid);
+      var tEl=document.getElementById('mT-'+rid), bEl=document.getElementById('mB-'+rid);
+      var h=hEl&&hEl.value.trim()||'', w=wEl&&wEl.value.trim()||'';
+      var t=isPVC&&tEl?tEl.value.trim():'', b=isPVC&&bEl?bEl.value.trim()||'—':'';
+      if (isPVC) { if(h||t) measurements.push({h:h,top:t,bottom:b}); }
+      else { if(h||w) measurements.push({h:h,w:w}); }
     });
-    if (measurements.length) items.push({product:prod, direction:dir, louverType, measurements});
+    if (measurements.length) items.push({product:prod, direction:dir, louverType:louverType, measurements:measurements});
   });
   return items;
 }
 
-// ── VALIDATE ──
 function validate() {
-  let ok = true;
-  const worker = document.getElementById('worker');
-  const location = document.getElementById('location');
+  var ok = true;
+  var worker = document.getElementById('worker');
+  var location = document.getElementById('location');
   document.getElementById('err-worker').style.display = 'none';
   document.getElementById('err-location').style.display = 'none';
   worker.classList.remove('field-error'); location.classList.remove('field-error');
@@ -964,94 +604,153 @@ function validate() {
   return ok;
 }
 
-// ── SAVING OVERLAY HELPERS ──
 function savingStep(stepIndex, text) {
-  // Update step text
   document.getElementById('saving-step-text').textContent = text;
-  // Update dots: previous = done (green), current = active (orange)
-  for (let i = 0; i < 3; i++) {
-    const dot = document.getElementById('sdot-' + i);
-    dot.className = 'saving-dot' + (i < stepIndex ? ' done' : i === stepIndex ? ' active' : '');
+  for (var i=0;i<4;i++) {
+    var dot = document.getElementById('sdot-'+i);
+    if (dot) dot.className = 'saving-dot'+(i<stepIndex?' done':i===stepIndex?' active':'');
   }
 }
 function showSaving() { document.getElementById('saving-overlay').classList.add('active'); }
 function hideSaving() { document.getElementById('saving-overlay').classList.remove('active'); }
 
-// ── SUBMIT ──
+// ── PARSE MEASUREMENT INCHES (supports "47 1/4" fractional format) ──
+function parseMeasInches(val) {
+  if (!val || val==='—') return 0;
+  val = val.trim();
+  var parts = val.split(' ');
+  var total = 0;
+  parts.forEach(function(p) {
+    if (p.includes('/')) {
+      var f = p.split('/');
+      if (f.length===2) total += parseFloat(f[0])/parseFloat(f[1]);
+    } else { total += parseFloat(p)||0; }
+  });
+  return total;
+}
+
+function calcQuotationItems(items, discountPct) {
+  var disc = parseFloat(discountPct)||0;
+  var quoteItems = [];
+  items.forEach(function(item) {
+    var prodKey = item.product;
+    // strip louver subtype if present e.g. "Louver (Aluminium Louver)" → use "Louver"
+    if (prodKey.includes('Louver')) prodKey = 'Louver';
+    var priceInfo = PRICE_LIST[prodKey] || {rate:0, type:'fixed'};
+    item.measurements.forEach(function(m) {
+      var sqft = 0, dimStr = '', cost = 0;
+      if (priceInfo.type === 'sqft') {
+        var h = parseMeasInches(m.h), w = parseMeasInches(m.w||'0');
+        sqft = (h/12)*(w/12);
+        dimStr = m.h+'" × '+m.w+'" / '+sqft.toFixed(2)+' sq ft';
+        cost = sqft * priceInfo.rate;
+      } else {
+        dimStr = item.product==='PVC Door'
+          ? 'H:'+m.h+' × Top:'+m.top+(m.bottom&&m.bottom!=='—'?' × Bottom:'+m.bottom:'')
+          : (m.h&&m.w ? m.h+'" × '+m.w+'"' : m.h||'');
+        cost = priceInfo.rate;
+      }
+      var afterDisc = cost*(1-disc/100);
+      quoteItems.push({
+        product: item.product+(item.louverType?' ('+item.louverType+')':''),
+        direction: item.direction||'',
+        dimensions: dimStr,
+        sqft: sqft.toFixed(2),
+        unitPrice: priceInfo.rate,
+        priceType: priceInfo.type,
+        discountPct: disc,
+        total: Math.round(afterDisc)
+      });
+    });
+  });
+  return quoteItems;
+}
+
 async function submitForm() {
   if (!validate()) { window.scrollTo({top:0,behavior:'smooth'}); return; }
-  const items = collectItems();
+  var items = collectItems();
   if (!items.length) { showToast('Add at least one product with measurements'); return; }
 
-  // Show saving overlay — step 0: preparing
   showSaving();
   savingStep(0, 'Preparing data...');
 
-  const gpsLink = (capturedLat && capturedLng)
-    ? `https://maps.google.com/?q=${capturedLat},${capturedLng}` : null;
+  var gpsLink = (capturedLat&&capturedLng) ? 'https://maps.google.com/?q='+capturedLat+','+capturedLng : null;
+  var entryId = Date.now();
+  var discountVal = document.getElementById('discount').value.trim()||'0';
 
-  const entryId = Date.now();
-
-  // Step 1: upload photos
   savingStep(1, 'Uploading photos to Drive...');
-  const photoLinks = await uploadPhotosToDrive(entryId);
+  var photoLinks = await uploadPhotosToDrive(entryId);
 
-  const entry = {
+  var entry = {
     id: entryId,
     timestamp: new Date().toISOString(),
     worker: document.getElementById('worker').value,
     date: document.getElementById('date').value,
     location: document.getElementById('location').value.trim(),
-    customer: document.getElementById('customer').value.trim() || '—',
-    phone: document.getElementById('phone').value.trim() || '—',
+    customer: document.getElementById('customer').value.trim()||'—',
+    phone: document.getElementById('phone').value.trim()||'—',
     lat: capturedLat, lng: capturedLng,
-    gpsLink: gpsLink || '—',
-    items,
+    gpsLink: gpsLink||'—',
+    items: items,
     notes: document.getElementById('notes').value.trim(),
     photoCount: photoLinks.length,
-    photoLinks: photoLinks
+    photoLinks: photoLinks,
+    discountPct: discountVal
   };
 
-  // Save locally
-  const existing = JSON.parse(localStorage.getItem('si_measurements') || '[]');
+  var existing = JSON.parse(localStorage.getItem('si_measurements')||'[]');
   existing.unshift(entry);
   localStorage.setItem('si_measurements', JSON.stringify(existing));
 
-  // Step 2: sync to Sheets
   savingStep(2, 'Syncing to Google Sheets...');
-  let sheetsMsg = '';
-  if (SHEETS_URL) {
-    try {
-      await sendToSheets(null, buildRows(entry));
-      sheetsMsg = ' · Sent to Sheets ✓';
-    } catch(e) {
-      console.error('Sheets error:', e);
-      sheetsMsg = ' · Sheets sync failed (saved locally)';
-    }
-  }
+  var sheetsMsg = '';
+  try {
+    await sendToSheets(null, buildRows(entry));
+    sheetsMsg = ' · Sent to Sheets ✓';
+  } catch(e) { console.error('Sheets error:', e); sheetsMsg = ' · Sheets sync failed (saved locally)'; }
+
+  savingStep(3, 'Creating quotation...');
+  var quoteCreated = false, quoteId = '', quoteTotal = 0;
+  try {
+    var quoteItems = calcQuotationItems(items, discountVal);
+    quoteTotal = quoteItems.reduce(function(s,qi){ return s+qi.total; }, 0);
+    quoteId = 'Q' + entryId.toString().slice(-10);
+    var quotePayload = {
+      action: 'createQuotation',
+      quoteId: quoteId,
+      date: entry.date,
+      teamMember: entry.worker,
+      location: entry.location,
+      customer: entry.customer,
+      phone: entry.phone,
+      discountPct: discountVal,
+      items: quoteItems,
+      total: quoteTotal
+    };
+    var quoteResult = await callAppsScript(quotePayload);
+    if (quoteResult && quoteResult.status === 'ok') quoteCreated = true;
+    else console.warn('Quote result:', quoteResult);
+  } catch(e) { console.error('Quotation error:', e); }
 
   hideSaving();
 
-  const total = items.reduce((s,i) => s+i.measurements.length, 0);
+  var totalMeas = items.reduce(function(s,i){ return s+i.measurements.length; }, 0);
   document.getElementById('success-detail').textContent =
-    `${items.length} product(s), ${total} measurement(s) — ${entry.location} · ${entry.worker}${sheetsMsg}`;
+    items.length+' product(s), '+totalMeas+' measurement(s) — '+entry.location+' · '+entry.worker+sheetsMsg;
 
-  const summary = buildWASummary(entry);
+  var quoteBadge = document.getElementById('quote-badge');
+  if (quoteCreated) {
+    quoteBadge.style.display = 'flex';
+    document.getElementById('quote-badge-sub').textContent =
+      quoteId+' · ₹'+quoteTotal.toLocaleString('en-IN')+(parseFloat(discountVal)>0?' (after '+discountVal+'% discount)':'')+' · Pending approval';
+  } else { quoteBadge.style.display = 'none'; }
+
+  var summary = buildWASummary(entry);
   document.getElementById('wa-summary').textContent = summary;
   window._waSummary = summary;
-
   try {
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(summary).catch(() => {});
-    } else {
-      const ta = document.createElement('textarea');
-      ta.value = summary;
-      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
-      document.body.appendChild(ta);
-      ta.focus(); ta.select();
-      try { document.execCommand('copy'); } catch(e) {}
-      document.body.removeChild(ta);
-    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(summary).catch(function(){});
+    else { var ta=document.createElement('textarea'); ta.value=summary; ta.style.cssText='position:fixed;top:0;left:0;opacity:0;'; document.body.appendChild(ta); ta.focus(); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); }
   } catch(e) {}
 
   document.getElementById('form-section').style.display = 'none';
@@ -1059,341 +758,215 @@ async function submitForm() {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ── WHATSAPP SUMMARY ──
 function buildWASummary(e) {
-  const d = new Date(e.timestamp);
-  const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-  const lines = [];
+  var d = new Date(e.timestamp);
+  var timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var lines = [];
   lines.push('📐 *Smart Interiors — Site Measurement*');
   lines.push('━━━━━━━━━━━━━━━━━━━━━');
-  lines.push(`📅 Date: ${e.date}   🕐 Time: ${timeStr}`);
-  lines.push(`👤 Team Member: ${e.worker}`);
-  lines.push(`📍 Location: ${e.location}`);
-  if (e.gpsLink && e.gpsLink !== '—') lines.push(`🗺 Directions: ${e.gpsLink}`);
-  if (e.customer !== '—') lines.push(`🏠 Customer: ${e.customer}`);
-  if (e.phone !== '—') lines.push(`📞 Phone: ${e.phone}`);
+  lines.push('📅 Date: '+e.date+'   🕐 Time: '+timeStr);
+  lines.push('👤 Team Member: '+e.worker);
+  lines.push('📍 Location: '+e.location);
+  if (e.gpsLink&&e.gpsLink!=='—') lines.push('🗺 Directions: '+e.gpsLink);
+  if (e.customer!=='—') lines.push('🏠 Customer: '+e.customer);
+  if (e.phone!=='—') lines.push('📞 Phone: '+e.phone);
   lines.push('━━━━━━━━━━━━━━━━━━━━━');
-
-  e.items.forEach((item) => {
-    const dirStr = item.direction ? ` (${item.direction})` : '';
-    const louverStr = item.louverType ? ` — ${item.louverType}` : '';
-    lines.push(`\n🪟 *${item.product}${louverStr}${dirStr}*`);
-    item.measurements.forEach((m, mi) => {
-      if (item.product === 'PVC Door') {
-        const botStr = m.bottom && m.bottom !== '—' ? `  ×  Bottom: ${m.bottom}` : '';
-        lines.push(`  ${mi+1}. H: ${m.h}  ×  Top: ${m.top}${botStr}`);
-      } else {
-        lines.push(`  ${mi+1}. H: ${m.h}  ×  W: ${m.w}`);
-      }
+  e.items.forEach(function(item) {
+    var dirStr = item.direction?' ('+item.direction+')':'';
+    var louverStr = item.louverType?' — '+item.louverType:'';
+    lines.push('\n🪟 *'+item.product+louverStr+dirStr+'*');
+    item.measurements.forEach(function(m,mi) {
+      if (item.product==='PVC Door') {
+        var botStr = m.bottom&&m.bottom!=='—'?'  ×  Bottom: '+m.bottom:'';
+        lines.push('  '+(mi+1)+'. H: '+m.h+'  ×  Top: '+m.top+botStr);
+      } else { lines.push('  '+(mi+1)+'. H: '+m.h+'  ×  W: '+m.w); }
     });
   });
-
-  if (e.notes) {
-    lines.push('\n━━━━━━━━━━━━━━━━━━━━━');
-    lines.push(`📝 Notes: ${e.notes}`);
-  }
-  if (e.photoLinks && e.photoLinks.length > 0) {
-    lines.push(`📷 Photos (${e.photoLinks.length}):`);
-    e.photoLinks.forEach((link, i) => lines.push(`  Photo ${i+1}: ${link}`));
+  if (e.notes) { lines.push('\n━━━━━━━━━━━━━━━━━━━━━'); lines.push('📝 Notes: '+e.notes); }
+  if (e.photoLinks&&e.photoLinks.length>0) {
+    lines.push('📷 Photos ('+e.photoLinks.length+'):');
+    e.photoLinks.forEach(function(link,i){ lines.push('  Photo '+(i+1)+': '+link); });
   }
   lines.push('\n━━━━━━━━━━━━━━━━━━━━━');
   return lines.join('\n');
 }
 
 function copySummary() {
-  const text = document.getElementById('wa-summary').textContent;
-  const confirm = document.getElementById('copy-confirm');
-  const fallback = () => {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); } catch(e) {}
-    document.body.removeChild(ta);
-    confirm.style.display = 'block';
-    setTimeout(() => { confirm.style.display='none'; }, 3000);
+  var text = document.getElementById('wa-summary').textContent;
+  var confirm = document.getElementById('copy-confirm');
+  var fallback = function() {
+    var ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta);
+    confirm.style.display='block'; setTimeout(function(){confirm.style.display='none';},3000);
   };
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      confirm.style.display = 'block';
-      setTimeout(() => { confirm.style.display='none'; }, 3000);
-    }).catch(fallback);
-  } else { fallback(); }
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(function(){ confirm.style.display='block'; setTimeout(function(){confirm.style.display='none';},3000); }).catch(fallback);
+  else fallback();
 }
 
-// ── CALL APPS SCRIPT DIRECTLY — no proxy needed with GitHub Pages ──
-// Apps Script handles CORS via ContentService JSON response
 async function callAppsScript(payload) {
-  const response = await fetch(SHEETS_URL, {
-    method: 'POST',
-    // Apps Script requires text/plain for direct browser POST (no CORS preflight)
-    // Using application/json triggers a preflight that Apps Script can't handle
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
-  });
-  const text = await response.text();
-  try { return JSON.parse(text); }
-  catch { return { raw: text }; }
+  var response = await fetch(SHEETS_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
+  var text = await response.text();
+  try { return JSON.parse(text); } catch { return {raw:text}; }
 }
 
 async function sendToSheets(url, rows) {
-  try {
-    const result = await callAppsScript({ action: 'saveRows', rows: rows });
-    console.log('Sheets result:', result);
-  } catch(err) {
-    console.error('sendToSheets error:', err);
-  }
+  try { var result = await callAppsScript({action:'saveRows', rows:rows}); console.log('Sheets result:', result); }
+  catch(err) { console.error('sendToSheets error:', err); }
 }
 
-// ── SHEET ROWS — one row per measurement, photo link on every row ──
-// Why option 1: keeps full column structure for analysis in Sheets
-// Photo is copied to all rows so it's always accessible regardless of which row is viewed
 function buildRows(entry) {
-  const rows = [];
-  const d = new Date(entry.timestamp);
-  const time = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-
-  // Photo links — same value repeated on every row of this entry
-  const photoCell = (entry.photoLinks && entry.photoLinks.length)
-    ? entry.photoLinks.join('\n') : '';
-
-  entry.items.forEach((item, ii) => {
-    item.measurements.forEach((m, mi) => {
-      const isPVC = item.product === 'PVC Door';
-      const meas = isPVC
-        ? (m.bottom && m.bottom !== '—'
-            ? 'H:' + m.h + ' x Top:' + m.top + ' x Bottom:' + m.bottom
-            : 'H:' + m.h + ' x Top:' + m.top)
-        : 'H:' + m.h + ' x W:' + m.w;
-      const productLabel = item.louverType
-        ? item.product + ' (' + item.louverType + ')' : item.product;
+  var rows = [];
+  var d = new Date(entry.timestamp);
+  var time = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var photoCell = (entry.photoLinks&&entry.photoLinks.length) ? entry.photoLinks.join('\n') : '';
+  entry.items.forEach(function(item,ii) {
+    item.measurements.forEach(function(m,mi) {
+      var isPVC = item.product==='PVC Door';
+      var meas = isPVC
+        ? (m.bottom&&m.bottom!=='—'?'H:'+m.h+' x Top:'+m.top+' x Bottom:'+m.bottom:'H:'+m.h+' x Top:'+m.top)
+        : 'H:'+m.h+' x W:'+m.w;
+      var productLabel = item.louverType ? item.product+' ('+item.louverType+')' : item.product;
       rows.push({
-        Date: entry.date, Time: time,
-        TeamMember: entry.worker, Location: entry.location,
-        Customer: entry.customer, Phone: entry.phone,
-        GPSLink: entry.gpsLink,
-        Product: productLabel,
-        Direction: item.direction || '—',
-        OpeningNo: ii + 1, MeasNo: mi + 1,
-        Height: m.h,
-        Width: isPVC ? '—' : m.w,
-        Top: isPVC ? m.top : '—',
-        Bottom: isPVC ? (m.bottom || '—') : '—',
-        Measurement: meas,
-        Notes: mi === 0 && ii === 0 ? entry.notes : '',
-        Photos: photoCell  // same link on every row
+        Date:entry.date, Time:time, TeamMember:entry.worker, Location:entry.location,
+        Customer:entry.customer, Phone:entry.phone, GPSLink:entry.gpsLink,
+        Product:productLabel, Direction:item.direction||'—',
+        OpeningNo:ii+1, MeasNo:mi+1, Height:m.h,
+        Width:isPVC?'—':m.w, Top:isPVC?m.top:'—', Bottom:isPVC?(m.bottom||'—'):'—',
+        Measurement:meas, Notes:mi===0&&ii===0?entry.notes:'', Photos:photoCell
       });
     });
   });
   return rows;
 }
 
-// ── RESET ──
 function resetForm() {
   document.getElementById('form-section').style.display = 'block';
   document.getElementById('success-screen').style.display = 'none';
-  ['location','customer','phone','notes'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.value = '';
-  });
+  document.getElementById('quote-badge').style.display = 'none';
+  ['location','customer','phone','notes','discount'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('worker').value = '';
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
-  capturedLat = null; capturedLng = null;
-  photoDataURLs = []; photoFileNames = [];
+  capturedLat=null; capturedLng=null; photoDataURLs=[]; photoFileNames=[];
   document.getElementById('photo-previews').innerHTML = '';
   document.getElementById('photo-upload-status').textContent = '';
   document.getElementById('gps-status').className = 'gps-status';
   document.getElementById('gps-status').textContent = 'Not captured yet';
   document.getElementById('gps-info-box').style.display = 'none';
   document.getElementById('items-list').innerHTML = '';
-  itemCount = 0; addItem();
+  itemCount=0; addItem();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ── DATA PANEL — Fetch last 20 from Sheets ──
 function toggleData() {
-  const p = document.getElementById('data-panel');
+  var p = document.getElementById('data-panel');
   p.style.display = p.style.display==='block' ? 'none' : 'block';
   if (p.style.display==='block') loadEntriesFromSheets();
 }
 
 async function loadEntriesFromSheets() {
-  const list = document.getElementById('entries-list');
+  var list = document.getElementById('entries-list');
   list.innerHTML = '<div class="loading-entries">⏳ Loading last 20 entries...</div>';
   try {
-    const result = await callAppsScript({ action: 'getRecent', limit: 20 });
-    if (result.rows && result.rows.length) {
-      renderSheetEntries(result.rows);
-    } else {
-      list.innerHTML = '<div class="no-entries">No entries found in Sheets.</div>';
-    }
-  } catch(err) {
-    console.warn('Sheets fetch failed, falling back to localStorage:', err);
-    renderLocalEntries();
-  }
+    var result = await callAppsScript({action:'getRecent', limit:20});
+    if (result.rows&&result.rows.length) renderSheetEntries(result.rows);
+    else list.innerHTML = '<div class="no-entries">No entries found in Sheets.</div>';
+  } catch(err) { console.warn('Sheets fetch failed:', err); renderLocalEntries(); }
 }
 
 function renderSheetEntries(rows) {
-  const list = document.getElementById('entries-list');
-  // rows already grouped into entries by getRecent — one object per entry
+  var list = document.getElementById('entries-list');
   window._sheetEntries = rows;
-  if (!rows.length) { list.innerHTML = '<div class="no-entries">No entries found.</div>'; return; }
-
-  list.innerHTML = rows.map((e, idx) => {
-    const photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
-    const photoIndicator = photoLinks.length
-      ? `<span style="color:var(--blue);font-size:0.72rem;">📷 ${photoLinks.length} photo(s)</span>` : '';
-    return `<div class="entry-card" onclick="openEntryModal(${idx})">
-      <div class="ec-header">
-        <span class="ec-worker">👤 ${e.TeamMember}</span>
-        <span class="ec-date">${e.Date} · ${e.Time}</span>
-      </div>
-      <div class="ec-meta">📍 ${e.Location} · ${e.Customer || '—'}${e.Phone && e.Phone !== '—' ? ' · 📞 ' + e.Phone : ''}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
-        <span style="font-size:0.72rem;color:var(--muted);">${e.Products || ''}</span>
-        ${photoIndicator}
-      </div>
-      <div class="ec-tap-hint">Tap to view details →</div>
-    </div>`;
+  if (!rows.length) { list.innerHTML='<div class="no-entries">No entries found.</div>'; return; }
+  list.innerHTML = rows.map(function(e,idx) {
+    var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
+    var photoInd = photoLinks.length ? '<span style="color:var(--blue);font-size:0.72rem;">📷 '+photoLinks.length+' photo(s)</span>' : '';
+    return '<div class="entry-card" onclick="openEntryModal('+idx+')">' +
+      '<div class="ec-header"><span class="ec-worker">👤 '+e.TeamMember+'</span><span class="ec-date">'+e.Date+' · '+e.Time+'</span></div>' +
+      '<div class="ec-meta">📍 '+e.Location+' · '+(e.Customer||'—')+(e.Phone&&e.Phone!=='—'?' · 📞 '+e.Phone:'')+'</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">' +
+      '<span style="font-size:0.72rem;color:var(--muted);">'+(e.Products||'')+'</span>'+photoInd+'</div>' +
+      '<div class="ec-tap-hint">Tap to view details →</div></div>';
   }).join('');
 }
 
 function openEntryModal(idx) {
-  const e = window._sheetEntries && window._sheetEntries[idx];
+  var e = window._sheetEntries && window._sheetEntries[idx];
   if (!e) return;
-
-  // Build summary from flat single-row structure
-  const lines = [];
+  var lines = [];
   lines.push('📐 Smart Interiors — Site Measurement');
   lines.push('━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('📅 Date: ' + e.Date + '   🕐 Time: ' + e.Time);
-  lines.push('👤 Team Member: ' + e.TeamMember);
-  lines.push('📍 Location: ' + e.Location);
-  if (e.GPSLink && e.GPSLink !== '—') lines.push('🗺 Directions: ' + e.GPSLink);
-  if (e.Customer && e.Customer !== '—') lines.push('🏠 Customer: ' + e.Customer);
-  if (e.Phone && e.Phone !== '—') lines.push('📞 Phone: ' + e.Phone);
+  lines.push('📅 Date: '+e.Date+'   🕐 Time: '+e.Time);
+  lines.push('👤 Team Member: '+e.TeamMember);
+  lines.push('📍 Location: '+e.Location);
+  if (e.GPSLink&&e.GPSLink!=='—') lines.push('🗺 Directions: '+e.GPSLink);
+  if (e.Customer&&e.Customer!=='—') lines.push('🏠 Customer: '+e.Customer);
+  if (e.Phone&&e.Phone!=='—') lines.push('📞 Phone: '+e.Phone);
   lines.push('━━━━━━━━━━━━━━━━━━━━━');
-  // Measurements stored as compact summary — split by || for each product block
-  if (e.Measurements) {
-    e.Measurements.split(' || ').forEach(block => lines.push('\n🪟 ' + block.trim()));
-  }
-  if (e.Notes) lines.push('\n📝 Notes: ' + e.Notes);
+  if (e.Measurements) e.Measurements.split(' || ').forEach(function(block){ lines.push('\n🪟 '+block.trim()); });
+  if (e.Notes) lines.push('\n📝 Notes: '+e.Notes);
   lines.push('\n━━━━━━━━━━━━━━━━━━━━━');
-
   document.getElementById('modal-summary').textContent = lines.join('\n');
-  document.getElementById('modal-title').textContent = e.TeamMember + ' · ' + e.Date;
-
-  // Photos — newline-separated Drive links stored in cell note
-  const photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
-  const photosSection = document.getElementById('modal-photos');
-  const photoLinksEl = document.getElementById('modal-photo-links');
+  document.getElementById('modal-title').textContent = e.TeamMember+' · '+e.Date;
+  var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
+  var photosSection = document.getElementById('modal-photos');
   if (photoLinks.length) {
-    photoLinksEl.innerHTML = photoLinks.map((link, i) =>
-      '<a class="modal-photo-link" href="' + link + '" target="_blank">🖼 View Photo ' + (i+1) + '</a>'
-    ).join('');
+    document.getElementById('modal-photo-links').innerHTML = photoLinks.map(function(link,i){
+      return '<a class="modal-photo-link" href="'+link+'" target="_blank">🖼 View Photo '+(i+1)+'</a>';
+    }).join('');
     photosSection.style.display = 'block';
-  } else {
-    photosSection.style.display = 'none';
-  }
-
+  } else { photosSection.style.display = 'none'; }
   document.getElementById('entry-modal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
-
-function closeModal() {
-  document.getElementById('entry-modal').classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-function closeEntryModal(event) {
-  // Close only if clicking the backdrop (not the sheet itself)
-  if (event.target === document.getElementById('entry-modal')) closeModal();
-}
+function closeModal() { document.getElementById('entry-modal').classList.remove('active'); document.body.style.overflow=''; }
+function closeEntryModal(event) { if (event.target===document.getElementById('entry-modal')) closeModal(); }
 
 function copyModalSummary() {
-  const text = document.getElementById('modal-summary').textContent;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => showToast('Summary copied!')).catch(() => {});
-  } else {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); showToast('Summary copied!'); } catch(e) {}
-    document.body.removeChild(ta);
-  }
+  var text = document.getElementById('modal-summary').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(function(){ showToast('Summary copied!'); }).catch(function(){});
+  else { var ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0;'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); showToast('Summary copied!');}catch(e){} document.body.removeChild(ta); }
 }
 
-// Fallback: render from localStorage if Sheets fetch fails
 function renderLocalEntries() {
-  const entries = JSON.parse(localStorage.getItem('si_measurements') || '[]');
-  const list = document.getElementById('entries-list');
+  var entries = JSON.parse(localStorage.getItem('si_measurements')||'[]');
+  var list = document.getElementById('entries-list');
   if (!entries.length) { list.innerHTML='<div class="no-entries">No entries yet.</div>'; return; }
-  // Convert local format to same shape as sheet entries for openEntryModal reuse
-  const converted = entries.slice(0,20).map(e => {
-    const d = new Date(e.timestamp);
-    const ds = d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-    const ts = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    const items = {};
-    (e.items||[]).forEach((item, ii) => {
-      items[ii] = {
-        product: item.product,
-        direction: item.direction || '—',
-        measurements: item.measurements.map(m => {
-          const isPVC = item.product === 'PVC Door';
-          const meas = isPVC
-            ? (m.bottom && m.bottom !== '—' ? `H:${m.h} x Top:${m.top} x Bottom:${m.bottom}` : `H:${m.h} x Top:${m.top}`)
-            : `H:${m.h} x W:${m.w}`;
-          return { meas };
-        })
-      };
-    });
+  var converted = entries.slice(0,20).map(function(e) {
+    var d = new Date(e.timestamp);
     return {
-      Date: ds, Time: ts,
-      TeamMember: e.worker, Location: e.location,
-      Customer: e.customer, Phone: e.phone,
-      GPSLink: e.gpsLink || '—', Notes: e.notes,
-      Photos: (e.photoLinks && e.photoLinks.length) ? e.photoLinks.join('\n') : '',
-      items
+      Date: d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),
+      Time: d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+      TeamMember:e.worker, Location:e.location, Customer:e.customer, Phone:e.phone,
+      GPSLink:e.gpsLink||'—', Notes:e.notes,
+      Photos:(e.photoLinks&&e.photoLinks.length)?e.photoLinks.join('\n'):'',
+      Products:(e.items||[]).map(function(i){ return i.product; }).join(', ')
     };
   });
   window._sheetEntries = converted;
-  list.innerHTML = converted.map((e, idx) => {
-    const photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
-    const photoIndicator = photoLinks.length
-      ? `<span style="color:var(--blue);font-size:0.72rem;">📷 ${photoLinks.length} photo(s)</span>` : '';
-    return `<div class="entry-card" onclick="openEntryModal(${idx})">
-      <div class="ec-header">
-        <span class="ec-worker">👤 ${e.TeamMember}</span>
-        <span class="ec-date">${e.Date} · ${e.Time}</span>
-      </div>
-      <div class="ec-meta">📍 ${e.Location} · ${e.Customer || '—'}${e.Phone && e.Phone !== '—' ? ' · 📞 ' + e.Phone : ''}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
-        <span style="font-size:0.72rem;color:var(--muted);">${Object.keys(e.items).length} product(s)</span>
-        ${photoIndicator}
-      </div>
-      <div class="ec-tap-hint">Tap to view details →</div>
-    </div>`;
+  list.innerHTML = converted.map(function(e,idx) {
+    var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
+    var photoInd = photoLinks.length ? '<span style="color:var(--blue);font-size:0.72rem;">📷 '+photoLinks.length+' photo(s)</span>' : '';
+    return '<div class="entry-card" onclick="openEntryModal('+idx+')">' +
+      '<div class="ec-header"><span class="ec-worker">👤 '+e.TeamMember+'</span><span class="ec-date">'+e.Date+' · '+e.Time+'</span></div>' +
+      '<div class="ec-meta">📍 '+e.Location+' · '+(e.Customer||'—')+'</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">' +
+      '<span style="font-size:0.72rem;color:var(--muted);">'+(e.Products||'')+'</span>'+photoInd+'</div>' +
+      '<div class="ec-tap-hint">Tap to view details →</div></div>';
   }).join('');
 }
 
-
-
-
-// ── WHATSAPP OPEN ──
 function openWhatsApp() {
-  const summary = window._waSummary || document.getElementById('wa-summary').textContent;
-  const waText = encodeURIComponent(summary);
-  window.open('https://api.whatsapp.com/send?text=' + waText, '_blank');
+  var summary = window._waSummary||document.getElementById('wa-summary').textContent;
+  window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(summary),'_blank');
 }
 
-// ── TOAST ──
 function showToast(msg) {
-  const t = document.createElement('div');
+  var t = document.createElement('div');
   t.textContent = msg;
-  t.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-    background:#1A1A2E;color:white;padding:9px 20px;border-radius:20px;
-    font-size:0.8rem;z-index:9999;white-space:nowrap;transition:opacity 0.5s;`;
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A1A2E;color:white;padding:9px 20px;border-radius:20px;font-size:0.8rem;z-index:9999;white-space:nowrap;transition:opacity 0.5s;';
   document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(),500); }, 2200);
+  setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); },500); },2200);
 }
 </script>
 </body>
