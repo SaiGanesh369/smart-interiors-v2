@@ -449,234 +449,245 @@ async function handleAction(quoteId, action, idx) {
 }
 
 // ════════════════════════════════════════
-// ── PDF GENERATION ──
-// Uses jsPDF to build a clean bill PDF matching the agreed design
+// ── PDF GENERATION — Option B: Clean White + Orange Accents
+// Rs. used instead of Rs. symbol — jsPDF base fonts don't support it
 // ════════════════════════════════════════
 function generatePDF(idx) {
   var q = allQuotes[idx];
-  if (!q) return;
+  if (!q) { showToast('Quote data not found', 'error'); return; }
 
   if (typeof window.jspdf === 'undefined') {
-    showToast('PDF library loading, try again in a moment...', 'info');
+    showToast('PDF library loading, try again...', 'info');
     return;
   }
 
   var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
-  var W = 210; // page width mm
-  var margin = 16;
-  var y = 0;
+  var W  = 210;
+  var M  = 18;
+  var y  = 0;
 
-  // ── ORANGE HEADER ──
+  var billNo   = q._billNo || ('B' + Date.now().toString().slice(-8));
+  var customer = (q.Customer && q.Customer !== '—') ? q.Customer : 'Customer';
+  var phone    = (q.Phone && q.Phone !== '—') ? q.Phone : '—';
+  var location = q.Location || '—';
+  var dateStr  = fmtDate(q.Date);
+
+  // ── THIN ORANGE TOP BAR ──
   doc.setFillColor(255, 107, 0);
-  doc.rect(0, 0, W, 32, 'F');
+  doc.rect(0, 0, W, 4, 'F');
 
-  // Company name
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(18);
-  doc.setTextColor(255,255,255);
-  doc.text('Smart Interiors', margin, 13);
-
-  doc.setFont('helvetica','normal');
+  // ── COMPANY NAME (left) ──
+  y = 16;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(26, 26, 46);
+  doc.text('Smart Interiors', M, y);
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.setTextColor(255,220,180);
-  doc.text('Site Measurement & Works', margin, 19);
+  doc.setTextColor(170, 170, 170);
+  doc.text('Site Measurement & Works', M, y + 6);
 
-  // Bill No + Date (right side)
-  var billNo = q._billNo || ('B'+Date.now().toString().slice(-8));
-  doc.setFont('helvetica','normal');
+  // ── BILL NO (right) ──
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.setTextColor(255,220,180);
-  doc.text('BILL NO.', W-margin, 11, {align:'right'});
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(11);
-  doc.setTextColor(255,255,255);
-  doc.text(billNo, W-margin, 17, {align:'right'});
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
-  doc.setTextColor(255,220,180);
-  doc.text(fmtDate(q.Date), W-margin, 23, {align:'right'});
-
-  // Thin accent line
-  doc.setFillColor(255,154,77);
-  doc.rect(0, 32, W, 1.2, 'F');
-
-  y = 38;
-
-  // ── BILL TO SECTION ──
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(255,107,0);
-  doc.text('BILL TO', margin, y);
-  y += 5;
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(12);
-  doc.setTextColor(26,26,46);
-  doc.text(q.Customer&&q.Customer!=='—' ? q.Customer : 'Customer', margin, y);
-  y += 5;
-
-  doc.setFont('helvetica','normal');
+  doc.setTextColor(255, 107, 0);
+  doc.text('BILL NO.', W - M, y - 2, { align: 'right' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(26, 26, 46);
+  doc.text(billNo, W - M, y + 6, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.setTextColor(100,100,130);
-  var metaLine = '';
-  if (q.Phone&&q.Phone!=='—') metaLine += q.Phone+'   ';
-  if (q.Location) metaLine += q.Location;
-  if (metaLine) { doc.text(metaLine.trim(), margin, y); y += 5; }
+  doc.setTextColor(170, 170, 170);
+  doc.text(dateStr, W - M, y + 12, { align: 'right' });
 
-  // Divider
-  y += 2;
-  doc.setDrawColor(224,228,239);
-  doc.setLineWidth(0.3);
-  doc.line(margin, y, W-margin, y);
-  y += 6;
+  // ── DIVIDER ──
+  y = 36;
+  doc.setDrawColor(230, 230, 230);
+  doc.setLineWidth(0.4);
+  doc.line(M, y, W - M, y);
 
-  // ── ITEMS TABLE HEADER ──
-  var colX = [margin, 100, 130, 160, W-margin];
-  // Orange header bg
-  doc.setFillColor(255,243,235);
-  doc.roundedRect(margin, y-3, W-margin*2, 8, 2, 2, 'F');
+  // ── CUSTOMER — 3 columns ──
+  y = 45;
+  var cx = [M, M + 62, M + 120];
+  var labels = ['CUSTOMER', 'MOBILE', 'LOCATION'];
+  var values = [customer, phone, location];
+  for (var ci = 0; ci < 3; ci++) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(255, 107, 0);
+    doc.text(labels[ci], cx[ci], y);
+    doc.setFont('helvetica', ci === 0 ? 'bold' : 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(ci === 0 ? 26 : 80, ci === 0 ? 26 : 80, ci === 0 ? 46 : 100);
+    doc.text(values[ci], cx[ci], y + 6);
+  }
 
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(255,107,0);
-  doc.text('ITEM · MEASUREMENT', colX[0]+2, y+2);
-  doc.text('QTY', colX[1]+8, y+2, {align:'center'});
-  doc.text('UNIT', colX[2]+12, y+2, {align:'right'});
-  doc.text('TOTAL', colX[4], y+2, {align:'right'});
+  // ── DIVIDER ──
+  y = 60;
+  doc.setDrawColor(230, 230, 230);
+  doc.setLineWidth(0.4);
+  doc.line(M, y, W - M, y);
   y += 8;
 
-  // ── ITEMS ROWS ──
-  var grouped = {};
-  var groupOrder = [];
-  (q.Items||[]).forEach(function(item) {
+  // ── TABLE HEADER ──
+  var cItem = M + 2;
+  var cQty  = M + 106;
+  var cUnit = W - M - 28;
+  var cTot  = W - M;
+
+  doc.setFillColor(255, 243, 235);
+  doc.roundedRect(M, y - 3, W - M * 2, 8, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(255, 107, 0);
+  doc.text('ITEM  ·  MEASUREMENT', cItem, y + 2);
+  doc.text('QTY', cQty, y + 2, { align: 'center' });
+  doc.text('UNIT', cUnit, y + 2, { align: 'right' });
+  doc.text('TOTAL', cTot, y + 2, { align: 'right' });
+  y += 10;
+
+  // ── GROUP ITEMS ──
+  var grouped = {}, groupOrder = [];
+  (q.Items || []).forEach(function(item) {
     var key = (item.product||'')+'||'+(item.dimensions||'')+'||'+(item.unitPrice||0);
     if (!grouped[key]) { grouped[key]={item:item,qty:0,subtotal:0}; groupOrder.push(key); }
     grouped[key].qty++;
     grouped[key].subtotal += calcItemSubtotal(item);
   });
 
-  var altFill = false;
   var subtotalSum = 0;
+  var alt = false;
 
   groupOrder.forEach(function(key) {
-    var g = grouped[key];
-    var item = g.item;
-    var sqft = parseFloat(item.sqft) || extractSqft(item.dimensions||'');
-    var unitPrice = parseFloat(item.unitPrice)||0;
-    var rowTotal = Math.round(g.subtotal);
-    subtotalSum += rowTotal;
-    var unitDisplay = sqft>0 ? '₹'+Math.round(sqft*unitPrice).toLocaleString('en-IN') : '₹'+unitPrice.toLocaleString('en-IN');
+    var g      = grouped[key];
+    var item   = g.item;
+    var sqft   = parseFloat(item.sqft) || extractSqft(item.dimensions || '');
+    var uprice = parseFloat(item.unitPrice) || 0;
+    var rowTot = Math.round(g.subtotal);
+    subtotalSum += rowTot;
 
-    // Dimension text
-    var dimText = '';
+    var unitDisp = sqft > 0
+      ? 'Rs.' + Math.round(sqft * uprice).toLocaleString('en-IN')
+      : 'Rs.' + uprice.toLocaleString('en-IN');
+
+    // Dimension line
+    var dimLine = '';
     if (sqft > 0) {
-      var nums = (item.dimensions||'').match(/(\d[\d\s\/]*)"?\s*[×x]\s*(\d[\d\s\/]*)"?/);
-      if (nums) dimText = nums[1].trim()+' W × '+nums[2].trim()+' H  ·  '+sqft.toFixed(2)+' sq ft  ·  @₹'+unitPrice+'/sq ft';
-      else dimText = (item.dimensions||'');
+      var nm = (item.dimensions || '').match(/(\d[\d\s\/]*)"?\s*[x×]\s*(\d[\d\s\/]*)"?/i);
+      dimLine = nm
+        ? nm[1].trim() + 'W x ' + nm[2].trim() + 'H  |  ' + sqft.toFixed(2) + ' sq ft  |  @Rs.' + uprice + '/sq ft'
+        : (item.dimensions || '');
     } else {
-      var stripped = (item.dimensions||'').replace(/H:/gi,'').replace(/W:/gi,'').replace(/Top:/gi,'').replace(/Bottom:/gi,'').trim();
-      dimText = stripped;
+      dimLine = (item.dimensions || '')
+        .replace(/H:/gi,'').replace(/W:/gi,'').replace(/Top:/gi,'')
+        .replace(/Bottom:/gi,'').replace(/Width:/gi,'').replace(/Height:/gi,'').trim();
     }
 
-    var rowH = dimText ? 10 : 7;
+    var rh = dimLine ? 12 : 8;
+    if (y + rh > 262) { doc.addPage(); y = 20; }
 
-    // Check page overflow
-    if (y + rowH > 260) { doc.addPage(); y = 20; }
-
-    if (altFill) {
-      doc.setFillColor(248,249,255);
-      doc.rect(margin, y-2, W-margin*2, rowH+1, 'F');
+    if (alt) {
+      doc.setFillColor(250, 250, 252);
+      doc.rect(M, y - 2, W - M * 2, rh + 2, 'F');
     }
-    altFill = !altFill;
+    alt = !alt;
 
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(9);
-    doc.setTextColor(26,26,46);
-    doc.text(item.product||'', colX[0]+2, y+3);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(26, 26, 46);
+    doc.text(item.product || '', cItem, y + 4);
 
-    if (dimText) {
-      doc.setFont('helvetica','normal');
+    if (dimLine) {
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
-      doc.setTextColor(120,120,160);
-      doc.text(dimText, colX[0]+2, y+7);
+      doc.setTextColor(170, 170, 170);
+      doc.text(dimLine, cItem, y + 9);
     }
 
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(9);
-    doc.setTextColor(26,26,46);
-    doc.text(String(g.qty), colX[1]+8, y+3, {align:'center'});
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(26, 26, 46);
+    doc.text(String(g.qty), cQty, y + 4, { align: 'center' });
 
-    doc.setFont('helvetica','normal');
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(120,120,160);
-    doc.text(unitDisplay, colX[2]+12, y+3, {align:'right'});
+    doc.setTextColor(170, 170, 170);
+    doc.text(unitDisp, cUnit, y + 4, { align: 'right' });
 
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(9);
-    doc.setTextColor(26,26,46);
-    doc.text('₹'+rowTotal.toLocaleString('en-IN'), colX[4], y+3, {align:'right'});
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(26, 26, 46);
+    doc.text('Rs.' + rowTot.toLocaleString('en-IN'), cTot, y + 4, { align: 'right' });
 
-    y += rowH + 2;
+    y += rh + 3;
   });
 
-  // Addon row
-  var addonAmt = parseFloat(q._addonAmt)||0;
-  var addonNote = q._addonNote||'';
+  // ── ADDON ROW ──
+  var addonAmt  = parseFloat(q._addonAmt) || 0;
+  var addonNote = q._addonNote || '';
   if (addonAmt > 0) {
-    if (altFill) { doc.setFillColor(248,249,255); doc.rect(margin,y-2,W-margin*2,10,0,'F'); }
-    var rowH = addonNote ? 10 : 7;
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(26,26,46);
-    doc.text('Add-on Charges', colX[0]+2, y+3);
-    if (addonNote) { doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(120,120,160); doc.text(addonNote, colX[0]+2, y+7); }
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(26,26,46);
-    doc.text('—', colX[1]+8, y+3, {align:'center'});
-    doc.text('—', colX[2]+12, y+3, {align:'right'});
-    doc.text('₹'+Math.round(addonAmt).toLocaleString('en-IN'), colX[4], y+3, {align:'right'});
+    var rh = addonNote ? 12 : 8;
+    if (y + rh > 262) { doc.addPage(); y = 20; }
+    if (alt) { doc.setFillColor(250,250,252); doc.rect(M,y-2,W-M*2,rh+2,'F'); }
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(26,26,46);
+    doc.text('Add-on Charges', cItem, y+4);
+    if (addonNote) {
+      doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(170,170,170);
+      doc.text(addonNote, cItem, y+9);
+    }
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(200,200,200);
+    doc.text('—', cQty, y+4, {align:'center'});
+    doc.text('—', cUnit, y+4, {align:'right'});
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(26,26,46);
+    doc.text('Rs.'+Math.round(addonAmt).toLocaleString('en-IN'), cTot, y+4, {align:'right'});
     subtotalSum += Math.round(addonAmt);
-    y += rowH + 2;
+    y += rh + 3;
   }
 
-  // Divider
-  y += 2;
-  doc.setDrawColor(224,228,239); doc.setLineWidth(0.3);
-  doc.line(margin, y, W-margin, y);
-  y += 5;
+  // ── DIVIDER ──
+  y += 3;
+  doc.setDrawColor(230,230,230); doc.setLineWidth(0.4);
+  doc.line(M, y, W-M, y);
+  y += 8;
 
-  // ── PRICE SUMMARY (right aligned) ──
-  var discPct = parseFloat(q.DiscountPct)||0;
-  var discAmt = Math.round(subtotalSum * discPct / 100);
+  // ── PRICE SUMMARY ──
+  var discPct  = parseFloat(q.DiscountPct) || 0;
+  var discAmt  = Math.round(subtotalSum * discPct / 100);
   var totalAmt = subtotalSum - discAmt;
-  var summaryX = W - margin - 80;
+  var sumX     = W - M - 78;
 
   if (discPct > 0) {
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,100,130);
-    doc.text('Subtotal', summaryX, y);
-    doc.text('₹'+subtotalSum.toLocaleString('en-IN'), W-margin, y, {align:'right'});
-    y += 6;
-    doc.setTextColor(34,197,94);
-    doc.text('Discount ('+discPct+'%)', summaryX, y);
-    doc.text('−₹'+discAmt.toLocaleString('en-IN'), W-margin, y, {align:'right'});
-    y += 6;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(150,150,170);
+    doc.text('Subtotal', sumX, y);
+    doc.text('Rs.'+subtotalSum.toLocaleString('en-IN'), cTot, y, {align:'right'});
+    y += 7;
+    doc.setTextColor(34, 150, 80);
+    doc.text('Discount ('+discPct+'%)', sumX, y);
+    doc.text('- Rs.'+discAmt.toLocaleString('en-IN'), cTot, y, {align:'right'});
+    y += 9;
   }
 
-  // Total — orange box
+  // Orange total box
   doc.setFillColor(255,107,0);
-  doc.roundedRect(summaryX-4, y-4, W-margin-summaryX+8, 12, 2, 2, 'F');
+  doc.roundedRect(sumX - 4, y - 4, cTot - sumX + 8, 14, 2, 2, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
-  doc.text('Total Amount', summaryX, y+4);
-  doc.text('₹'+totalAmt.toLocaleString('en-IN'), W-margin, y+4, {align:'right'});
-  y += 18;
+  doc.text('Total Amount', sumX, y + 6);
+  doc.setFontSize(14);
+  doc.text('Rs.'+totalAmt.toLocaleString('en-IN'), cTot, y + 6, {align:'right'});
 
   // ── FOOTER ──
-  doc.setFillColor(255,107,0);
+  doc.setFillColor(255,243,235);
   doc.rect(0, 282, W, 15, 'F');
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+  doc.setDrawColor(255,204,153); doc.setLineWidth(0.3);
+  doc.line(0, 282, W, 282);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(255,107,0);
   doc.text('Thank you for your business!', W/2, 291, {align:'center'});
 
-  // Save
-  var fileName = 'SmartInteriors_'+billNo+'_'+(q.Customer||'Bill').replace(/[^a-zA-Z0-9]/g,'_')+'.pdf';
-  doc.save(fileName);
-  showToast('📄 PDF downloaded!', 'success');
+  // ── SAVE ──
+  var safeName = (customer+'_'+billNo).replace(/[^a-zA-Z0-9_]/g,'_');
+  doc.save('SmartInteriors_'+safeName+'.pdf');
+  showToast('PDF downloaded!', 'success');
 }
 
 function showOverlay(msg) {
