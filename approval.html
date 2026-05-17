@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Smart Interiors – Owner Approval</title>
+<script>
+// ════════════════════════════════════════
+// CONFIG — must match measurement-form.html
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx9VV_tzmKYu5YLIZHFyxvPUK5ttpwjY5SMUkkjG4Sbfmwmmw3cP1Ut5zq9qleKqvnBjA/exec';
+// ════════════════════════════════════════
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Noto+Sans:wght@400;600&display=swap');
+  :root {
+    --orange:#FF6B00; --bg:#F4F6FA; --text:#1A1A2E; --muted:#7A7A9D;
+    --border:#E0E4EF; --green:#22C55E; --red:#EF4444; --blue:#3B82F6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;}
+  header{background:var(--orange);color:white;padding:16px 20px 12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(255,107,0,0.3);}
+  .header-inner{display:flex;align-items:center;gap:12px;}
+  .btn-back{background:rgba(255,255,255,0.2);color:white;border:1.5px solid rgba(255,255,255,0.5);border-radius:10px;padding:6px 12px;font-family:'Baloo 2',cursive;font-size:0.78rem;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px;flex-shrink:0;}
+  .btn-back:active{background:rgba(255,255,255,0.35);}
+  .header-text{flex:1;}
+  header h1{font-family:'Baloo 2',cursive;font-size:1.2rem;font-weight:800;}
+  header p{font-size:0.72rem;opacity:0.88;margin-top:2px;}
+  .container{max-width:480px;margin:0 auto;padding:14px;}
+
+  /* Filter tabs */
+  .filter-tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;}
+  .filter-tab{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Baloo 2',cursive;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .filter-tab.active{background:var(--orange);border-color:var(--orange);color:white;}
+
+  /* Quotation cards */
+  .quote-card{background:white;border-radius:16px;margin-bottom:14px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;}
+  .quote-card-header{padding:14px 16px 10px;border-bottom:1.5px solid var(--border);}
+  .quote-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+  .quote-id{font-family:'Baloo 2',cursive;font-weight:800;color:var(--orange);font-size:0.9rem;}
+  .status-badge{padding:3px 10px;border-radius:20px;font-size:0.68rem;font-weight:700;font-family:'Baloo 2',cursive;flex-shrink:0;}
+  .status-DRAFT{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;}
+  .status-APPROVED{background:#DCFCE7;color:#15803D;border:1px solid #86EFAC;}
+  .status-DENIED{background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;}
+  .quote-customer{font-weight:700;font-size:0.92rem;color:var(--text);}
+  .quote-meta{font-size:0.75rem;color:var(--muted);line-height:1.7;margin-top:2px;}
+  .quote-card-body{padding:12px 16px;}
+
+  /* Items table */
+  .items-table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:12px;}
+  .items-table th{text-align:left;padding:6px 8px;background:#F8F9FF;color:var(--muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.4px;font-weight:700;}
+  .items-table td{padding:7px 8px;border-top:1px solid var(--border);vertical-align:top;}
+  .items-table tr:first-child td{border-top:none;}
+  .product-name{font-weight:600;color:var(--text);}
+  .product-dim{font-size:0.7rem;color:var(--muted);margin-top:2px;}
+  .price-rate{color:var(--muted);font-size:0.72rem;}
+  .amount-cell{text-align:right;font-weight:700;color:var(--text);}
+
+  /* Price summary */
+  .price-summary{background:#F8F9FF;border-radius:10px;padding:12px;margin-bottom:14px;}
+  .price-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.82rem;}
+  .price-row.total-row{border-top:1.5px solid var(--border);margin-top:6px;padding-top:10px;font-family:'Baloo 2',cursive;font-weight:800;font-size:1rem;color:var(--orange);}
+  .price-label{color:var(--muted);}
+  .price-value{font-weight:600;color:var(--text);}
+
+  /* Editable fields */
+  .edit-fields{display:none;border:1.5px solid #FED7AA;border-radius:10px;padding:12px;margin-bottom:12px;background:#FFF7ED;}
+  .edit-fields.visible{display:block;}
+  .edit-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+  .edit-label{font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
+  .edit-input{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:0.9rem;font-family:'Noto Sans',sans-serif;background:white;color:var(--text);}
+  .edit-input:focus{outline:none;border-color:var(--orange);}
+  .edit-total{text-align:center;font-family:'Baloo 2',cursive;font-weight:800;font-size:1.1rem;color:var(--orange);padding:6px 0 2px;}
+  .edit-total-label{text-align:center;font-size:0.7rem;color:var(--muted);margin-bottom:2px;}
+
+  /* Action buttons */
+  .quote-actions{display:flex;gap:8px;}
+  .btn-edit{flex:1;padding:11px 8px;background:#F0F0F0;color:var(--text);border:none;border-radius:10px;font-family:'Baloo 2',cursive;font-size:0.85rem;font-weight:700;cursor:pointer;}
+  .btn-edit.active{background:#FFF7ED;color:var(--orange);border:1.5px solid #FED7AA;}
+  .btn-deny{flex:1;padding:11px 8px;background:#FEE2E2;color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-family:'Baloo 2',cursive;font-size:0.85rem;font-weight:700;cursor:pointer;}
+  .btn-approve{flex:1;padding:11px 8px;background:var(--green);color:white;border:none;border-radius:10px;font-family:'Baloo 2',cursive;font-size:0.85rem;font-weight:800;cursor:pointer;}
+  .btn-deny:active{background:#FCA5A5;}
+  .btn-approve:active{background:#16A34A;}
+
+  /* Status overlay on approved/denied cards */
+  .quote-card.approved .quote-card-body{opacity:0.7;}
+  .quote-card.denied .quote-card-body{opacity:0.7;}
+
+  /* Loading / empty */
+  .loading-state,.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+  .loading-spinner{width:36px;height:36px;border:3px solid #FFE0C8;border-top-color:var(--orange);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty-icon{font-size:2.5rem;margin-bottom:10px;}
+  .empty-title{font-family:'Baloo 2',cursive;font-weight:800;font-size:1rem;color:var(--text);margin-bottom:6px;}
+  .empty-sub{font-size:0.8rem;line-height:1.5;}
+  .btn-reload{margin-top:14px;padding:10px 24px;background:var(--orange);color:white;border:none;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:700;font-size:0.85rem;cursor:pointer;}
+
+  /* Action overlay (processing) */
+  .action-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(26,26,46,0.7);backdrop-filter:blur(3px);flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+  .action-overlay.active{display:flex;}
+  .action-card{background:white;border-radius:20px;padding:24px 32px;text-align:center;max-width:260px;width:88%;}
+  .action-spinner{width:40px;height:40px;border:3px solid #FFE0C8;border-top-color:var(--orange);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+  .action-msg{font-family:'Baloo 2',cursive;font-size:0.95rem;font-weight:800;color:var(--text);}
+
+  /* Toast */
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:20px;font-size:0.82rem;font-weight:600;z-index:10000;white-space:nowrap;transition:opacity 0.4s;}
+  .toast.success{background:#15803D;color:white;}
+  .toast.error{background:var(--red);color:white;}
+  .toast.info{background:#1A1A2E;color:white;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="btn-back" href="measurement-form.html">← Back</a>
+    <div class="header-text">
+      <h1>📋 Owner Approval</h1>
+      <p>Review & approve quotations</p>
+    </div>
+  </div>
+</header>
+
+<!-- ACTION OVERLAY -->
+<div class="action-overlay" id="action-overlay">
+  <div class="action-card">
+    <div class="action-spinner"></div>
+    <div class="action-msg" id="action-msg">Processing...</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" onclick="filterQuotes('ALL',this)">All</button>
+    <button class="filter-tab" onclick="filterQuotes('DRAFT',this)">⏳ Pending</button>
+    <button class="filter-tab" onclick="filterQuotes('APPROVED',this)">✅ Approved</button>
+    <button class="filter-tab" onclick="filterQuotes('DENIED',this)">❌ Denied</button>
+  </div>
+
+  <div id="quotes-container">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <div>Loading quotations...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var allQuotes = [];
+var currentFilter = 'ALL';
+
+// Load on page load
+window.addEventListener('load', function() { loadQuotations(); });
+
+async function callAppsScript(payload) {
+  var response = await fetch(SHEETS_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
+  var text = await response.text();
+  try { return JSON.parse(text); } catch(e) { return {raw:text, error:'Parse error'}; }
+}
+
+async function loadQuotations() {
+  document.getElementById('quotes-container').innerHTML =
+    '<div class="loading-state"><div class="loading-spinner"></div><div>Loading quotations...</div></div>';
+  try {
+    var result = await callAppsScript({ action: 'getPendingQuotations' });
+    if (result.quotes) {
+      allQuotes = result.quotes;
+      renderQuotes();
+    } else {
+      showEmpty('Could not load quotations', result.error || 'Unknown error');
+    }
+  } catch(e) {
+    showEmpty('Connection error', 'Could not reach the server. Check your internet and try again.');
+  }
+}
+
+function filterQuotes(status, tabEl) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-tab').forEach(function(t){ t.classList.remove('active'); });
+  tabEl.classList.add('active');
+  renderQuotes();
+}
+
+function renderQuotes() {
+  var filtered = currentFilter === 'ALL' ? allQuotes : allQuotes.filter(function(q){ return q.Status === currentFilter; });
+  if (!filtered.length) {
+    var msg = currentFilter === 'ALL' ? 'No quotations yet' : 'No ' + currentFilter.toLowerCase() + ' quotations';
+    showEmpty(msg, currentFilter === 'DRAFT' ? 'Save a measurement to auto-generate a quotation.' : '');
+    return;
+  }
+  var html = filtered.map(function(q, idx) { return buildQuoteCard(q, idx); }).join('');
+  document.getElementById('quotes-container').innerHTML = html;
+}
+
+function buildQuoteCard(q, idx) {
+  var statusClass = 'status-' + (q.Status || 'DRAFT');
+  var cardClass = 'quote-card' + (q.Status === 'APPROVED' ? ' approved' : q.Status === 'DENIED' ? ' denied' : '');
+  var statusLabel = q.Status === 'APPROVED' ? '✅ Approved' : q.Status === 'DENIED' ? '❌ Denied' : '⏳ Pending';
+  var isActionable = q.Status === 'DRAFT';
+
+  // Build items rows
+  var itemRows = '';
+  if (q.Items && q.Items.length) {
+    q.Items.forEach(function(item) {
+      var rateStr = item.priceType === 'sqft' ? '@₹' + item.unitPrice + '/sq ft' : 'Fixed ₹' + item.unitPrice;
+      itemRows += '<tr>' +
+        '<td><div class="product-name">' + (item.product||'') + '</div>' +
+        '<div class="product-dim">' + (item.dimensions||'') + '</div></td>' +
+        '<td class="price-rate">' + rateStr + '</td>' +
+        '<td class="amount-cell">₹' + Number(item.total).toLocaleString('en-IN') + '</td>' +
+        '</tr>';
+    });
+  } else {
+    // Flat format from sheet
+    itemRows = '<tr><td colspan="3" style="color:var(--muted);font-size:0.78rem;">' +
+      (q.Product||'') + ' — ' + (q.Dimensions||'') + '</td></tr>';
+  }
+
+  var subtotal = q.Subtotal || q.Total || 0;
+  var discPct = parseFloat(q.DiscountPct) || 0;
+  var total = q.Total || 0;
+
+  var priceRows = discPct > 0
+    ? '<div class="price-row"><span class="price-label">Subtotal</span><span class="price-value">₹' + Number(subtotal).toLocaleString('en-IN') + '</span></div>' +
+      '<div class="price-row"><span class="price-label">Discount (' + discPct + '%)</span><span class="price-value" style="color:var(--green);">-₹' + Math.round(subtotal*discPct/100).toLocaleString('en-IN') + '</span></div>'
+    : '';
+  priceRows += '<div class="price-row total-row"><span>Total</span><span>₹' + Number(total).toLocaleString('en-IN') + '</span></div>';
+
+  var actionBtns = isActionable
+    ? '<button class="btn-edit" id="edit-btn-'+idx+'" onclick="toggleEdit('+idx+')">✏️ Edit</button>' +
+      '<button class="btn-deny" onclick="handleAction(\''+q.QuoteID+'\',\'deny\','+idx+')">❌ Deny</button>' +
+      '<button class="btn-approve" onclick="handleAction(\''+q.QuoteID+'\',\'approve\','+idx+')">✅ Approve</button>'
+    : '<div style="font-size:0.78rem;color:var(--muted);text-align:center;width:100%;padding:6px 0;">' +
+      (q.Status === 'APPROVED' ? '✅ Approved — sent to billing' : '❌ This quotation was denied') + '</div>';
+
+  return '<div class="' + cardClass + '" id="qcard-' + idx + '">' +
+    '<div class="quote-card-header">' +
+    '<div class="quote-card-top">' +
+    '<span class="quote-id">' + (q.QuoteID||'—') + '</span>' +
+    '<span class="status-badge ' + statusClass + '">' + statusLabel + '</span>' +
+    '</div>' +
+    '<div class="quote-customer">' + (q.Customer||'—') + (q.Phone&&q.Phone!=='—'?' · 📞 '+q.Phone:'') + '</div>' +
+    '<div class="quote-meta">📅 ' + (q.Date||'') + ' · 👤 ' + (q.TeamMember||'') + ' · 📍 ' + (q.Location||'') + '</div>' +
+    '</div>' +
+    '<div class="quote-card-body">' +
+    '<table class="items-table">' +
+    '<thead><tr><th>Product</th><th>Rate</th><th style="text-align:right;">Amount</th></tr></thead>' +
+    '<tbody>' + itemRows + '</tbody>' +
+    '</table>' +
+    '<div class="price-summary">' + priceRows + '</div>' +
+    // Edit fields (hidden by default)
+    '<div class="edit-fields" id="edit-fields-' + idx + '">' +
+    '<div class="edit-row">' +
+    '<div><div class="edit-label">Unit Price (₹)</div>' +
+    '<input class="edit-input" id="edit-price-' + idx + '" type="number" value="' + (q.UnitPrice||0) + '" onchange="recalcEdit(' + idx + ')" oninput="recalcEdit(' + idx + ')"></div>' +
+    '<div><div class="edit-label">Discount (%)</div>' +
+    '<input class="edit-input" id="edit-disc-' + idx + '" type="number" value="' + discPct + '" min="0" max="100" onchange="recalcEdit(' + idx + ')" oninput="recalcEdit(' + idx + ')"></div>' +
+    '</div>' +
+    '<div class="edit-total-label">Revised Total</div>' +
+    '<div class="edit-total" id="edit-total-' + idx + '">₹' + Number(total).toLocaleString('en-IN') + '</div>' +
+    '</div>' +
+    '<div class="quote-actions">' + actionBtns + '</div>' +
+    '</div></div>';
+}
+
+// Store quote data for edit recalc
+var quoteData = {};
+
+function toggleEdit(idx) {
+  var fields = document.getElementById('edit-fields-' + idx);
+  var btn = document.getElementById('edit-btn-' + idx);
+  var isVisible = fields.classList.contains('visible');
+  fields.classList.toggle('visible', !isVisible);
+  btn.classList.toggle('active', !isVisible);
+  btn.textContent = isVisible ? '✏️ Edit' : '✕ Cancel Edit';
+}
+
+function recalcEdit(idx) {
+  var q = allQuotes[idx] || {};
+  // Use original subtotal (before discount) for recalc
+  var subtotal = q.Subtotal || q.Total || 0;
+  var newPrice = parseFloat(document.getElementById('edit-price-' + idx).value) || 0;
+  var newDisc = parseFloat(document.getElementById('edit-disc-' + idx).value) || 0;
+
+  // If price changed, scale subtotal proportionally
+  var origPrice = q.UnitPrice || q.Total || subtotal;
+  var scaledSubtotal = origPrice > 0 ? (subtotal / origPrice) * newPrice : newPrice;
+  var newTotal = Math.round(scaledSubtotal * (1 - newDisc / 100));
+
+  document.getElementById('edit-total-' + idx).textContent = '₹' + newTotal.toLocaleString('en-IN');
+}
+
+async function handleAction(quoteId, action, idx) {
+  var q = allQuotes[idx];
+  if (!q) return;
+
+  // Read edited values if edit fields are open
+  var editFields = document.getElementById('edit-fields-' + idx);
+  var isEdited = editFields && editFields.classList.contains('visible');
+  var editedPrice = isEdited ? (parseFloat(document.getElementById('edit-price-' + idx).value) || 0) : null;
+  var editedDisc = isEdited ? (parseFloat(document.getElementById('edit-disc-' + idx).value) || 0) : null;
+
+  var actionMsg = action === 'approve' ? 'Approving quotation...' : 'Denying quotation...';
+  showActionOverlay(actionMsg);
+
+  try {
+    var payload = {
+      action: action === 'approve' ? 'approveQuotation' : 'denyQuotation',
+      quoteId: quoteId
+    };
+    if (isEdited && action === 'approve') {
+      payload.editedPrice = editedPrice;
+      payload.editedDisc = editedDisc;
+    }
+
+    var result = await callAppsScript(payload);
+    hideActionOverlay();
+
+    if (result && result.status === 'ok') {
+      // Update local state
+      allQuotes[idx].Status = action === 'approve' ? 'APPROVED' : 'DENIED';
+      if (isEdited && action === 'approve') {
+        allQuotes[idx].UnitPrice = editedPrice;
+        allQuotes[idx].DiscountPct = editedDisc;
+      }
+      renderQuotes();
+      showToast(action === 'approve' ? '✅ Approved & sent to billing!' : '❌ Quotation denied', action === 'approve' ? 'success' : 'error');
+    } else {
+      showToast('Error: ' + (result.error || 'Something went wrong'), 'error');
+    }
+  } catch(e) {
+    hideActionOverlay();
+    showToast('Connection error. Please try again.', 'error');
+  }
+}
+
+function showActionOverlay(msg) {
+  document.getElementById('action-msg').textContent = msg;
+  document.getElementById('action-overlay').classList.add('active');
+}
+function hideActionOverlay() { document.getElementById('action-overlay').classList.remove('active'); }
+
+function showEmpty(title, sub) {
+  document.getElementById('quotes-container').innerHTML =
+    '<div class="empty-state">' +
+    '<div class="empty-icon">📄</div>' +
+    '<div class="empty-title">' + title + '</div>' +
+    '<div class="empty-sub">' + (sub||'') + '</div>' +
+    '<button class="btn-reload" onclick="loadQuotations()">🔄 Reload</button>' +
+    '</div>';
+}
+
+function showToast(msg, type) {
+  var existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type||'info');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); },500); }, 3000);
+}
+</script>
+</body>
+</html>
