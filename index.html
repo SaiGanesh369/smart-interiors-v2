@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Smart — Doors & Windows</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxbOmjSePvDxgjfEvmQlxeIEr8sfMkLcYfY6S1cb3Co3BdcvfJR0lqkj8l1KrWaYIwulg/exec';
+const SETUP_CODE  = 'SMART2016';
+const SESSION_TTL = 24 * 60 * 60 * 1000;
+</script>
+<style>
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+:root {
+  --o: #FF6B00;
+  --o2: #FF8C3A;
+  --o-bg: #FFF4EC;
+  --o-border: #FFD4B0;
+  --navy: #1A1A2E;
+  --text: #0F172A;
+  --text2: #64748B;
+  --text3: #94A3B8;
+  --border: #E2E8F0;
+  --bg: #F8FAFC;
+  --white: #FFFFFF;
+  --green: #16A34A;
+  --red: #EF4444;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(15,23,42,0.08);
+}
+html, body {
+  min-height: 100dvh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ══════════════════════════════════════
+   PAGE WRAPPER
+══════════════════════════════════════ */
+.page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+/* ══════════════════════════════════════
+   CARD
+══════════════════════════════════════ */
+.card {
+  background: var(--white);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow), 0 0 0 1px rgba(15,23,42,0.04);
+  overflow: hidden;
+  animation: rise 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── CARD TOP — brand strip ── */
+.card-top {
+  background: var(--o-bg);
+  padding: 28px 32px 24px;
+  border-bottom: 1px solid var(--o-border);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Window pane decorations in background */
+.card-top::before {
+  content: '';
+  position: absolute;
+  right: -16px; top: -16px;
+  width: 80px; height: 80px;
+  background: var(--o);
+  opacity: 0.06;
+  border-radius: 6px;
+  transform: rotate(15deg);
+}
+.card-top::after {
+  content: '';
+  position: absolute;
+  right: 28px; top: 28px;
+  width: 40px; height: 40px;
+  border: 2px solid var(--o);
+  opacity: 0.12;
+  border-radius: 4px;
+  transform: rotate(15deg);
+}
+
+/* 2B-1 logo — window panes + stacked name */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Four pane icon */
+.panes {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.pane {
+  width: 100%; height: 100%;
+}
+.pane-1 { background: var(--o); }
+.pane-2 { background: var(--o); opacity: 0.38; }
+.pane-3 { background: var(--o); opacity: 0.38; }
+.pane-4 { background: var(--navy); }
+/* White cross dividers */
+.panes-cross {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.panes-cross::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2.5px; background: white;
+  transform: translateY(-50%);
+}
+.panes-cross::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  width: 2.5px; background: white;
+  transform: translateX(-50%);
+}
+
+/* Brand name */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.brand-smart {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: 2.5px;
+  line-height: 1;
+}
+.brand-divider {
+  width: 100%;
+  height: 1.5px;
+  background: var(--o);
+  margin: 4px 0;
+  border-radius: 1px;
+}
+.brand-sub {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--o);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+.brand-estd {
+  font-size: 7px;
+  font-weight: 400;
+  color: var(--text3);
+  letter-spacing: 2.5px;
+  margin-top: 2px;
+}
+
+/* ── CARD BODY ── */
+.card-body {
+  padding: 28px 32px 32px;
+}
+
+/* Mode heading */
+.mode-head {
+  margin-bottom: 22px;
+}
+.mode-head h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+.mode-head p {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+/* Tab switcher */
+.switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+  margin-bottom: 22px;
+}
+.sw-btn {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.sw-btn.on {
+  background: var(--white);
+  color: var(--text);
+  box-shadow: 0 1px 6px rgba(15,23,42,0.1);
+}
+
+/* Screens */
+.scr { display: none; }
+.scr.on { display: block; }
+
+/* Fields */
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.2px;
+  margin-bottom: 6px;
+}
+.field-inner { position: relative; }
+.field input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  -webkit-appearance: none;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--o);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(255,107,0,0.1);
+}
+.field input.with-btn { padding-right: 46px; }
+.eye-btn {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 4px;
+  color: var(--text3);
+}
+
+/* CTA */
+.cta {
+  width: 100%;
+  padding: 14px;
+  background: var(--o);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.1px;
+  box-shadow: 0 4px 16px rgba(255,107,0,0.35);
+  transition: box-shadow 0.2s, transform 0.1s, opacity 0.15s;
+  margin-top: 6px;
+}
+.cta:hover { box-shadow: 0 6px 22px rgba(255,107,0,0.45); }
+.cta:active { transform: scale(0.98); opacity: 0.92; }
+.cta:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.cta.dark {
+  background: var(--navy);
+  box-shadow: 0 4px 16px rgba(15,23,42,0.2);
+}
+.cta.dark:hover { box-shadow: 0 6px 22px rgba(15,23,42,0.3); }
+
+/* Owner link */
+.owner-link {
+  text-align: center;
+  margin-top: 16px;
+}
+.owner-link button {
+  background: none; border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text2); cursor: pointer;
+}
+.owner-link button span {
+  color: var(--o);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Setup hint */
+.hint-box {
+  background: var(--o-bg);
+  border: 1.5px solid var(--o-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: #92400E;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.hint-box strong {
+  display: block;
+  color: #C2410C;
+  margin-bottom: 2px;
+  font-size: 12.5px;
+}
+
+/* Back btn */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none; border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--text2); cursor: pointer;
+  margin-bottom: 18px; padding: 0;
+}
+.back-btn:hover { color: var(--text); }
+
+/* Messages */
+.msg {
+  font-size: 12.5px;
+  text-align: center;
+  min-height: 18px;
+  margin: 10px 0 2px;
+  line-height: 1.5;
+}
+.msg.err { color: var(--red); }
+.msg.ok  { color: var(--green); }
+
+/* Success state */
+.success-box {
+  display: none;
+  background: #F0FDF4;
+  border: 1.5px solid #86EFAC;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  margin-top: 8px;
+}
+.success-box .ico { font-size: 2rem; margin-bottom: 8px; }
+.success-box h3 {
+  font-size: 15px; font-weight: 700;
+  color: #15803D; margin-bottom: 6px;
+}
+.success-box p {
+  font-size: 12px; color: #166534;
+  line-height: 1.7;
+}
+
+/* Overlay */
+.overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(248,250,252,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  align-items: center; justify-content: center;
+}
+.overlay.on { display: flex; }
+.ov-inner { text-align: center; }
+.spin {
+  width: 38px; height: 38px;
+  border: 3px solid var(--o-border);
+  border-top-color: var(--o);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin: 0 auto 14px;
+}
+.ov-inner p {
+  font-size: 14px; font-weight: 500;
+  color: var(--text2);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Footer note */
+.footer-note {
+  text-align: center;
+  padding-top: 20px;
+  font-size: 11.5px;
+  color: var(--text3);
+}
+.footer-note a {
+  color: var(--o);
+  text-decoration: none;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="overlay" id="ov">
+  <div class="ov-inner">
+    <div class="spin"></div>
+    <p id="ov-msg">Please wait...</p>
+  </div>
+</div>
+
+<div class="page">
+  <div class="card">
+
+    <!-- Brand strip -->
+    <div class="card-top">
+      <div class="logo">
+        <div class="panes">
+          <div class="pane pane-1"></div>
+          <div class="pane pane-2"></div>
+          <div class="pane pane-3"></div>
+          <div class="pane pane-4"></div>
+          <div class="panes-cross"></div>
+        </div>
+        <div class="brand">
+          <div class="brand-smart">SMART</div>
+          <div class="brand-divider"></div>
+          <div class="brand-sub">Doors &amp; Windows</div>
+          <div class="brand-estd">ESTD. 2016</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form body -->
+    <div class="card-body">
+
+      <!-- ── SIGN IN ── -->
+      <div class="scr on" id="scr-login">
+        <div class="mode-head">
+          <h2>Sign in</h2>
+          <p>Enter your credentials to continue</p>
+        </div>
+        <div class="switcher">
+          <button class="sw-btn on" onclick="goTab('login')">Sign In</button>
+          <button class="sw-btn" onclick="goTab('register')">Request Access</button>
+        </div>
+        <div class="field">
+          <label>Username</label>
+          <div class="field-inner">
+            <input type="text" id="l-user" placeholder="Your username"
+              autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <div class="field-inner">
+            <input type="password" id="l-pass" class="with-btn"
+              placeholder="Your password" autocomplete="current-password">
+            <button class="eye-btn" onclick="eye('l-pass',this)" type="button">👁</button>
+          </div>
+        </div>
+        <div class="msg" id="l-msg"></div>
+        <button class="cta" onclick="doLogin()">Sign In</button>
+        <div class="owner-link">
+          <button onclick="goTab('setup')">First time here? <span>Owner setup →</span></button>
+        </div>
+      </div>
+
+      <!-- ── REQUEST ACCESS ── -->
+      <div class="scr" id="scr-register">
+        <div class="mode-head">
+          <h2>Request access</h2>
+          <p>Submit your details — the owner will approve your account</p>
+        </div>
+        <div class="switcher">
+          <button class="sw-btn" onclick="goTab('login')">Sign In</button>
+          <button class="sw-btn on" onclick="goTab('register')">Request Access</button>
+        </div>
+        <div class="field">
+          <label>Your Name</label>
+          <div class="field-inner">
+            <input type="text" id="r-name" placeholder="e.g. Raju" autocapitalize="words">
+          </div>
+        </div>
+        <div class="field">
+          <label>Username</label>
+          <div class="field-inner">
+            <input type="text" id="r-user" placeholder="Choose a username"
+              autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <div class="field-inner">
+            <input type="password" id="r-pass" class="with-btn"
+              placeholder="Min. 6 characters" autocomplete="new-password">
+            <button class="eye-btn" onclick="eye('r-pass',this)" type="button">👁</button>
+          </div>
+        </div>
+        <div class="msg" id="r-msg"></div>
+        <div class="success-box" id="r-ok">
+          <div class="ico">🎉</div>
+          <h3>Request submitted!</h3>
+          <p>The owner will approve your account shortly.<br>Come back here to sign in once approved.</p>
+        </div>
+        <button class="cta" id="r-btn" onclick="doRegister()">Request Access</button>
+      </div>
+
+      <!-- ── OWNER SETUP ── -->
+      <div class="scr" id="scr-setup">
+        <button class="back-btn" onclick="goTab('login')">← Back to Sign In</button>
+        <div class="mode-head">
+          <h2>Owner setup</h2>
+          <p>One-time account creation for the app owner</p>
+        </div>
+        <div class="hint-box">
+          <strong>🔐 Secret setup code required</strong>
+          Use the code provided with your app. This creates the owner account with full access.
+        </div>
+        <div class="field">
+          <label>Setup Code</label>
+          <div class="field-inner">
+            <input type="text" id="s-code" placeholder="Enter secret code"
+              autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="field">
+          <label>Your Name</label>
+          <div class="field-inner">
+            <input type="text" id="s-name" placeholder="Your full name" autocapitalize="words">
+          </div>
+        </div>
+        <div class="field">
+          <label>Username</label>
+          <div class="field-inner">
+            <input type="text" id="s-user" placeholder="Choose a username"
+              autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <div class="field-inner">
+            <input type="password" id="s-pass" class="with-btn"
+              placeholder="Min. 6 characters" autocomplete="new-password">
+            <button class="eye-btn" onclick="eye('s-pass',this)" type="button">👁</button>
+          </div>
+        </div>
+        <div class="msg" id="s-msg"></div>
+        <button class="cta dark" onclick="doSetup()">Create Owner Account</button>
+      </div>
+
+    </div><!-- /card-body -->
+
+    <div class="footer-note">
+      Smart Doors &amp; Windows &nbsp;·&nbsp; Visakhapatnam
+    </div>
+
+  </div><!-- /card -->
+</div><!-- /page -->
+
+<script>
+// ── Session check ──
+(function(){
+  try {
+    var s = localStorage.getItem('sdw_session');
+    if (!s) return;
+    var sess = JSON.parse(s);
+    if (sess.expiry > Date.now()) window.location.href = 'app.html';
+    else localStorage.removeItem('sdw_session');
+  } catch(e){ localStorage.removeItem('sdw_session'); }
+})();
+
+// ── Tab switching ──
+function goTab(t) {
+  ['login','register','setup'].forEach(function(id){
+    var el = document.getElementById('scr-'+id);
+    if (el) el.classList.toggle('on', id===t);
+  });
+  clearMsgs();
+  setTimeout(function(){
+    var f = document.querySelector('.scr.on input');
+    if (f) f.focus();
+  }, 60);
+}
+
+function clearMsgs(){
+  ['l-msg','r-msg','s-msg'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el){ el.textContent=''; el.className='msg'; }
+  });
+}
+
+function msg(id, txt, type){
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = txt;
+  el.className = 'msg '+(type||'err');
+}
+
+function eye(id, btn){
+  var inp = document.getElementById(id);
+  if (!inp) return;
+  inp.type = inp.type==='password' ? 'text' : 'password';
+  btn.textContent = inp.type==='password' ? '👁' : '🙈';
+}
+
+function showOv(m){
+  document.getElementById('ov-msg').textContent = m||'Please wait...';
+  document.getElementById('ov').classList.add('on');
+}
+function hideOv(){ document.getElementById('ov').classList.remove('on'); }
+
+function saveSession(u){
+  localStorage.setItem('sdw_session', JSON.stringify({
+    username: u.username, name: u.name,
+    role: u.role, expiry: Date.now()+SESSION_TTL
+  }));
+}
+
+async function api(payload){
+  var r = await fetch(SHEETS_URL,{
+    method:'POST', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(payload)
+  });
+  var t = await r.text();
+  try{ return JSON.parse(t); }catch(e){ return {error:'Server error'}; }
+}
+
+// ── Login ──
+async function doLogin(){
+  var u = document.getElementById('l-user').value.trim();
+  var p = document.getElementById('l-pass').value;
+  if (!u||!p){ msg('l-msg','Please enter username and password'); return; }
+  showOv('Signing you in...');
+  try{
+    var r = await api({action:'loginUser', username:u, password:p});
+    hideOv();
+    if (r.status==='ok'){
+      saveSession(r.user);
+      window.location.href='app.html';
+    } else if (r.status==='pending'){
+      msg('l-msg','⏳ Account pending approval by owner');
+    } else {
+      msg('l-msg', r.error||'Invalid username or password');
+    }
+  } catch(e){ hideOv(); msg('l-msg','Connection error. Try again.'); }
+}
+
+// ── Register ──
+async function doRegister(){
+  var n = document.getElementById('r-name').value.trim();
+  var u = document.getElementById('r-user').value.trim();
+  var p = document.getElementById('r-pass').value;
+  if (!n||!u||!p){ msg('r-msg','Please fill all fields'); return; }
+  if (p.length<6){ msg('r-msg','Password must be at least 6 characters'); return; }
+  showOv('Submitting request...');
+  try{
+    var r = await api({action:'registerUser', name:n, username:u, password:p});
+    hideOv();
+    if (r.status==='ok'){
+      document.getElementById('r-btn').style.display='none';
+      document.getElementById('r-ok').style.display='block';
+    } else {
+      msg('r-msg', r.error||'Username may already be taken');
+    }
+  } catch(e){ hideOv(); msg('r-msg','Connection error. Try again.'); }
+}
+
+// ── Setup ──
+async function doSetup(){
+  var c = document.getElementById('s-code').value.trim();
+  var n = document.getElementById('s-name').value.trim();
+  var u = document.getElementById('s-user').value.trim();
+  var p = document.getElementById('s-pass').value;
+  if (!c||!n||!u||!p){ msg('s-msg','Please fill all fields'); return; }
+  if (c!==SETUP_CODE){ msg('s-msg','❌ Invalid setup code'); return; }
+  if (p.length<6){ msg('s-msg','Password must be at least 6 characters'); return; }
+  showOv('Creating owner account...');
+  try{
+    var r = await api({action:'registerUser', name:n, username:u, password:p, isOwner:true});
+    hideOv();
+    if (r.status==='ok'){
+      msg('s-msg','✅ Account created! Redirecting...','ok');
+      saveSession({username:u, name:n, role:'owner'});
+      setTimeout(function(){ window.location.href='app.html'; }, 1000);
+    } else {
+      msg('s-msg', r.error||'Setup failed. Username may exist.');
+    }
+  } catch(e){ hideOv(); msg('s-msg','Connection error. Try again.'); }
+}
+
+// Enter key
+document.addEventListener('keydown', function(e){
+  if (e.key!=='Enter') return;
+  var scr = document.querySelector('.scr.on');
+  if (!scr) return;
+  var id = scr.id;
+  if (id==='scr-login') doLogin();
+  else if (id==='scr-register') doRegister();
+  else if (id==='scr-setup') doSetup();
+});
+</script>
+</body>
+</html>
