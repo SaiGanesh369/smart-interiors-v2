@@ -665,6 +665,39 @@ html, body {
 .q-btn { flex:1; padding:12px; border:none; border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; cursor:pointer; }
 .q-deny    { background:var(--red-bg); color:var(--red); }
 .q-approve { background:var(--o); color:white; box-shadow:0 4px 12px rgba(255,107,0,0.3); }
+  /* SALES */
+.sales-summary { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+.sales-card { background:var(--white); border-radius:14px; border:1.5px solid var(--border); padding:14px; box-shadow:var(--shadow); }
+.sales-card .sc-label { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.sales-card .sc-val { font-size:20px; font-weight:800; color:var(--text); }
+.sales-card.green .sc-val { color:var(--green); }
+.sales-card.orange .sc-val { color:var(--o); }
+.bill-card { background:var(--white); border-radius:14px; border:1.5px solid var(--border); padding:14px; margin-bottom:10px; box-shadow:var(--shadow); }
+.bill-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.bill-no-lbl { font-size:11px; font-weight:700; color:var(--o); }
+.bill-cust-name { font-size:15px; font-weight:700; color:var(--text); margin-top:2px; }
+.bill-card-meta { font-size:11px; color:var(--text3); margin-top:2px; }
+.bill-amounts { display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:10px; margin-top:8px; }
+.bill-amt-col { text-align:center; }
+.bill-amt-col .ba-label { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; }
+.bill-amt-col .ba-val { font-size:15px; font-weight:800; color:var(--text); margin-top:3px; }
+.bill-amt-col.paid .ba-val { color:var(--green); }
+.bill-amt-col.balance .ba-val { color:var(--red); }
+.bill-actions { display:flex; gap:8px; margin-top:10px; }
+.bill-btn { flex:1; padding:10px 8px; border:none; border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700; cursor:pointer; }
+.bill-btn-pdf { background:var(--navy); color:white; }
+.bill-btn-pay { background:var(--green-bg); color:var(--green); border:1.5px solid #86EFAC; }
+/* Payment modal */
+.pay-modal { display:none; position:fixed; inset:0; z-index:9998; background:rgba(26,26,46,0.65); backdrop-filter:blur(3px); align-items:flex-end; justify-content:center; }
+.pay-modal.active { display:flex; }
+.pay-sheet { background:var(--white); border-radius:20px 20px 0 0; width:100%; max-width:480px; padding:0 20px 32px; }
+.pay-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 16px; }
+.pay-title { font-size:16px; font-weight:800; color:var(--text); margin-bottom:16px; }
+.pay-field { margin-bottom:12px; }
+.pay-field label { display:block; font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+.pay-field input { width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; color:var(--text); background:var(--bg); }
+.pay-field input:focus { outline:none; border-color:var(--o); background:var(--white); }
+.pay-submit { width:100%; padding:14px; background:var(--o); color:white; border:none; border-radius:12px; font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(255,107,0,0.3); }
 </style>
 </head>
 <body>
@@ -1060,6 +1093,7 @@ function goScreen(id) {
   if (id === 'users')        loadPendingUsers();
   if (id === 'measurements') initMeasScreen();
   if (id === 'quotations') loadQuotations();
+  if (id === 'sales') loadSales();
 }
 
 // ══════════════════════════════
@@ -1840,6 +1874,200 @@ function denyQuote(quoteId) {
     showToast('❌ Quotation denied');
     loadQuotations();
   });
+}
+  // ══════════════════════════════
+// SALES
+// ══════════════════════════════
+function loadSales() {
+  var scr = document.getElementById('scr-sales');
+  scr.innerHTML = '<div class="screen-title">Sales</div><div class="empty-state"><div class="emo">⏳</div><p>Loading bills...</p></div>';
+  api({ action:'getPayments' }, function(err, res) {
+    if (err || !res || res.error || !res.bills || !res.bills.length) {
+      scr.innerHTML = '<div class="screen-title">Sales</div><div class="empty-state"><div class="emo">💰</div><p>No bills yet.<br>Approve a quotation to generate a bill.</p></div>';
+      return;
+    }
+    var bills = res.bills;
+    var totalBilled = bills.reduce(function(s,b){ return s+b.Total; },0);
+    var totalPaid   = bills.reduce(function(s,b){ return s+b.Paid; },0);
+    var totalBal    = bills.reduce(function(s,b){ return s+b.Balance; },0);
+
+    var html = '<div class="screen-title">Sales</div>';
+    html += '<div class="sales-summary">';
+    html += '<div class="sales-card orange"><div class="sc-label">Total Billed</div><div class="sc-val">Rs.'+totalBilled.toLocaleString('en-IN')+'</div></div>';
+    html += '<div class="sales-card green"><div class="sc-label">Collected</div><div class="sc-val">Rs.'+totalPaid.toLocaleString('en-IN')+'</div></div>';
+    html += '<div class="sales-card"><div class="sc-label">Pending</div><div class="sc-val">Rs.'+totalBal.toLocaleString('en-IN')+'</div></div>';
+    html += '<div class="sales-card"><div class="sc-label">Bills</div><div class="sc-val">'+bills.length+'</div></div>';
+    html += '</div>';
+
+    html += '<div class="section-label">All Bills</div>';
+    bills.forEach(function(b) {
+      var balClass = b.Balance > 0 ? 'balance' : 'paid';
+      html += '<div class="bill-card">';
+      html += '<div class="bill-card-head">';
+      html += '<div><div class="bill-no-lbl">'+b.BillNo+'</div><div class="bill-cust-name">'+(b.Customer||'—')+'</div><div class="bill-card-meta">'+b.Date+' · '+b.Location+'</div></div>';
+      html += '<span class="badge '+(b.Balance>0?'badge-orange':'badge-green')+'">'+(b.Balance>0?'Pending':'Paid')+'</span>';
+      html += '</div>';
+      html += '<div class="bill-amounts">';
+      html += '<div class="bill-amt-col"><div class="ba-label">Total</div><div class="ba-val">Rs.'+b.Total.toLocaleString('en-IN')+'</div></div>';
+      html += '<div class="bill-amt-col paid"><div class="ba-label">Paid</div><div class="ba-val">Rs.'+b.Paid.toLocaleString('en-IN')+'</div></div>';
+      html += '<div class="bill-amt-col '+balClass+'"><div class="ba-label">Balance</div><div class="ba-val">Rs.'+b.Balance.toLocaleString('en-IN')+'</div></div>';
+      html += '</div>';
+      html += '<div class="bill-actions">';
+      html += '<button class="bill-btn bill-btn-pdf" onclick="downloadPDF(\''+b.BillNo+'\')">📄 PDF</button>';
+      html += '<button class="bill-btn bill-btn-pay" onclick="openPayModal(\''+b.BillNo+'\')">💰 Payment</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    scr.innerHTML = html;
+    window._salesBills = bills;
+  });
+}
+
+function openPayModal(billNo) {
+  document.getElementById('pay-billno').value = billNo;
+  document.getElementById('pay-amount').value = '';
+  document.getElementById('pay-note').value   = '';
+  document.getElementById('pay-date').value   = new Date().toISOString().split('T')[0];
+  document.getElementById('pay-modal').classList.add('active');
+}
+
+function submitPayment() {
+  var billNo = document.getElementById('pay-billno').value;
+  var amount = parseFloat(document.getElementById('pay-amount').value) || 0;
+  var date   = document.getElementById('pay-date').value;
+  var note   = document.getElementById('pay-note').value.trim();
+  if (!amount) { showToast('Enter a valid amount'); return; }
+  showOv('Recording payment...');
+  api({ action:'recordPayment', billNo:billNo, amount:amount, paymentDate:date, note:note, recordedBy:SESSION.name }, function(err, res) {
+    hideOv();
+    document.getElementById('pay-modal').classList.remove('active');
+    if (err || !res || res.error) { showToast('Failed to record payment'); return; }
+    showToast('✅ Payment of Rs.'+amount.toLocaleString('en-IN')+' recorded!');
+    loadSales();
+  });
+}
+
+function downloadPDF(billNo) {
+  var bills = window._salesBills || [];
+  var bill  = bills.find(function(b){ return b.BillNo === billNo; });
+  if (!bill) { showToast('Bill not found'); return; }
+
+  // Load jsPDF then generate
+  if (typeof window.jspdf === 'undefined') {
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = function(){ generatePDF(bill); };
+    document.head.appendChild(s);
+  } else { generatePDF(bill); }
+}
+
+function generatePDF(bill) {
+  var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
+  var W = 210, margin = 16;
+
+  // Header bg
+  doc.setFillColor(26,26,46);
+  doc.rect(0, 0, W, 38, 'F');
+
+  // Brand
+  doc.setTextColor(255,107,0);
+  doc.setFontSize(20); doc.setFont('helvetica','bold');
+  doc.text('SMART', margin, 14);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.setTextColor(180,180,200);
+  doc.text('DOORS & WINDOWS', margin, 20);
+  doc.text('ESTD. 2016', margin, 25);
+
+  // Contact right side
+  doc.setFontSize(7.5); doc.setTextColor(180,180,200);
+  doc.text('Opp Gopalapatnam Police Station, Baji Junction', W-margin, 12, {align:'right'});
+  doc.text('Visakhapatnam 530027', W-margin, 17, {align:'right'});
+  doc.text('Ph: 7396931873 / 8919007089', W-margin, 22, {align:'right'});
+  doc.text('smartdoorspvcgallery@gmail.com', W-margin, 27, {align:'right'});
+
+  // Bill No + Date strip
+  doc.setFillColor(255,107,0);
+  doc.rect(0, 38, W, 10, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('BILL NO: '+bill.BillNo, margin, 45);
+  doc.text('DATE: '+bill.Date, W-margin, 45, {align:'right'});
+
+  // Bill To
+  var y = 56;
+  doc.setTextColor(26,26,46); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('BILL TO:', margin, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(bill.Customer||'—', margin, y+6);
+  doc.text('Ph: '+(bill.Phone||'—'), margin, y+12);
+  doc.text('Location: '+(bill.Location||'—'), margin, y+18);
+
+  // Items table header
+  y = 86;
+  doc.setFillColor(255,107,0);
+  doc.rect(margin, y, W-margin*2, 8, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('Item', margin+2, y+5.5);
+  doc.text('Dimensions', 90, y+5.5);
+  doc.text('Unit Price', 140, y+5.5);
+  doc.text('Total', W-margin-2, y+5.5, {align:'right'});
+
+  // Items rows
+  y += 10;
+  doc.setTextColor(26,26,46); doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  (bill.Items||[]).forEach(function(item, i) {
+    if (i%2===0) { doc.setFillColor(248,250,252); doc.rect(margin, y-4, W-margin*2, 8, 'F'); }
+    doc.text((item.Product||'').substring(0,25), margin+2, y+0.5);
+    doc.text((item.Dimensions||'').substring(0,25), 90, y+0.5);
+    doc.text('Rs.'+(parseFloat(item.UnitPrice)||0).toLocaleString('en-IN'), 140, y+0.5);
+    doc.text('Rs.'+(parseFloat(item.FinalAmount)||0).toLocaleString('en-IN'), W-margin-2, y+0.5, {align:'right'});
+    y += 8;
+  });
+
+  // Total box
+  y += 4;
+  doc.setFillColor(255,107,0);
+  doc.rect(W-margin-60, y, 60, 10, 'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text('TOTAL  Rs.'+bill.Total.toLocaleString('en-IN'), W-margin-4, y+7, {align:'right'});
+
+  // Balance
+  y += 14;
+  doc.setTextColor(26,26,46); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('Amount Paid: Rs.'+bill.Paid.toLocaleString('en-IN'), margin, y);
+  doc.setTextColor(bill.Balance>0?239:22, bill.Balance>0?68:163, bill.Balance>0?68:74);
+  doc.text('Balance Due: Rs.'+bill.Balance.toLocaleString('en-IN'), margin+60, y);
+
+  // T&C
+  y += 12;
+  doc.setTextColor(100,116,139); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
+  doc.text('TERMS & CONDITIONS', margin, y);
+  y += 5;
+  doc.setFont('helvetica','normal');
+  var tcs = [
+    '1. Items once sold not returnable/exchangeable.',
+    '2. Delivery timeline subject to material availability.',
+    '3. Customer must ensure site ready before installation.',
+    '4. Prices subject to change after quotation expiry.',
+    '5. Measurements by team are final.',
+    '6. Slight colour variations may occur.',
+    '7. Disputes subject to Visakhapatnam jurisdiction only.',
+    '8. Order cancelled if advance not received within 7 days.'
+  ];
+  var col1 = tcs.slice(0,4), col2 = tcs.slice(4);
+  col1.forEach(function(t,i){ doc.text(t, margin, y+i*5); });
+  col2.forEach(function(t,i){ doc.text(t, W/2+4, y+i*5); });
+
+  // Footer
+  y = 280;
+  doc.setFillColor(26,26,46);
+  doc.rect(0, y, W, 18, 'F');
+  doc.setTextColor(255,107,0); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('Thank you for choosing Smart Doors & Windows!', W/2, y+7, {align:'center'});
+  doc.setTextColor(180,180,200); doc.setFontSize(7); doc.setFont('helvetica','normal');
+  doc.text('7396931873 / 8919007089  |  smartdoorspvcgallery@gmail.com  |  Visakhapatnam', W/2, y+13, {align:'center'});
+
+  doc.save('Bill_'+bill.BillNo+'.pdf');
+  showToast('📄 PDF downloaded!');
 }
 </script>
 </body>
