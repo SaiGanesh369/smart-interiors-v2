@@ -1287,58 +1287,59 @@ function removePhoto(idx) {
 }
 
 async function uploadPhotosToDrive(entryId) {
-  var valid = [];
+  var validPhotos = [];
   for (var i = 0; i < photoDataURLs.length; i++) {
     if (photoDataURLs[i]) {
-      valid.push({
+      validPhotos.push({
         data: photoDataURLs[i],
-        name: photoFileNames[i] || ('photo_'+(i+1)+'.jpg')
+        name: photoFileNames[i] || ('photo_' + (i+1) + '.jpg')
       });
     }
   }
-  if (!valid.length) return [];
+  if (!validPhotos.length) return [];
 
   var links = [];
-  for (var j = 0; j < valid.length; j++) {
-    showOv('Uploading photo '+(j+1)+' of '+valid.length+'...');
+
+  for (var j = 0; j < validPhotos.length; j++) {
+    showOv('Uploading photo ' + (j+1) + ' of ' + validPhotos.length + '...');
     try {
-      // Fire the upload — don't wait for response (CORS blocks it from GitHub Pages)
-      // Photo DOES upload to Drive successfully — Apps Script confirms this
-      // We just can't read the redirect response back in browser
-      fetch(SHEETS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          action: 'uploadPhotos',
-          entryId: entryId,
-          folderId: DRIVE_FOLDER_ID,
-          photos: [valid[j]]
-        })
-      }).catch(function(){});  // silence CORS error — upload still succeeds
-
-      // Wait 8 seconds per photo for Apps Script to process
-      await new Promise(function(resolve){ setTimeout(resolve, 8000); });
-      showToast('📷 Photo '+(j+1)+' uploaded to Drive');
-
+      var result = await apiAsync({
+        action: 'uploadPhotos',
+        entryId: entryId,
+        folderId: DRIVE_FOLDER_ID,
+        photos: [validPhotos[j]]
+      });
+      console.log('Photo upload result:', JSON.stringify(result));
+      if (result && result.links && result.links[0]) {
+        links.push(result.links[0]);
+        showToast('📷 Photo ' + (j+1) + ' uploaded!');
+      } else if (result && result.errors && result.errors.length) {
+        console.error('Drive error:', result.errors);
+      }
     } catch(e) {
       console.error('Photo upload error:', e);
     }
   }
 
-  // Return empty array — links aren't readable due to CORS
-  // Photos are in Drive folder, accessible via the folder directly
+  if (links.length) {
+    showToast('✅ ' + links.length + ' photo(s) saved to Drive');
+  }
   return links;
 }
 
-function apiAsync(payload) {
-  return fetch(SHEETS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
-  })
-  .then(function(r){ return r.text(); })
-  .then(function(t){ try{ return JSON.parse(t); } catch(e){ return {raw:t}; } })
-  .catch(function(e){ return {error: e.toString()}; });
+async function apiAsync(payload) {
+  try {
+    var response = await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    var text = await response.text();
+    try { return JSON.parse(text); }
+    catch(e) { return { raw: text }; }
+  } catch(e) {
+    return { error: e.toString() };
+  }
 }
 
 function attachMeasInputRules(input) {
