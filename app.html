@@ -337,6 +337,211 @@ html, body {
 }
 .nav-btn.on::after { opacity: 1; }
 
+/* ══════════════════════════════
+   MEASUREMENTS FORM
+══════════════════════════════ */
+.m-tabs {
+  display: flex; gap: 0;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 3px; margin-bottom: 14px;
+}
+.m-tab {
+  flex: 1; border: none; border-radius: 8px;
+  padding: 10px 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--text2); cursor: pointer;
+  background: none; transition: all 0.18s;
+}
+.m-tab.on {
+  background: var(--white); color: var(--text);
+  box-shadow: 0 1px 6px rgba(15,23,42,0.1);
+}
+
+.form-section {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.form-section-title {
+  font-size: 13px; font-weight: 700;
+  color: var(--text2); letter-spacing: 0.3px;
+  margin-bottom: 14px;
+}
+
+.field { margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text2); margin-bottom: 5px;
+}
+.field .opt { font-weight: 400; color: var(--text3); }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 11px 13px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px; color: var(--text);
+  background: var(--bg); transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none; appearance: none;
+}
+.field textarea { resize: none; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--o);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(255,107,0,0.1);
+}
+
+.gps-btn {
+  padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; background: var(--bg);
+  font-size: 16px; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.gps-btn:active { border-color: var(--o); }
+
+/* Product blocks */
+.product-block {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 14px;
+  margin-bottom: 10px; position: relative;
+}
+.product-block-head {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 12px;
+}
+.product-num {
+  font-size: 11px; font-weight: 700;
+  color: var(--o); letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.remove-product {
+  background: var(--red-bg); border: none;
+  color: var(--red); border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+  padding: 4px 8px; cursor: pointer;
+}
+
+/* Measurement rows */
+.meas-row {
+  display: flex; gap: 8px; align-items: center;
+  margin-bottom: 8px;
+}
+.meas-row .meas-num {
+  font-size: 12px; font-weight: 700;
+  color: var(--text3); min-width: 18px;
+}
+.meas-input {
+  flex: 1; padding: 9px 10px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px; color: var(--text);
+  background: var(--white); text-align: center;
+  -webkit-appearance: none;
+}
+.meas-input:focus {
+  outline: none; border-color: var(--o);
+  box-shadow: 0 0 0 2px rgba(255,107,0,0.1);
+}
+.meas-input.placeholder-label {
+  background: var(--bg); color: var(--text3);
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-style: dashed; pointer-events: none;
+}
+.remove-meas {
+  background: none; border: none;
+  color: var(--text3); font-size: 16px;
+  cursor: pointer; padding: 4px; line-height: 1;
+}
+
+.add-meas-btn {
+  background: none; border: 1.5px dashed var(--border);
+  border-radius: 8px; width: 100%;
+  padding: 8px; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--text3);
+  cursor: pointer; margin-top: 4px;
+}
+.add-meas-btn:hover { border-color: var(--o); color: var(--o); }
+
+.add-product-btn {
+  width: 100%; padding: 13px;
+  background: none; border: 2px dashed var(--o-border);
+  border-radius: 12px; color: var(--o);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+.add-product-btn:hover { background: var(--o-bg); }
+
+/* Photo upload */
+.photo-upload-area {
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.photo-upload-area:hover { border-color: var(--o); background: var(--o-bg); }
+.photo-thumb {
+  position: relative; width: 72px; height: 72px;
+}
+.photo-thumb img {
+  width: 72px; height: 72px;
+  object-fit: cover; border-radius: 8px;
+  border: 1.5px solid var(--border);
+}
+.photo-thumb .rm-photo {
+  position: absolute; top: -5px; right: -5px;
+  background: var(--red); color: white;
+  border: none; border-radius: 50%;
+  width: 18px; height: 18px;
+  font-size: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+
+/* Submit */
+.cta-submit {
+  width: 100%; padding: 15px;
+  background: var(--o); color: white; border: none;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.1px;
+  box-shadow: 0 4px 16px rgba(255,107,0,0.35);
+  transition: opacity 0.15s, transform 0.1s;
+}
+.cta-submit:active { opacity: 0.9; transform: scale(0.98); }
+
+/* Saved entries */
+.entry-card {
+  background: var(--white); border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 14px; margin-bottom: 10px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.entry-card:hover { border-color: var(--o); }
+.entry-card .ec-date {
+  font-size: 11px; font-weight: 700; color: var(--o);
+  letter-spacing: 0.3px; margin-bottom: 4px;
+}
+.entry-card .ec-loc {
+  font-size: 15px; font-weight: 700; color: var(--text);
+}
+.entry-card .ec-team {
+  font-size: 12px; color: var(--text3); margin-top: 2px;
+}
+.entry-card .ec-products {
+  font-size: 12px; color: var(--text2);
+  margin-top: 6px; line-height: 1.5;
+}
+.entry-card .ec-photo {
+  display: inline-block; margin-top: 6px;
+  font-size: 11px; font-weight: 600; color: var(--o);
+}
+
 /* Toast */
 .toast {
   position: fixed; bottom: calc(var(--nav-h) + 12px); left: 16px; right: 16px;
@@ -430,13 +635,97 @@ html, body {
     </div>
   </div>
 
-  <!-- ══ MEASUREMENTS SCREEN (placeholder) ══ -->
+  <!-- ══ MEASUREMENTS SCREEN ══ -->
   <div class="screen" id="scr-measurements">
-    <div class="screen-title">Measurements</div>
-    <div class="empty-state">
-      <div class="emo">📐</div>
-      <p>Measurement form coming in Chunk 2.</p>
+
+    <!-- Tab switcher: New Entry / View Saved -->
+    <div class="m-tabs">
+      <button class="m-tab on" id="mtab-new"    onclick="mTab('new')">New Entry</button>
+      <button class="m-tab"    id="mtab-saved"  onclick="mTab('saved')">View Saved</button>
     </div>
+
+    <!-- ── NEW ENTRY FORM ── -->
+    <div id="m-new">
+
+      <!-- Step 1: Basic Info -->
+      <div class="form-section">
+        <div class="form-section-title">📋 Basic Info</div>
+
+        <div class="field">
+          <label>Team Member</label>
+          <select id="m-team">
+            <option value="">Select member</option>
+            <option>Raju</option>
+            <option>Vasu</option>
+            <option>Chinna</option>
+            <option>Srinu</option>
+            <option>Sai</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Location / Site</label>
+          <input type="text" id="m-location" placeholder="e.g. Madhurawada, House No. 12">
+        </div>
+
+        <div class="field">
+          <label>Customer Name <span class="opt">(optional)</span></label>
+          <input type="text" id="m-customer" placeholder="Customer name">
+        </div>
+
+        <div class="field">
+          <label>Phone <span class="opt">(optional)</span></label>
+          <input type="tel" id="m-phone" placeholder="10-digit number" maxlength="10">
+        </div>
+
+        <div class="field">
+          <label>GPS Location <span class="opt">(optional)</span></label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="m-gps" placeholder="Tap to capture" readonly style="flex:1">
+            <button class="gps-btn" onclick="captureGPS()">📍</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Notes <span class="opt">(optional)</span></label>
+          <textarea id="m-notes" rows="2" placeholder="Any additional notes..."></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2: Products -->
+      <div class="form-section">
+        <div class="form-section-title">🪟 Products &amp; Measurements</div>
+        <div id="products-list"></div>
+        <button class="add-product-btn" onclick="addProduct()">+ Add Product</button>
+      </div>
+
+      <!-- Step 3: Photos -->
+      <div class="form-section">
+        <div class="form-section-title">📷 Photos <span class="opt">(optional)</span></div>
+        <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+          <div style="font-size:2rem;margin-bottom:6px">📷</div>
+          <div style="font-size:13px;color:var(--text2);font-weight:500">Tap to add photos</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">Compressed automatically</div>
+        </div>
+        <input type="file" id="photo-input" multiple accept="image/*" style="display:none" onchange="handlePhotos(this)">
+        <div id="photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+      </div>
+
+      <!-- Submit -->
+      <button class="cta-submit" onclick="submitMeasurement()">Save Measurement</button>
+      <div style="height:8px"></div>
+    </div>
+
+    <!-- ── VIEW SAVED ── -->
+    <div id="m-saved" style="display:none">
+      <div id="saved-list">
+        <div class="empty-state">
+          <div class="emo">📂</div>
+          <p>Loading saved entries...</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ══ QUOTATIONS SCREEN (placeholder) ══ -->
@@ -673,6 +962,374 @@ function approveUser(username, action) {
     if (err || !res || res.error) { showToast('Action failed'); return; }
     showToast(action === 'approve' ? '✅ User approved!' : '❌ User rejected');
     loadPendingUsers();
+  });
+}
+
+// ══════════════════════════════
+// MEASUREMENTS
+// ══════════════════════════════
+var PRODUCTS = ['UPVC Window','Aluminium Window','UPVC Door','Aluminium Door','PVC Door','WPC Door','Wood Door','Aluminium Partition','Louver','Other'];
+var DIRECTIONS = ['RI','RO','LI','LO'];
+var LOUVER_TYPES = ['Aluminium','UPVC'];
+var photoFiles = [];
+var productCount = 0;
+
+function mTab(tab) {
+  document.getElementById('m-new').style.display   = tab === 'new'   ? 'block' : 'none';
+  document.getElementById('m-saved').style.display = tab === 'saved' ? 'block' : 'none';
+  document.getElementById('mtab-new').classList.toggle('on',   tab === 'new');
+  document.getElementById('mtab-saved').classList.toggle('on', tab === 'saved');
+  if (tab === 'saved') loadSaved();
+}
+
+function addProduct() {
+  productCount++;
+  var idx = productCount;
+  var div = document.createElement('div');
+  div.className = 'product-block';
+  div.id = 'pb-' + idx;
+  div.innerHTML = buildProductBlock(idx);
+  document.getElementById('products-list').appendChild(div);
+  updateMeasRows(idx);
+}
+
+function buildProductBlock(idx) {
+  var opts = PRODUCTS.map(function(p) {
+    return '<option value="' + p + '">' + p + '</option>';
+  }).join('');
+  return '<div class="product-block-head">' +
+    '<span class="product-num">Product ' + idx + '</span>' +
+    '<button class="remove-product" onclick="removeProduct(' + idx + ')">Remove</button>' +
+  '</div>' +
+  '<div class="field">' +
+    '<label>Product Type</label>' +
+    '<select id="prod-' + idx + '" onchange="onProductChange(' + idx + ')">' +
+      '<option value="">Select product</option>' + opts +
+    '</select>' +
+  '</div>' +
+  '<div id="extras-' + idx + '"></div>' +
+  '<div class="field"><label>Opening No.</label>' +
+    '<input type="text" id="opening-' + idx + '" placeholder="e.g. 1">' +
+  '</div>' +
+  '<div id="meas-rows-' + idx + '"></div>' +
+  '<button class="add-meas-btn" onclick="addMeasRow(' + idx + ')">+ Add Measurement</button>';
+}
+
+function onProductChange(idx) {
+  var prod = document.getElementById('prod-' + idx).value;
+  var extrasDiv = document.getElementById('extras-' + idx);
+  var html = '';
+
+  if (prod === 'PVC Door') {
+    html += '<div class="field"><label>Direction</label><select id="dir-' + idx + '">' +
+      DIRECTIONS.map(function(d){ return '<option>' + d + '</option>'; }).join('') +
+    '</select></div>';
+  }
+  if (prod === 'Louver') {
+    html += '<div class="field"><label>Louver Type</label><select id="louver-' + idx + '">' +
+      LOUVER_TYPES.map(function(t){ return '<option>' + t + '</option>'; }).join('') +
+    '</select></div>';
+  }
+  extrasDiv.innerHTML = html;
+  updateMeasRows(idx);
+}
+
+function updateMeasRows(idx) {
+  var prod = document.getElementById('prod-' + idx) ? document.getElementById('prod-' + idx).value : '';
+  var container = document.getElementById('meas-rows-' + idx);
+  if (!container) return;
+  container.innerHTML = '';
+  addMeasRow(idx);
+}
+
+function addMeasRow(idx) {
+  var prod = document.getElementById('prod-' + idx) ? document.getElementById('prod-' + idx).value : '';
+  var container = document.getElementById('meas-rows-' + idx);
+  if (!container) return;
+  var rowCount = container.querySelectorAll('.meas-row-wrap').length + 1;
+  var wrap = document.createElement('div');
+  wrap.className = 'meas-row-wrap';
+  wrap.style.marginBottom = '6px';
+
+  var rowHtml = '<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">' +
+    '<span class="meas-num" style="font-size:11px;color:var(--text3);min-width:16px">' + rowCount + '.</span>';
+
+  if (prod === 'PVC Door') {
+    rowHtml += '<input class="meas-input" placeholder="H" style="flex:1"> ';
+    rowHtml += '<input class="meas-input" placeholder="Top" style="flex:1"> ';
+    rowHtml += '<input class="meas-input" placeholder="Bot (opt)" style="flex:1"> ';
+  } else {
+    rowHtml += '<input class="meas-input" placeholder="H" style="flex:1"> ';
+    rowHtml += '<input class="meas-input" placeholder="W" style="flex:1"> ';
+  }
+
+  rowHtml += '<button class="remove-meas" onclick="this.parentElement.parentElement.remove()">✕</button>';
+  rowHtml += '</div>';
+  wrap.innerHTML = rowHtml;
+  container.appendChild(wrap);
+
+  // Auto-slash formatting on inputs
+  wrap.querySelectorAll('.meas-input').forEach(function(inp) {
+    inp.addEventListener('input', function() {
+      var v = this.value.replace(/[^0-9 \/]/g,'');
+      this.value = v;
+    });
+  });
+}
+
+function removeProduct(idx) {
+  var el = document.getElementById('pb-' + idx);
+  if (el) el.remove();
+}
+
+function captureGPS() {
+  if (!navigator.geolocation) { showToast('GPS not supported'); return; }
+  showToast('Capturing GPS...');
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var lat = pos.coords.latitude.toFixed(6);
+    var lng = pos.coords.longitude.toFixed(6);
+    document.getElementById('m-gps').value = 'https://maps.google.com/?q=' + lat + ',' + lng;
+    showToast('📍 GPS captured!');
+  }, function() { showToast('Could not get GPS'); });
+}
+
+function handlePhotos(input) {
+  var files = Array.from(input.files);
+  files.forEach(function(file) {
+    photoFiles.push(file);
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      var imgIdx = photoFiles.length - 1;
+      thumb.innerHTML = '<img src="' + e.target.result + '"><button class="rm-photo" onclick="removePhoto(' + imgIdx + ', this)">✕</button>';
+      document.getElementById('photo-previews').appendChild(thumb);
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function removePhoto(idx, btn) {
+  photoFiles[idx] = null;
+  btn.parentElement.remove();
+}
+
+function compressPhoto(file, cb) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 1200;
+      var w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitMeasurement() {
+  var team     = document.getElementById('m-team').value;
+  var location = document.getElementById('m-location').value.trim();
+  if (!team)     { showToast('Please select a team member'); return; }
+  if (!location) { showToast('Please enter a location'); return; }
+
+  var blocks = document.querySelectorAll('.product-block');
+  if (!blocks.length) { showToast('Please add at least one product'); return; }
+
+  // Build rows
+  var rows = [];
+  var now  = new Date();
+  var dateStr = now.toISOString().split('T')[0];
+  var timeStr = now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+  var customer = document.getElementById('m-customer').value.trim() || '—';
+  var phone    = document.getElementById('m-phone').value.trim()    || '—';
+  var gps      = document.getElementById('m-gps').value.trim()      || '—';
+  var notes    = document.getElementById('m-notes').value.trim()    || '—';
+
+  var valid = true;
+  blocks.forEach(function(block, bi) {
+    var idx  = block.id.replace('pb-','');
+    var prod = document.getElementById('prod-' + idx);
+    if (!prod || !prod.value) { showToast('Select a product for Product ' + (bi+1)); valid = false; return; }
+    var product   = prod.value;
+    var openingNo = (document.getElementById('opening-' + idx) || {}).value || (bi+1).toString();
+    var direction = '—';
+    var louverType = '';
+    if (product === 'PVC Door') {
+      var dirEl = document.getElementById('dir-' + idx);
+      if (dirEl) direction = dirEl.value;
+    }
+    if (product === 'Louver') {
+      var lEl = document.getElementById('louver-' + idx);
+      if (lEl) louverType = lEl.value;
+      product = 'Louver (' + (louverType || 'Aluminium') + ')';
+    }
+
+    var measWraps = block.querySelectorAll('.meas-row-wrap');
+    measWraps.forEach(function(wrap, mi) {
+      var inputs = wrap.querySelectorAll('.meas-input');
+      var h = inputs[0] ? inputs[0].value.trim() : '';
+      var w = inputs[1] ? inputs[1].value.trim() : '';
+      var bot = inputs[2] ? inputs[2].value.trim() : '';
+      if (!h) return;
+
+      var measStr = '';
+      if (prod.value === 'PVC Door') {
+        measStr = 'H:' + h + (w ? ' Top:' + w : '') + (bot ? ' Bot:' + bot : '');
+      } else {
+        measStr = 'H:' + h + (w ? ' W:' + w : '');
+      }
+
+      rows.push({
+        Date: dateStr, Time: timeStr,
+        TeamMember: team, Location: location,
+        Customer: customer, Phone: phone, GPSLink: gps,
+        Product: product, Direction: direction,
+        OpeningNo: openingNo, MeasNo: mi + 1,
+        Height: h, Width: prod.value === 'PVC Door' ? '' : w,
+        Top: prod.value === 'PVC Door' ? w : '',
+        Bottom: bot, Measurement: measStr,
+        Notes: notes, Photos: ''
+      });
+    });
+  });
+
+  if (!valid || !rows.length) { if (!rows.length) showToast('Add at least one measurement'); return; }
+
+  // Save with/without photos
+  var activePhotos = photoFiles.filter(Boolean);
+  if (!activePhotos.length) {
+    doSaveRows(rows, []);
+  } else {
+    showOv('Compressing photos...');
+    var compressed = [], done = 0;
+    activePhotos.forEach(function(file, i) {
+      compressPhoto(file, function(dataUrl) {
+        compressed[i] = { name: file.name, data: dataUrl };
+        done++;
+        if (done === activePhotos.length) {
+          hideOv();
+          doSaveWithPhotos(rows, compressed);
+        }
+      });
+    });
+  }
+}
+
+function doSaveWithPhotos(rows, photos) {
+  showOv('Uploading photos...');
+  var entryId = Date.now().toString();
+  api({ action: 'uploadPhotos', entryId: entryId, photos: photos, folderId: '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ' }, function(err, res) {
+    if (!err && res && res.links && res.links.length) {
+      var photoStr = res.links.join('\n');
+      rows.forEach(function(r){ r.Photos = photoStr; });
+    }
+    doSaveRows(rows, photos);
+  });
+}
+
+function doSaveRows(rows, photos) {
+  showOv('Saving to Sheets...');
+  api({ action: 'saveRows', rows: rows }, function(err, res) {
+    hideOv();
+    if (err || !res || res.error) {
+      showToast('Save failed: ' + (res ? res.error : err));
+      return;
+    }
+    showToast('✅ Saved ' + rows.length + ' measurement(s)!');
+    resetForm();
+
+    // Auto-create quotation
+    autoCreateQuotation(rows);
+  });
+}
+
+function autoCreateQuotation(rows) {
+  // Fetch price list then create quotation
+  api({ action: 'getPriceList' }, function(err, res) {
+    if (err || !res || !res.items) return;
+    var priceMap = {};
+    res.items.forEach(function(item) {
+      priceMap[item.Product] = { type: item.Type, rate: parseFloat(item.Rate) || 0 };
+    });
+
+    var items = [];
+    rows.forEach(function(row) {
+      var key = row.Product;
+      var p = priceMap[key] || priceMap[key.split(' (')[0]];
+      if (!p) return;
+      var h = parseFloat(row.Height) || 0;
+      var w = parseFloat(row.Width)  || 0;
+      var sqft = 0, unitPrice = p.rate, total = 0;
+      if (p.type === 'sqft' && h > 0 && w > 0) {
+        sqft = Math.round(((h/12) * (w/12)) * 100) / 100;
+        total = Math.round(sqft * p.rate);
+      } else {
+        total = Math.round(p.rate);
+      }
+      items.push({
+        product: row.Product,
+        dimensions: row.Measurement,
+        sqft: sqft, unitPrice: unitPrice, total: total
+      });
+    });
+
+    if (!items.length) return;
+    var quoteId = 'Q' + Date.now().toString().slice(-8);
+    api({
+      action: 'createQuotation',
+      quoteId: quoteId,
+      date: rows[0].Date,
+      teamMember: rows[0].TeamMember,
+      location: rows[0].Location,
+      customer: rows[0].Customer,
+      phone: rows[0].Phone,
+      discountPct: 0,
+      items: items
+    }, function(e, r) {
+      if (!e && r && r.status === 'ok') showToast('📄 Quotation ' + quoteId + ' created!');
+    });
+  });
+}
+
+function resetForm() {
+  document.getElementById('m-team').value     = '';
+  document.getElementById('m-location').value = '';
+  document.getElementById('m-customer').value = '';
+  document.getElementById('m-phone').value    = '';
+  document.getElementById('m-gps').value      = '';
+  document.getElementById('m-notes').value    = '';
+  document.getElementById('products-list').innerHTML = '';
+  document.getElementById('photo-previews').innerHTML = '';
+  photoFiles = [];
+  productCount = 0;
+}
+
+function loadSaved() {
+  showOv('Loading entries...');
+  api({ action: 'getRecent', limit: 20 }, function(err, res) {
+    hideOv();
+    var list = document.getElementById('saved-list');
+    if (err || !res || res.error || !res.rows || !res.rows.length) {
+      list.innerHTML = '<div class="empty-state"><div class="emo">📂</div><p>No saved entries yet.</p></div>';
+      return;
+    }
+    list.innerHTML = res.rows.map(function(e) {
+      var photoTag = e.Photos ? '<span class="ec-photo">📷 Photos attached</span>' : '';
+      return '<div class="entry-card">' +
+        '<div class="ec-date">' + (e.Date || '') + ' · ' + (e.Time || '') + '</div>' +
+        '<div class="ec-loc">' + (e.Location || '—') + '</div>' +
+        '<div class="ec-team">👤 ' + (e.TeamMember || '') + (e.Customer && e.Customer !== '—' ? ' · 🏠 ' + e.Customer : '') + '</div>' +
+        '<div class="ec-products">' + (e.Products || '') + '</div>' +
+        photoTag +
+      '</div>';
+    }).join('');
   });
 }
 
