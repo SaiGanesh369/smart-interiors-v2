@@ -1164,7 +1164,7 @@ function captureGPS() {
     },
     function(err) {
       status.className = 'gps-status err';
-      status.textContent = err.code === 1 ? '✗ Allow location permission.' : '✗ Could not get location.';
+      status.textContent = err.code===1 ? '✗ Allow location — tap the 🔒 icon in address bar' : err.code===2 ? '✗ Location unavailable. Try again.' : '✗ Timed out. Move to open area.';
     },
     { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
   );
