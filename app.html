@@ -1,803 +1,716 @@
-// ════════════════════════════════════════════════════════
-// Smart Doors & Windows — Code.gs
-// Actions: auth (login/register), saveRows, uploadPhotos,
-//          getRecent, createQuotation, getPendingQuotations,
-//          approveQuotation, denyQuotation, getPayments,
-//          recordPayment, getPriceList, updatePriceList,
-//          getDashboard, getPendingUsers, approveUser
-// ════════════════════════════════════════════════════════
-
-/* global SpreadsheetApp, ContentService, Utilities, ScriptApp, UrlFetchApp, DriveApp */
-
-// ── CONFIG ──────────────────────────────────────────────
-var MEASUREMENT_SHEET_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
-var BILLING_SHEET_ID     = '15WVZFvdRGnNsNjDlRG0rYWxpt6fGkEfAmCEHmT8GZHU';
-var DRIVE_FOLDER_ID      = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
-
-var TAB_MEASUREMENTS = 'Measurements';
-var TAB_QUOTATIONS   = 'Quotations';
-var TAB_BILLING      = 'Billing';
-var TAB_PRICELIST    = 'PriceList';
-var TAB_USERS        = 'Users';
-var TAB_PAYMENTS     = 'Payments';
-// ────────────────────────────────────────────────────────
-
-function doGet(e) {
-  return buildResponse({ status: 'ok', message: 'Smart Doors & Windows API v2' });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SMART — App</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxbOmjSePvDxgjfEvmQlxeIEr8sfMkLcYfY6S1cb3Co3BdcvfJR0lqkj8l1KrWaYIwulg/exec';
+var SESSION_TTL = 24 * 60 * 60 * 1000;
+</script>
+<style>
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+:root {
+  --o: #FF6B00;
+  --o2: #FF8C3A;
+  --o-bg: #FFF4EC;
+  --o-border: #FFD4B0;
+  --navy: #1A1A2E;
+  --text: #0F172A;
+  --text2: #64748B;
+  --text3: #94A3B8;
+  --border: #E2E8F0;
+  --bg: #F8FAFC;
+  --white: #FFFFFF;
+  --green: #16A34A;
+  --green-bg: #F0FDF4;
+  --red: #EF4444;
+  --red-bg: #FEF2F2;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(15,23,42,0.08);
+  --nav-h: 64px;
+}
+html, body {
+  height: 100%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
 }
 
-function doPost(e) {
+/* ══════════════════════════════
+   OVERLAY / LOADER
+══════════════════════════════ */
+.overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(248,250,252,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  align-items: center; justify-content: center;
+}
+.overlay.on { display: flex; }
+.spin {
+  width: 36px; height: 36px;
+  border: 3px solid var(--o-border);
+  border-top-color: var(--o);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin: 0 auto 12px;
+}
+.ov-inner { text-align: center; }
+.ov-inner p { font-size: 14px; font-weight: 500; color: var(--text2); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════
+   TOP HEADER
+══════════════════════════════ */
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+.top-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.panes {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 28px; height: 28px;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+.pane { width: 100%; height: 100%; }
+.pane-1 { background: var(--o); }
+.pane-2 { background: var(--o); opacity: 0.38; }
+.pane-3 { background: var(--o); opacity: 0.38; }
+.pane-4 { background: var(--navy); }
+.panes-cross { position: absolute; inset: 0; pointer-events: none; }
+.panes-cross::before {
+  content: ''; position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2px; background: white;
+  transform: translateY(-50%);
+}
+.panes-cross::after {
+  content: ''; position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  width: 2px; background: white;
+  transform: translateX(-50%);
+}
+.top-brand {
+  font-size: 15px; font-weight: 800;
+  color: var(--navy); letter-spacing: 1.5px;
+}
+.top-user {
+  display: flex; align-items: center; gap: 8px;
+}
+.user-avatar {
+  width: 34px; height: 34px;
+  background: var(--o);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+  cursor: pointer;
+}
+.logout-btn {
+  background: none; border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  color: var(--text3); cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.logout-btn:hover { color: var(--red); background: var(--red-bg); }
+
+/* ══════════════════════════════
+   MAIN CONTENT AREA
+══════════════════════════════ */
+.main {
+  padding-top: 56px;
+  padding-bottom: calc(var(--nav-h) + 8px);
+  min-height: 100dvh;
+}
+
+/* ══════════════════════════════
+   SCREEN PAGES
+══════════════════════════════ */
+.screen {
+  display: none;
+  padding: 16px;
+  animation: fadeUp 0.25s ease both;
+}
+.screen.on { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Screen title */
+.screen-title {
+  font-size: 20px; font-weight: 800;
+  color: var(--text); letter-spacing: -0.3px;
+  margin-bottom: 16px;
+}
+.screen-title span {
+  font-size: 13px; font-weight: 500;
+  color: var(--text3); letter-spacing: 0;
+  margin-left: 6px;
+}
+
+/* ══════════════════════════════
+   DASHBOARD CARDS
+══════════════════════════════ */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.dash-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.dash-card.full { grid-column: 1 / -1; }
+.dash-card.orange {
+  background: var(--o);
+  border-color: var(--o);
+}
+.dash-card .dc-label {
+  font-size: 11px; font-weight: 600;
+  color: var(--text3); letter-spacing: 0.5px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.dash-card.orange .dc-label { color: rgba(255,255,255,0.75); }
+.dash-card .dc-val {
+  font-size: 26px; font-weight: 800;
+  color: var(--text); letter-spacing: -0.5px;
+  line-height: 1;
+}
+.dash-card.orange .dc-val { color: white; }
+.dash-card .dc-sub {
+  font-size: 11.5px; color: var(--text3);
+  margin-top: 4px;
+}
+.dash-card.orange .dc-sub { color: rgba(255,255,255,0.65); }
+
+/* Section label */
+.section-label {
+  font-size: 12px; font-weight: 700;
+  color: var(--text2); letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin: 20px 0 10px;
+}
+
+/* Recent bills list */
+.bills-list { display: flex; flex-direction: column; gap: 8px; }
+.bill-row {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bill-info .bill-no {
+  font-size: 12px; font-weight: 700;
+  color: var(--o); letter-spacing: 0.3px;
+}
+.bill-info .bill-cust {
+  font-size: 14px; font-weight: 600;
+  color: var(--text); margin-top: 1px;
+}
+.bill-info .bill-date {
+  font-size: 11.5px; color: var(--text3); margin-top: 2px;
+}
+.bill-amt {
+  font-size: 15px; font-weight: 800;
+  color: var(--text);
+}
+
+/* Pending approval badge */
+.pending-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #FEF3C7; color: #B45309;
+  border: 1px solid #FDE68A;
+  border-radius: 8px; padding: 4px 10px;
+  font-size: 12px; font-weight: 600;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.pending-badge:hover { background: #FDE68A; }
+
+/* User approval list */
+.user-card {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.user-info .u-name {
+  font-size: 14px; font-weight: 700; color: var(--text);
+}
+.user-info .u-user {
+  font-size: 12px; color: var(--text3); margin-top: 2px;
+}
+.user-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.u-btn {
+  border: none; border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px; font-weight: 700;
+  padding: 7px 12px; cursor: pointer;
+}
+.u-btn.approve { background: var(--green-bg); color: var(--green); }
+.u-btn.reject  { background: var(--red-bg);   color: var(--red); }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  color: var(--text3);
+}
+.empty-state .emo { font-size: 2.5rem; margin-bottom: 10px; }
+.empty-state p { font-size: 13px; line-height: 1.6; }
+
+/* ══════════════════════════════
+   BOTTOM NAV
+══════════════════════════════ */
+.bot-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  background: none; border: none;
+  cursor: pointer;
+  padding: 8px 4px;
+  position: relative;
+  transition: color 0.15s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.nav-btn .nav-ico {
+  font-size: 20px; line-height: 1;
+  transition: transform 0.2s;
+}
+.nav-btn .nav-lbl {
+  font-size: 10px; font-weight: 600;
+  color: var(--text3); letter-spacing: 0.2px;
+  transition: color 0.15s;
+}
+.nav-btn.on .nav-lbl { color: var(--o); }
+.nav-btn.on .nav-ico { transform: scale(1.12); }
+.nav-btn::after {
+  content: '';
+  position: absolute; bottom: 0; left: 25%; right: 25%;
+  height: 2.5px; border-radius: 2px;
+  background: var(--o);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.nav-btn.on::after { opacity: 1; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: calc(var(--nav-h) + 12px); left: 16px; right: 16px;
+  background: var(--navy); color: white;
+  border-radius: 12px; padding: 12px 16px;
+  font-size: 13px; font-weight: 500;
+  text-align: center; z-index: 9000;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+}
+.toast.on { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="overlay" id="ov">
+  <div class="ov-inner">
+    <div class="spin"></div>
+    <p id="ov-msg">Loading...</p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <div class="top-logo">
+    <div class="panes">
+      <div class="pane pane-1"></div>
+      <div class="pane pane-2"></div>
+      <div class="pane pane-3"></div>
+      <div class="pane pane-4"></div>
+      <div class="panes-cross"></div>
+    </div>
+    <div class="top-brand">SMART</div>
+  </div>
+  <div class="top-user">
+    <div class="user-avatar" id="user-avatar">S</div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="main">
+
+  <!-- ══ DASHBOARD SCREEN ══ -->
+  <div class="screen on" id="scr-dashboard">
+    <div class="screen-title">Dashboard</div>
+
+    <!-- Pending user approvals (owner only) -->
+    <div id="pending-users-section" style="display:none">
+      <div class="pending-badge" onclick="goScreen('users')">
+        👥 <span id="pending-users-count">0</span> pending user approval(s) — tap to review
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="dash-grid">
+      <div class="dash-card orange">
+        <div class="dc-label">Today</div>
+        <div class="dc-val" id="d-today">—</div>
+        <div class="dc-sub">Measurements</div>
+      </div>
+      <div class="dash-card">
+        <div class="dc-label">Pending</div>
+        <div class="dc-val" id="d-pending">—</div>
+        <div class="dc-sub">Quotations</div>
+      </div>
+      <div class="dash-card">
+        <div class="dc-label">Billed</div>
+        <div class="dc-val" id="d-billed">—</div>
+        <div class="dc-sub">This month</div>
+      </div>
+      <div class="dash-card">
+        <div class="dc-label">Collected</div>
+        <div class="dc-val" id="d-paid">—</div>
+        <div class="dc-sub">This month</div>
+      </div>
+    </div>
+
+    <!-- Recent bills -->
+    <div class="section-label">Recent Bills</div>
+    <div id="recent-bills-list" class="bills-list">
+      <div class="empty-state">
+        <div class="emo">📋</div>
+        <p>No bills yet.<br>Approve a quotation to generate your first bill.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MEASUREMENTS SCREEN (placeholder) ══ -->
+  <div class="screen" id="scr-measurements">
+    <div class="screen-title">Measurements</div>
+    <div class="empty-state">
+      <div class="emo">📐</div>
+      <p>Measurement form coming in Chunk 2.</p>
+    </div>
+  </div>
+
+  <!-- ══ QUOTATIONS SCREEN (placeholder) ══ -->
+  <div class="screen" id="scr-quotations">
+    <div class="screen-title">Quotations</div>
+    <div class="empty-state">
+      <div class="emo">📄</div>
+      <p>Quotations screen coming in Chunk 3.</p>
+    </div>
+  </div>
+
+  <!-- ══ SALES SCREEN (placeholder) ══ -->
+  <div class="screen" id="scr-sales">
+    <div class="screen-title">Sales</div>
+    <div class="empty-state">
+      <div class="emo">💰</div>
+      <p>Sales screen coming in Chunk 4.</p>
+    </div>
+  </div>
+
+  <!-- ══ PRICE LIST SCREEN (placeholder) ══ -->
+  <div class="screen" id="scr-pricelist">
+    <div class="screen-title">Price List</div>
+    <div class="empty-state">
+      <div class="emo">🏷️</div>
+      <p>Price list coming in Chunk 5.</p>
+    </div>
+  </div>
+
+  <!-- ══ USER APPROVALS SCREEN (owner only) ══ -->
+  <div class="screen" id="scr-users">
+    <div class="screen-title">User Approvals</div>
+    <div id="users-list">
+      <div class="empty-state">
+        <div class="emo">✅</div>
+        <p>No pending users to approve.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- Bottom nav -->
+<nav class="bot-nav" id="bot-nav">
+  <!-- Populated by JS based on role -->
+</nav>
+
+<script>
+// ══════════════════════════════
+// SESSION
+// ══════════════════════════════
+var SESSION = null;
+
+function loadSession() {
   try {
-    var data   = JSON.parse(e.postData.contents);
-    var action = data.action || 'saveRows';
-
-    // ── AUTH ──
-    if (action === 'registerUser')        return buildResponse(registerUser(data));
-    if (action === 'loginUser')           return buildResponse(loginUser(data));
-    if (action === 'getPendingUsers')     return buildResponse(getPendingUsers());
-    if (action === 'approveUser')         return buildResponse(approveUser(data));
-
-    // ── MEASUREMENTS ──
-    if (action === 'saveRows')            return buildResponse(JSON.parse(saveRows(data.rows).getContent()));
-    if (action === 'uploadPhotos')        return buildResponse(JSON.parse(uploadPhotos(data).getContent()));
-    if (action === 'getRecent')           return buildResponse(JSON.parse(getRecent(data.limit || 20).getContent()));
-
-    // ── QUOTATIONS ──
-    if (action === 'createQuotation')     return buildResponse(JSON.parse(createQuotation(data).getContent()));
-    if (action === 'getPendingQuotations')return buildResponse(JSON.parse(getPendingQuotations().getContent()));
-    if (action === 'approveQuotation')    return buildResponse(JSON.parse(approveQuotation(data).getContent()));
-    if (action === 'denyQuotation')       return buildResponse(JSON.parse(denyQuotation(data).getContent()));
-
-    // ── PAYMENTS ──
-    if (action === 'getPayments')         return buildResponse(getPayments(data));
-    if (action === 'recordPayment')       return buildResponse(recordPayment(data));
-
-    // ── PRICING ──
-    if (action === 'getPriceList')        return buildResponse(getPriceListData());
-    if (action === 'updatePriceList')     return buildResponse(updatePriceListData(data));
-
-    // ── DASHBOARD ──
-    if (action === 'getDashboard')        return buildResponse(getDashboard());
-
-    return buildResponse({ error: 'Unknown action: ' + action });
-  } catch (err) {
-    return buildResponse({ error: err.message + ' | ' + err.stack });
-  }
+    var s = localStorage.getItem('sdw_session');
+    if (!s) return null;
+    var sess = JSON.parse(s);
+    if (sess.expiry > Date.now()) return sess;
+    localStorage.removeItem('sdw_session');
+    return null;
+  } catch(e) { return null; }
 }
 
-function buildResponse(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function doLogout() {
+  localStorage.removeItem('sdw_session');
+  window.location.href = 'index.html';
 }
 
-function jsonResponse(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+// ══════════════════════════════
+// API
+// ══════════════════════════════
+function api(payload, cb) {
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(t){
+    try { cb(null, JSON.parse(t)); }
+    catch(e) { cb('Parse error'); }
+  })
+  .catch(function(e){ cb(e.toString()); });
 }
 
-// ════════════════════════════════════════════════════════
-// ── AUTH FUNCTIONS ──────────────────────────────────────
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════
+// OVERLAY + TOAST
+// ══════════════════════════════
+function showOv(m) {
+  document.getElementById('ov-msg').textContent = m || 'Loading...';
+  document.getElementById('ov').classList.add('on');
+}
+function hideOv() { document.getElementById('ov').classList.remove('on'); }
 
-// Users tab columns: Username, PasswordHash, Name, Role, Approved, CreatedAt
-function getUsersSheet() {
-  var bs = SpreadsheetApp.openById(BILLING_SHEET_ID);
-  var sheet = bs.getSheetByName(TAB_USERS);
-  if (!sheet) {
-    sheet = bs.insertSheet(TAB_USERS);
-    var headers = ['Username', 'PasswordHash', 'Name', 'Role', 'Approved', 'CreatedAt'];
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#1A1A2E').setFontColor('white');
-  }
-  return sheet;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(function(){ t.classList.remove('on'); }, 2500);
 }
 
-// Simple hash — not crypto-grade but sufficient for this use case
-function simpleHash(str) {
-  var hash = 0;
-  var salt = 'SDW_SMART_2016_SALT';
-  var s = str + salt;
-  for (var i = 0; i < s.length; i++) {
-    var char = s.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return 'SDW_' + Math.abs(hash).toString(36).toUpperCase();
+// ══════════════════════════════
+// NAVIGATION
+// ══════════════════════════════
+var OWNER_NAV = [
+  { id: 'dashboard',    ico: '🏠', lbl: 'Home' },
+  { id: 'measurements', ico: '📐', lbl: 'Measure' },
+  { id: 'quotations',   ico: '📄', lbl: 'Quotes' },
+  { id: 'sales',        ico: '💰', lbl: 'Sales' },
+  { id: 'pricelist',    ico: '🏷️', lbl: 'Prices' }
+];
+var WORKER_NAV = [
+  { id: 'measurements', ico: '📐', lbl: 'Measure' },
+  { id: 'pricelist',    ico: '🏷️', lbl: 'Prices' }
+];
+
+function buildNav(role) {
+  var items = role === 'owner' ? OWNER_NAV : WORKER_NAV;
+  var nav = document.getElementById('bot-nav');
+  nav.innerHTML = '';
+  items.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.className = 'nav-btn';
+    btn.id = 'nav-' + item.id;
+    btn.innerHTML = '<span class="nav-ico">' + item.ico + '</span><span class="nav-lbl">' + item.lbl + '</span>';
+    btn.onclick = function() { goScreen(item.id); };
+    nav.appendChild(btn);
+  });
 }
 
-function registerUser(data) {
-  try {
-    var username = (data.username || '').trim().toLowerCase();
-    var password = data.password || '';
-    var name     = data.name || '';
-    var role     = data.isOwner ? 'owner' : 'worker';
-    var approved = data.isOwner ? 'TRUE' : 'FALSE';
+var currentScreen = 'dashboard';
 
-    if (!username || !password || !name) return { error: 'Missing required fields' };
+function goScreen(id) {
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('on');
+  });
+  // Show target
+  var target = document.getElementById('scr-' + id);
+  if (target) target.classList.add('on');
 
-    var sheet = getUsersSheet();
-    var rows  = sheet.getDataRange().getValues();
+  // Update nav
+  document.querySelectorAll('.nav-btn').forEach(function(b) {
+    b.classList.remove('on');
+  });
+  var activeNav = document.getElementById('nav-' + id);
+  if (activeNav) activeNav.classList.add('on');
 
-    // Check username taken
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][0].toString().toLowerCase() === username) {
-        return { error: 'Username already taken. Please choose another.' };
-      }
+  currentScreen = id;
+
+  // Load data for screen
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'users') loadPendingUsers();
+}
+
+// ══════════════════════════════
+// DASHBOARD
+// ══════════════════════════════
+function loadDashboard() {
+  showOv('Loading dashboard...');
+  api({ action: 'getDashboard' }, function(err, res) {
+    hideOv();
+    if (err || !res || res.error) {
+      showToast('Could not load dashboard');
+      return;
     }
+    var d = res.data || {};
+    document.getElementById('d-today').textContent   = d.todayMeasurements || '0';
+    document.getElementById('d-pending').textContent = d.pendingQuotations || '0';
+    document.getElementById('d-billed').textContent  = d.totalBilledThisMonth ? 'Rs.' + d.totalBilledThisMonth.toLocaleString('en-IN') : 'Rs.0';
+    document.getElementById('d-paid').textContent    = d.totalPaidThisMonth  ? 'Rs.' + d.totalPaidThisMonth.toLocaleString('en-IN')  : 'Rs.0';
 
-    var hash = simpleHash(password);
-    sheet.appendRow([username, hash, name, role, approved, new Date().toISOString()]);
-
-    return { status: 'ok', message: 'User registered' };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-function loginUser(data) {
-  try {
-    var username = (data.username || '').trim().toLowerCase();
-    var password = data.password || '';
-
-    if (!username || !password) return { error: 'Missing credentials' };
-
-    var sheet = getUsersSheet();
-    var rows  = sheet.getDataRange().getValues();
-    var hash  = simpleHash(password);
-
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][0].toString().toLowerCase() === username) {
-        // Check password
-        if (rows[i][1].toString() !== hash) {
-          return { error: 'Invalid username or password' };
-        }
-        // Check approved
-        if (rows[i][4].toString() !== 'TRUE') {
-          return { status: 'pending', error: 'Account pending approval' };
-        }
-        return {
-          status: 'ok',
-          user: {
-            username: rows[i][0],
-            name:     rows[i][2],
-            role:     rows[i][3]
-          }
-        };
-      }
-    }
-    return { error: 'Invalid username or password' };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-function getPendingUsers() {
-  try {
-    var sheet = getUsersSheet();
-    var rows  = sheet.getDataRange().getValues();
-    var pending = [];
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][4].toString() === 'FALSE') {
-        pending.push({
-          rowIndex: i + 1,
-          username: rows[i][0],
-          name:     rows[i][2],
-          role:     rows[i][3],
-          createdAt: rows[i][5]
-        });
-      }
-    }
-    return { status: 'ok', users: pending };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-function approveUser(data) {
-  try {
-    var username = (data.username || '').trim().toLowerCase();
-    var action   = data.userAction || 'approve'; // 'approve' or 'reject'
-
-    var sheet = getUsersSheet();
-    var rows  = sheet.getDataRange().getValues();
-
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i][0].toString().toLowerCase() === username) {
-        if (action === 'approve') {
-          sheet.getRange(i + 1, 5).setValue('TRUE');
-          return { status: 'ok', message: 'User approved' };
-        } else {
-          sheet.deleteRow(i + 1);
-          return { status: 'ok', message: 'User rejected and removed' };
-        }
-      }
-    }
-    return { error: 'User not found' };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// ── SAVE ROWS TO MEASUREMENTS SHEET ─────────────────────
-// ════════════════════════════════════════════════════════
-function saveRows(rows) {
-  if (!rows || !rows.length) return jsonResponse({ error: 'No rows provided' });
-
-  var ss    = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(TAB_MEASUREMENTS);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(TAB_MEASUREMENTS);
-    var headers = ['Date','Time','TeamMember','Location','Customer','Phone','GPSLink','Product','Direction','OpeningNo','MeasNo','Height','Width','Top','Bottom','Measurement','Notes','Photos'];
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#1A1A2E').setFontColor('white');
-  }
-
-  var photoCell = rows[0].Photos || '';
-  var hasPhoto  = photoCell.includes('https://');
-
-  rows.forEach(function(row) {
-    sheet.appendRow([
-      row.Date, row.Time, row.TeamMember, row.Location,
-      row.Customer, row.Phone, row.GPSLink, row.Product,
-      row.Direction, row.OpeningNo, row.MeasNo,
-      row.Height, row.Width, row.Top, row.Bottom,
-      row.Measurement, row.Notes, photoCell
-    ]);
-    if (hasPhoto) {
-      var lastRow = sheet.getLastRow();
-      var links   = photoCell.split('\n').filter(Boolean);
-      var cell    = sheet.getRange(lastRow, 18);
-      cell.setNote(links.join('\n'));
-      cell.setFormula(links.length === 1
-        ? '=HYPERLINK("' + links[0] + '","View Photo")'
-        : '=HYPERLINK("' + links[0] + '","' + links.length + ' Photos")'
-      );
+    // Recent bills
+    var bills = d.recentBills || [];
+    var list = document.getElementById('recent-bills-list');
+    if (!bills.length) {
+      list.innerHTML = '<div class="empty-state"><div class="emo">📋</div><p>No bills yet.<br>Approve a quotation to generate your first bill.</p></div>';
+    } else {
+      list.innerHTML = bills.map(function(b) {
+        return '<div class="bill-row">' +
+          '<div class="bill-info">' +
+            '<div class="bill-no">' + b.BillNo + '</div>' +
+            '<div class="bill-cust">' + (b.Customer || '—') + '</div>' +
+            '<div class="bill-date">' + (b.Date || '') + '</div>' +
+          '</div>' +
+          '<div class="bill-amt">Rs.' + (b.Amount || 0).toLocaleString('en-IN') + '</div>' +
+        '</div>';
+      }).join('');
     }
   });
-
-  return jsonResponse({ status: 'ok', saved: rows.length });
 }
 
-// ════════════════════════════════════════════════════════
-// ── UPLOAD PHOTOS TO DRIVE ───────────────────────────────
-// ════════════════════════════════════════════════════════
-function uploadPhotos(data) {
-  var entryId  = data.entryId;
-  var folderId = data.folderId || DRIVE_FOLDER_ID;
-  var photos   = data.photos;
-
-  if (!photos || !photos.length) return jsonResponse({ links: [] });
-
-  var token = ScriptApp.getOAuthToken();
-  var links = [], errors = [];
-
-  for (var i = 0; i < photos.length; i++) {
-    try {
-      var photo    = photos[i];
-      var parts    = photo.data.split(',');
-      var b64      = parts[1];
-      var mime     = parts[0].split(':')[1].split(';')[0] || 'image/jpeg';
-      var ext      = mime.split('/')[1] || 'jpg';
-      var fileName = photo.name || ('photo_' + entryId + '_' + (i+1) + '.' + ext);
-
-      var metaResp = UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files', {
-        method: 'POST', contentType: 'application/json',
-        payload: JSON.stringify({ name: fileName, parents: [folderId], mimeType: mime }),
-        headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true
-      });
-      var meta = JSON.parse(metaResp.getContentText());
-      if (!meta.id) { errors.push('meta failed ' + i); continue; }
-
-      var upResp = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files/' + meta.id + '?uploadType=media', {
-        method: 'PATCH', contentType: mime,
-        payload: Utilities.base64Decode(b64),
-        headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true
-      });
-      var uploaded = JSON.parse(upResp.getContentText());
-      if (!uploaded.id) { errors.push('upload failed ' + i); continue; }
-
-      UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files/' + uploaded.id + '/permissions', {
-        method: 'POST', contentType: 'application/json',
-        payload: JSON.stringify({ role: 'reader', type: 'anyone' }),
-        headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true
-      });
-      links.push('https://drive.google.com/file/d/' + uploaded.id + '/view');
-    } catch(err) { errors.push('photo ' + i + ': ' + err.toString()); }
-  }
-  return jsonResponse({ status: 'ok', links: links, errors: errors });
-}
-
-// ════════════════════════════════════════════════════════
-// ── GET RECENT ENTRIES ───────────────────────────────────
-// ════════════════════════════════════════════════════════
-function getRecent(limit) {
-  var ss    = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(TAB_MEASUREMENTS);
-  if (!sheet) return jsonResponse({ rows: [] });
-
-  var data = sheet.getDataRange().getValues();
-  if (data.length < 2) return jsonResponse({ rows: [] });
-
-  var headers      = data[0];
-  var photosColIdx = headers.indexOf('Photos');
-  var fetchRows    = limit * 6;
-  var startRow     = Math.max(1, data.length - fetchRows);
-  var recentRows   = data.slice(startRow).reverse();
-
-  var grouped = {}, groupOrder = [];
-
-  recentRows.forEach(function(row, i) {
-    var obj = {};
-    headers.forEach(function(h, j) {
-      var val = row[j];
-      if (typeof val === 'object' && val !== null) val = val.toString();
-      obj[h] = val || '';
-    });
-    var key = obj.Date + '_' + obj.Time + '_' + obj.TeamMember + '_' + obj.Location;
-    if (!grouped[key]) {
-      grouped[key] = JSON.parse(JSON.stringify(obj));
-      grouped[key]._measurements = [];
-      grouped[key]._sheetRowIdx  = startRow + (recentRows.length - 1 - i) + 1;
-      groupOrder.push(key);
+// ══════════════════════════════
+// PENDING USER APPROVALS
+// ══════════════════════════════
+function loadPendingUsers() {
+  showOv('Loading...');
+  api({ action: 'getPendingUsers' }, function(err, res) {
+    hideOv();
+    if (err || !res || res.error) { showToast('Could not load users'); return; }
+    var users = res.users || [];
+    var list = document.getElementById('users-list');
+    if (!users.length) {
+      list.innerHTML = '<div class="empty-state"><div class="emo">✅</div><p>No pending users to approve.</p></div>';
+    } else {
+      list.innerHTML = users.map(function(u) {
+        return '<div class="user-card">' +
+          '<div class="user-info">' +
+            '<div class="u-name">' + u.name + '</div>' +
+            '<div class="u-user">@' + u.username + '</div>' +
+          '</div>' +
+          '<div class="user-actions">' +
+            '<button class="u-btn approve" onclick="approveUser(\'' + u.username + '\',\'approve\')">Approve</button>' +
+            '<button class="u-btn reject"  onclick="approveUser(\'' + u.username + '\',\'reject\')">Reject</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
     }
-    grouped[key]._measurements.push({
-      Product: obj.Product, Direction: obj.Direction,
-      OpeningNo: obj.OpeningNo, MeasNo: obj.MeasNo, Measurement: obj.Measurement
-    });
+
+    // Update badge count on dashboard
+    var count = users.length;
+    if (count > 0 && SESSION && SESSION.role === 'owner') {
+      document.getElementById('pending-users-section').style.display = 'block';
+      document.getElementById('pending-users-count').textContent = count;
+    }
   });
+}
 
-  var entries = groupOrder.slice(0, limit).map(function(key) {
-    var e = grouped[key];
-    if (photosColIdx !== -1) {
-      try {
-        var note = sheet.getRange(e._sheetRowIdx, photosColIdx + 1).getNote();
-        if (note && note.includes('https://')) e.Photos = note;
-      } catch(err) {}
-    }
-    var productMap = {};
-    e._measurements.forEach(function(m) {
-      var k = m.OpeningNo + '_' + m.Product;
-      if (!productMap[k]) productMap[k] = { product: m.Product, direction: m.Direction, measurements: [] };
-      productMap[k].measurements.push(m.Measurement);
-    });
-    e.Measurements = Object.values(productMap).map(function(p) {
-      var d = p.direction && p.direction !== '—' ? ' [' + p.direction + ']' : '';
-      return p.product + d + ': ' + p.measurements.map(function(m,i){ return (i+1)+'. '+m; }).join(' | ');
-    }).join(' || ');
-    e.Products = Object.values(productMap).map(function(p){ return p.product; }).join(', ');
-    return e;
+function approveUser(username, action) {
+  showOv(action === 'approve' ? 'Approving...' : 'Rejecting...');
+  api({ action: 'approveUser', username: username, userAction: action }, function(err, res) {
+    hideOv();
+    if (err || !res || res.error) { showToast('Action failed'); return; }
+    showToast(action === 'approve' ? '✅ User approved!' : '❌ User rejected');
+    loadPendingUsers();
   });
-
-  return jsonResponse({ status: 'ok', rows: entries });
 }
 
-// ════════════════════════════════════════════════════════
-// ── CREATE QUOTATION ─────────────────────────────────────
-// ════════════════════════════════════════════════════════
-function createQuotation(data) {
-  try {
-    var bs    = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var sheet = bs.getSheetByName(TAB_QUOTATIONS);
-    if (!sheet) {
-      sheet = bs.insertSheet(TAB_QUOTATIONS);
-      var headers = ['QuoteID','Date','TeamMember','Location','Customer','Phone','Product','Dimensions','SqFt','UnitPrice','DiscountPct','Subtotal','Total','Status'];
-      sheet.appendRow(headers);
-      sheet.getRange(1,1,1,headers.length).setFontWeight('bold').setBackground('#FF6B00').setFontColor('white');
-    }
-    var items   = data.items || [];
-    var discPct = parseFloat(data.discountPct) || 0;
-    items.forEach(function(item) {
-      var itemSub = discPct > 0 ? item.total / (1 - discPct/100) : item.total;
-      sheet.appendRow([
-        data.quoteId, data.date, data.teamMember, data.location,
-        data.customer || '—', data.phone || '—',
-        item.product || '', item.dimensions || '', item.sqft || 0,
-        item.unitPrice || 0, discPct, Math.round(itemSub), item.total, 'DRAFT'
-      ]);
-    });
-    return jsonResponse({ status: 'ok', quoteId: data.quoteId });
-  } catch(err) {
-    return jsonResponse({ error: err.message });
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+(function init() {
+  SESSION = loadSession();
+  if (!SESSION) {
+    window.location.href = 'index.html';
+    return;
   }
-}
 
-// ════════════════════════════════════════════════════════
-// ── GET PENDING QUOTATIONS ───────────────────────────────
-// ════════════════════════════════════════════════════════
-function getPendingQuotations() {
-  try {
-    var bs    = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var sheet = bs.getSheetByName(TAB_QUOTATIONS);
-    if (!sheet) return jsonResponse({ quotes: [] });
+  // Set avatar initial
+  var initial = (SESSION.name || SESSION.username || 'U')[0].toUpperCase();
+  document.getElementById('user-avatar').textContent = initial;
 
-    var data    = sheet.getDataRange().getValues();
-    if (data.length < 2) return jsonResponse({ quotes: [] });
+  // Build nav for role
+  buildNav(SESSION.role);
 
-    var headers = data[0];
-    var grouped = {}, order = [];
+  // Set first screen based on role
+  var firstScreen = SESSION.role === 'owner' ? 'dashboard' : 'measurements';
 
-    data.slice(1).forEach(function(row) {
-      var obj = {};
-      headers.forEach(function(h, i) { obj[h] = row[i] !== undefined ? row[i].toString() : ''; });
-      var qid = obj.QuoteID;
-      if (!qid) return;
-      if (!grouped[qid]) {
-        grouped[qid] = {
-          QuoteID: qid, Date: obj.Date, TeamMember: obj.TeamMember,
-          Location: obj.Location, Customer: obj.Customer, Phone: obj.Phone,
-          DiscountPct: parseFloat(obj.DiscountPct) || 0,
-          Status: obj.Status || 'DRAFT', UnitPrice: parseFloat(obj.UnitPrice) || 0,
-          Subtotal: 0, Total: 0, Items: []
-        };
-        order.push(qid);
-      }
-      grouped[qid].Items.push({
-        product: obj.Product, dimensions: obj.Dimensions, sqft: obj.SqFt,
-        unitPrice: parseFloat(obj.UnitPrice) || 0,
-        priceType: (obj.SqFt && parseFloat(obj.SqFt) > 0) ? 'sqft' : 'fixed',
-        discountPct: parseFloat(obj.DiscountPct) || 0,
-        subtotal: parseFloat(obj.Subtotal) || 0, total: parseFloat(obj.Total) || 0
-      });
-      grouped[qid].Subtotal += parseFloat(obj.Subtotal) || 0;
-      grouped[qid].Total    += parseFloat(obj.Total) || 0;
-    });
+  // Mark first nav button active
+  goScreen(firstScreen);
 
-    return jsonResponse({ status: 'ok', quotes: order.map(function(q){ return grouped[q]; }).reverse() });
-  } catch(err) {
-    return jsonResponse({ error: err.message });
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// ── APPROVE QUOTATION ────────────────────────────────────
-// ════════════════════════════════════════════════════════
-function approveQuotation(data) {
-  try {
-    var quoteId    = data.quoteId;
-    var editedDisc = (data.editedDisc !== undefined && data.editedDisc !== null) ? parseFloat(data.editedDisc) : null;
-    var addonAmt   = parseFloat(data.addonAmt)  || 0;
-    var addonNote  = data.addonNote || '';
-
-    var bs     = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var qSheet = bs.getSheetByName(TAB_QUOTATIONS);
-    if (!qSheet) return jsonResponse({ error: 'Quotations sheet not found' });
-
-    var qData      = qSheet.getDataRange().getValues();
-    var headers    = qData[0];
-    var qidCol     = headers.indexOf('QuoteID') + 1;
-    var statusCol  = headers.indexOf('Status') + 1;
-    var discCol    = headers.indexOf('DiscountPct') + 1;
-    var totalCol   = headers.indexOf('Total') + 1;
-    var subCol     = headers.indexOf('Subtotal') + 1;
-    var sqftIdx    = headers.indexOf('SqFt');
-    var upriceIdx  = headers.indexOf('UnitPrice');
-
-    var quoteRows = [];
-    for (var i = 1; i < qData.length; i++) {
-      if (qData[i][qidCol-1].toString() === quoteId) {
-        var rowNum = i + 1;
-        qSheet.getRange(rowNum, statusCol).setValue('APPROVED');
-        if (editedDisc !== null) {
-          var sqft   = parseFloat(qData[i][sqftIdx]) || 0;
-          var uprice = parseFloat(qData[i][upriceIdx]) || 0;
-          var rSub   = sqft > 0 ? Math.round(sqft * uprice) : uprice;
-          var rTot   = Math.round(rSub * (1 - editedDisc/100));
-          qSheet.getRange(rowNum, discCol).setValue(editedDisc);
-          qSheet.getRange(rowNum, subCol).setValue(rSub);
-          qSheet.getRange(rowNum, totalCol).setValue(rTot);
-        }
-        var rowObj = {};
-        headers.forEach(function(h, j) { rowObj[h] = qSheet.getRange(rowNum, j+1).getValue(); });
-        quoteRows.push(rowObj);
-      }
-    }
-    if (!quoteRows.length) return jsonResponse({ error: 'QuoteID not found' });
-
-    // Write to Billing tab
-    var bSheet = bs.getSheetByName(TAB_BILLING);
-    if (!bSheet) {
-      bSheet = bs.insertSheet(TAB_BILLING);
-      var bHdrs = ['BillNo','Date','Time','Customer','Phone','Product','Dimensions','UnitPrice','DiscountPct','FinalAmount','Team','Location','QuoteID'];
-      bSheet.appendRow(bHdrs);
-      bSheet.getRange(1,1,1,bHdrs.length).setFontWeight('bold').setBackground('#FF6B00').setFontColor('white');
-    }
-    var billNo  = 'B' + new Date().getTime().toString().slice(-8);
-    var timeStr = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-
-    quoteRows.forEach(function(r) {
-      bSheet.appendRow([
-        billNo, r.Date, timeStr, r.Customer, r.Phone, r.Product,
-        r.Dimensions, parseFloat(r.UnitPrice)||0, parseFloat(r.DiscountPct)||0,
-        parseFloat(r.Total)||0, r.TeamMember, r.Location, quoteId
-      ]);
-    });
-    if (addonAmt > 0) {
-      bSheet.appendRow([
-        billNo, quoteRows[0].Date, timeStr,
-        quoteRows[0].Customer, quoteRows[0].Phone,
-        'Add-on: ' + (addonNote || 'Extra charges'),
-        addonNote, 0, 0, addonAmt,
-        quoteRows[0].TeamMember, quoteRows[0].Location, quoteId
-      ]);
-    }
-    return jsonResponse({ status: 'ok', billNo: billNo, quoteId: quoteId });
-  } catch(err) {
-    return jsonResponse({ error: err.message });
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// ── DENY QUOTATION ───────────────────────────────────────
-// ════════════════════════════════════════════════════════
-function denyQuotation(data) {
-  try {
-    var bs     = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var qSheet = bs.getSheetByName(TAB_QUOTATIONS);
-    if (!qSheet) return jsonResponse({ error: 'Quotations sheet not found' });
-    var qData   = qSheet.getDataRange().getValues();
-    var headers = qData[0];
-    var qidCol  = headers.indexOf('QuoteID') + 1;
-    var statCol = headers.indexOf('Status') + 1;
-    var found   = false;
-    for (var i = 1; i < qData.length; i++) {
-      if (qData[i][qidCol-1].toString() === data.quoteId) {
-        qSheet.getRange(i+1, statCol).setValue('DENIED');
-        found = true;
-      }
-    }
-    if (!found) return jsonResponse({ error: 'QuoteID not found' });
-    return jsonResponse({ status: 'ok' });
-  } catch(err) {
-    return jsonResponse({ error: err.message });
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// ── PAYMENTS ─────────────────────────────────────────────
-// Payments tab: BillNo, Date, Amount, Note, RecordedBy, Timestamp
-// ════════════════════════════════════════════════════════
-function getPaymentsSheet() {
-  var bs    = SpreadsheetApp.openById(BILLING_SHEET_ID);
-  var sheet = bs.getSheetByName(TAB_PAYMENTS);
-  if (!sheet) {
-    sheet = bs.insertSheet(TAB_PAYMENTS);
-    var headers = ['BillNo','PaymentDate','Amount','Note','RecordedBy','Timestamp'];
-    sheet.appendRow(headers);
-    sheet.getRange(1,1,1,headers.length).setFontWeight('bold').setBackground('#1A1A2E').setFontColor('white');
-  }
-  return sheet;
-}
-
-function getPayments(data) {
-  try {
-    var bs     = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var bSheet = bs.getSheetByName(TAB_BILLING);
-    var pSheet = getPaymentsSheet();
-    if (!bSheet) return { status: 'ok', bills: [] };
-
-    var bData   = bSheet.getDataRange().getValues();
-    var bHdrs   = bData[0];
-    var pData   = pSheet.getDataRange().getValues();
-    var pHdrs   = pData[0];
-
-    // Group billing rows by BillNo
-    var billMap = {}, billOrder = [];
-    bData.slice(1).forEach(function(row) {
-      var obj = {};
-      bHdrs.forEach(function(h,i){ obj[h] = row[i] ? row[i].toString() : ''; });
-      var bn = obj.BillNo;
-      if (!bn) return;
-      if (!billMap[bn]) {
-        billMap[bn] = {
-          BillNo: bn, Date: obj.Date, Customer: obj.Customer,
-          Phone: obj.Phone, Location: obj.Location, Team: obj.Team,
-          QuoteID: obj.QuoteID, Items: [], Total: 0, Payments: []
-        };
-        billOrder.push(bn);
-      }
-      billMap[bn].Items.push(obj);
-      billMap[bn].Total += parseFloat(obj.FinalAmount) || 0;
-    });
-
-    // Attach payments
-    pData.slice(1).forEach(function(row) {
-      var obj = {};
-      pHdrs.forEach(function(h,i){ obj[h] = row[i] ? row[i].toString() : ''; });
-      if (billMap[obj.BillNo]) {
-        billMap[obj.BillNo].Payments.push(obj);
+  // For owner: check pending users in background
+  if (SESSION.role === 'owner') {
+    api({ action: 'getPendingUsers' }, function(err, res) {
+      if (err || !res || res.error) return;
+      var count = (res.users || []).length;
+      if (count > 0) {
+        document.getElementById('pending-users-section').style.display = 'block';
+        document.getElementById('pending-users-count').textContent = count;
       }
     });
-
-    // Compute balance
-    var bills = billOrder.map(function(bn) {
-      var b    = billMap[bn];
-      b.Total  = Math.round(b.Total);
-      var paid = b.Payments.reduce(function(s,p){ return s + (parseFloat(p.Amount)||0); }, 0);
-      b.Paid    = Math.round(paid);
-      b.Balance = b.Total - b.Paid;
-      return b;
-    }).reverse();
-
-    return { status: 'ok', bills: bills };
-  } catch(err) {
-    return { error: err.message };
   }
-}
-
-function recordPayment(data) {
-  try {
-    var sheet = getPaymentsSheet();
-    sheet.appendRow([
-      data.billNo, data.paymentDate || new Date().toISOString().split('T')[0],
-      parseFloat(data.amount) || 0, data.note || '',
-      data.recordedBy || 'Owner', new Date().toISOString()
-    ]);
-    return { status: 'ok' };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// ── PRICE LIST ───────────────────────────────────────────
-// ════════════════════════════════════════════════════════
-function getPriceListData() {
-  try {
-    var bs    = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var sheet = bs.getSheetByName(TAB_PRICELIST);
-    if (!sheet) return { status: 'ok', items: getDefaultPriceList() };
-
-    var data = sheet.getDataRange().getValues();
-    if (data.length < 2) return { status: 'ok', items: getDefaultPriceList() };
-
-    var headers = data[0];
-    var items   = data.slice(1).map(function(row) {
-      var obj = {};
-      headers.forEach(function(h,i){ obj[h] = row[i] ? row[i].toString() : ''; });
-      return obj;
-    });
-    return { status: 'ok', items: items };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-function getDefaultPriceList() {
-  return [
-    { Product: 'UPVC Window',         Type: 'sqft',  Rate: '400',  Notes: 'Per sq ft' },
-    { Product: 'Aluminium Window',    Type: 'sqft',  Rate: '550',  Notes: 'Per sq ft' },
-    { Product: 'UPVC Door',           Type: 'sqft',  Rate: '400',  Notes: 'Per sq ft' },
-    { Product: 'Aluminium Door',      Type: 'sqft',  Rate: '550',  Notes: 'Per sq ft' },
-    { Product: 'PVC Door',            Type: 'fixed', Rate: '2500', Notes: 'Per unit' },
-    { Product: 'WPC Door',            Type: 'fixed', Rate: '4500', Notes: 'Per unit' },
-    { Product: 'Wood Door',           Type: 'fixed', Rate: '3000', Notes: 'Per unit' },
-    { Product: 'Aluminium Partition', Type: 'sqft',  Rate: '450',  Notes: 'Per sq ft' },
-    { Product: 'Louver',              Type: 'fixed', Rate: '2500', Notes: 'Per unit' }
-  ];
-}
-
-function updatePriceListData(data) {
-  try {
-    var bs    = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var sheet = bs.getSheetByName(TAB_PRICELIST);
-    if (!sheet) {
-      sheet = bs.insertSheet(TAB_PRICELIST);
-      sheet.appendRow(['Product','Type','Rate','Notes']);
-      sheet.getRange(1,1,1,4).setFontWeight('bold').setBackground('#FF6B00').setFontColor('white');
-    }
-    var items = data.items || [];
-    // Clear existing data (keep header)
-    if (sheet.getLastRow() > 1) {
-      sheet.getRange(2, 1, sheet.getLastRow()-1, sheet.getLastColumn()).clearContent();
-    }
-    items.forEach(function(item) {
-      sheet.appendRow([item.Product, item.Type, item.Rate, item.Notes || '']);
-    });
-    return { status: 'ok' };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// ── DASHBOARD ────────────────────────────────────────────
-// ════════════════════════════════════════════════════════
-function getDashboard() {
-  try {
-    var bs      = SpreadsheetApp.openById(BILLING_SHEET_ID);
-    var ss      = SpreadsheetApp.getActiveSpreadsheet();
-    var today   = new Date().toISOString().split('T')[0];
-    var result  = {
-      todayMeasurements: 0, pendingQuotations: 0,
-      totalBilledThisMonth: 0, totalPaidThisMonth: 0,
-      recentBills: []
-    };
-
-    // Today's measurements
-    var mSheet = ss.getSheetByName(TAB_MEASUREMENTS);
-    if (mSheet) {
-      var mData = mSheet.getDataRange().getValues();
-      var mHdrs = mData[0];
-      var dateIdx = mHdrs.indexOf('Date');
-      if (dateIdx !== -1) {
-        mData.slice(1).forEach(function(row) {
-          var d = row[dateIdx];
-          if (d && d.toString().substring(0,10) === today) result.todayMeasurements++;
-        });
-      }
-    }
-
-    // Pending quotations
-    var qSheet = bs.getSheetByName(TAB_QUOTATIONS);
-    if (qSheet) {
-      var qData  = qSheet.getDataRange().getValues();
-      var qHdrs  = qData[0];
-      var statIdx = qHdrs.indexOf('Status');
-      var qidIdx  = qHdrs.indexOf('QuoteID');
-      var seen    = {};
-      if (statIdx !== -1) {
-        qData.slice(1).forEach(function(row) {
-          var qid = row[qidIdx] ? row[qidIdx].toString() : '';
-          if (row[statIdx] === 'DRAFT' && qid && !seen[qid]) {
-            result.pendingQuotations++;
-            seen[qid] = true;
-          }
-        });
-      }
-    }
-
-    // This month billing + recent bills
-    var bSheet = bs.getSheetByName(TAB_BILLING);
-    if (bSheet) {
-      var bData  = bSheet.getDataRange().getValues();
-      var bHdrs  = bData[0];
-      var bDateI = bHdrs.indexOf('Date');
-      var bAmtI  = bHdrs.indexOf('FinalAmount');
-      var bBillI = bHdrs.indexOf('BillNo');
-      var bCustI = bHdrs.indexOf('Customer');
-      var thisMonth = today.substring(0,7);
-      var billSeen  = {};
-      bData.slice(1).forEach(function(row) {
-        var d  = row[bDateI] ? row[bDateI].toString().substring(0,7) : '';
-        var bn = row[bBillI] ? row[bBillI].toString() : '';
-        var amt = parseFloat(row[bAmtI]) || 0;
-        if (d === thisMonth) result.totalBilledThisMonth += amt;
-        if (bn && !billSeen[bn]) {
-          billSeen[bn] = true;
-          result.recentBills.push({ BillNo: bn, Customer: row[bCustI] || '', Date: row[bDateI] || '', Amount: amt });
-        }
-      });
-      result.totalBilledThisMonth = Math.round(result.totalBilledThisMonth);
-      result.recentBills = result.recentBills.slice(-5).reverse();
-    }
-
-    // Payments this month
-    var pSheet = bs.getSheetByName(TAB_PAYMENTS);
-    if (pSheet) {
-      var pData  = pSheet.getDataRange().getValues();
-      var pHdrs  = pData[0];
-      var pDateI = pHdrs.indexOf('PaymentDate');
-      var pAmtI  = pHdrs.indexOf('Amount');
-      var thisM  = today.substring(0,7);
-      pData.slice(1).forEach(function(row) {
-        var d = row[pDateI] ? row[pDateI].toString().substring(0,7) : '';
-        if (d === thisM) result.totalPaidThisMonth += parseFloat(row[pAmtI]) || 0;
-      });
-      result.totalPaidThisMonth = Math.round(result.totalPaidThisMonth);
-    }
-
-    return { status: 'ok', data: result };
-  } catch(err) {
-    return { error: err.message };
-  }
-}
-
-// ── TEST HELPERS ──
-function testAuth() {
-  Logger.log(JSON.stringify(registerUser({ username:'owner1', password:'test123', name:'Sai Ganesh', isOwner:true })));
-  Logger.log(JSON.stringify(loginUser({ username:'owner1', password:'test123' })));
-}
+})();
+</script>
+</body>
+</html>
