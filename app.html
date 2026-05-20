@@ -817,8 +817,6 @@ html, body {
         <label class="mlabel">Customer Phone</label>
         <input type="tel" id="m-phone" placeholder="e.g. 98765 43210">
 
-        <label class="mlabel">Discount % <span style="font-size:11px;color:var(--text3);font-weight:400">(optional)</span></label>
-        <input type="text" id="m-discount" placeholder="e.g. 10" inputmode="decimal">
       </div>
 
       <div class="mcard">
@@ -1491,7 +1489,7 @@ async function submitMeasurement() {
 
   var gpsLink = (capturedLat&&capturedLng) ? 'https://maps.google.com/?q='+capturedLat+','+capturedLng : '—';
   var entryId = Date.now();
-  var discountVal = document.getElementById('m-discount').value.trim() || '0';
+  var discountVal = '0';
   var now = new Date();
 
   savingStep(1, 'Uploading photos to Drive...');
@@ -1602,7 +1600,17 @@ function showMSuccess(entry, quoteCreated, quoteId, quoteTotal, discountVal) {
     document.getElementById('quote-badge-sub').textContent =
       quoteId+' · Rs.'+quoteTotal.toLocaleString('en-IN')+(parseFloat(discountVal)>0?' (after '+discountVal+'% disc)':'')+' · Pending approval';
     badge.style.cursor = 'pointer';
-    badge.onclick = function(){ resetMForm(); goScreen('quotations'); };
+    badge.onclick = function(){
+      document.getElementById('scr-m-success').style.display = 'none';
+      document.getElementById('scr-m-success').classList.remove('on');
+      document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
+      document.getElementById('scr-quotations').classList.add('on');
+      document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('on'); });
+      var qNav = document.getElementById('nav-quotations');
+      if (qNav) qNav.classList.add('on');
+      loadQuotations();
+      window.scrollTo({top:0,behavior:'smooth'});
+    };
   } else { badge.classList.remove('show'); }
 
   var summary = buildWASummary(entry);
@@ -1835,7 +1843,7 @@ function renderQuotes(all, filterStatus, scr) {
         html += '<div style="background:var(--o-bg);border:1.5px solid var(--o-border);border-radius:10px;padding:12px;margin-top:12px">';
         html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
         html += '<label class="q-edit-label">Discount %</label>';
-        html += '<input class="q-edit-input" type="number" id="disc-'+q.QuoteID+'" value="'+(q.DiscountPct||0)+'" min="0" max="100" oninput="recalcQuoteTotal(\''+q.QuoteID+'\','+JSON.stringify(q.Items)+')" style="max-width:80px">';
+        html += '<input class="q-edit-input" type="number" id="disc-'+q.QuoteID+'" value="'+(q.DiscountPct||0)+'" min="0" max="100" oninput="recalcQuoteTotal(\''+q.QuoteID+'\')" style="max-width:80px">';
         html += '<span style="font-size:12px;color:var(--text2);margin-left:4px">off items total</span>';
         html += '</div>';
         html += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase">Add-ons</div>';
@@ -1872,8 +1880,8 @@ function addAddonRow(quoteId) {
   var div = document.createElement('div');
   div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center';
   div.innerHTML =
-    '<input class="q-edit-input" type="text" placeholder="Addon description" style="flex:2" oninput="recalcQuoteTotal(\''+quoteId+'\',null)">' +
-    '<input class="q-edit-input" type="number" placeholder="Rs." style="max-width:80px" oninput="recalcQuoteTotal(\''+quoteId+'\',null)">' +
+    '<input class="q-edit-input" type="text" placeholder="Addon description" style="flex:2" oninput="recalcQuoteTotal(\''+quoteId+'\')">' +
+    '<input class="q-edit-input" type="number" placeholder="Rs." style="max-width:80px" oninput="recalcQuoteTotal(\''+quoteId+'\')">' +
     '<button onclick="this.parentElement.remove();recalcQuoteTotal(\''+quoteId+'\',null)" style="background:var(--red-bg);color:var(--red);border:none;border-radius:6px;padding:6px 8px;font-size:12px;cursor:pointer;font-weight:700">✕</button>';
   list.appendChild(div);
 }
@@ -1891,24 +1899,23 @@ function getAddonRows(quoteId) {
   return addons;
 }
 
-function recalcQuoteTotal(quoteId, items) {
+function recalcQuoteTotal(quoteId) {
   var disc = parseFloat((document.getElementById('disc-'+quoteId)||{}).value) || 0;
   var addons = getAddonRows(quoteId);
   var addonTotal = addons.reduce(function(s,a){ return s+a.amt; }, 0);
-
-  // Use stored items if not passed
-  if (!items) items = window._quoteItemsMap ? window._quoteItemsMap[quoteId] : null;
-  var baseTotal = 0;
+  var items = window._quoteItemsMap ? window._quoteItemsMap[quoteId] : null;
+  var baseSubtotal = 0;
   if (items) {
     items.forEach(function(item){
-      baseTotal += parseFloat(item.total)||0;
+      // Use subtotal (pre-discount) to recalculate correctly
+      baseSubtotal += parseFloat(item.subtotal)||parseFloat(item.total)||0;
     });
   }
-  var afterDisc = Math.round(baseTotal * (1 - disc/100));
+  var afterDisc = Math.round(baseSubtotal * (1 - disc/100));
   var finalTotal = afterDisc + addonTotal;
   var el = document.getElementById('live-total-'+quoteId);
   if (el) el.textContent = 'Rs.' + finalTotal.toLocaleString('en-IN');
-}  
+}
 
 function approveQuote(quoteId) {
   var disc = document.getElementById('disc-'+quoteId);
