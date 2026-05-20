@@ -1287,22 +1287,30 @@ function removePhoto(idx) {
 }
 
 async function uploadPhotosToDrive(entryId) {
-  var valid = photoDataURLs.filter(Boolean).map(function(d,i){
-    return { data: d, name: photoFileNames[i] || ('photo_'+(i+1)+'.jpg') };
-  });
+  var valid = [];
+  for (var i = 0; i < photoDataURLs.length; i++) {
+    if (photoDataURLs[i]) {
+      valid.push({ data: photoDataURLs[i], name: photoFileNames[i] || ('photo_'+(i+1)+'.jpg') });
+    }
+  }
   if (!valid.length) return [];
   var links = [];
-  try {
-    var res = await apiAsync({
-      action: 'uploadPhotos',
-      entryId: entryId,
-      folderId: DRIVE_FOLDER_ID,
-      photos: valid
-    });
-    if (res && res.links && res.links.length) {
-      links = res.links;
-    }
-  } catch(e) { console.error('Photo upload error:', e); }
+  for (var j = 0; j < valid.length; j++) {
+    try {
+      showOv('Uploading photo '+(j+1)+' of '+valid.length+'...');
+      var res = await apiAsync({
+        action: 'uploadPhotos',
+        entryId: entryId,
+        folderId: DRIVE_FOLDER_ID,
+        photos: [valid[j]]
+      });
+      if (res && res.links && res.links[0]) {
+        links.push(res.links[0]);
+      } else if (res && res.errors) {
+        console.error('Photo error:', res.errors);
+      }
+    } catch(e) { console.error('Photo upload failed:', e); }
+  }
   return links;
 }
 
@@ -2075,6 +2083,18 @@ function downloadPDF(billNo) {
 function generatePDF(bill) {
   var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
   var W = 210, margin = 16, y = 0;
+
+  // ── CALCULATE DATE FIRST ──
+  var pdfDate = '—';
+  if (bill.Date) {
+    try {
+      var rawDate = bill.Date.toString().trim();
+      var dt = new Date(rawDate);
+      if (!isNaN(dt)) {
+        pdfDate = dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
+      } else { pdfDate = rawDate.substring(0,10); }
+    } catch(e) { pdfDate = bill.Date.toString().substring(0,10); }
+  }
 
   // ── WHITE BACKGROUND ──
   doc.setFillColor(255,255,255);
