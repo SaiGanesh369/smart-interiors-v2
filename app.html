@@ -1956,7 +1956,7 @@ function approveQuote(quoteId) {
   var disc = document.getElementById('disc-'+quoteId);
   var addons = getAddonRows(quoteId);
   var totalAddon = addons.reduce(function(s,a){ return s+a.amt; },0);
-  var addonNotes = addons.map(function(a){ return a.note+'(Rs.'+a.amt+')'; }).join(', ');
+  var addonNotes = addons.map(function(a){ return a.note + ': Rs.' + a.amt; }).join(' | ');
   showOv('Approving...');
   api({
     action: 'approveQuotation', quoteId: quoteId,
@@ -2103,7 +2103,7 @@ function downloadPDF(billNo) {
 
 function generatePDF(bill) {
   var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
-  var W = 210, M = 16, y = 0;
+  var W = 210, M = 14, y = 0;
 
   // ── DATE + TIME ──
   var pdfDate = '—';
@@ -2112,285 +2112,285 @@ function generatePDF(bill) {
     try {
       var dt = new Date(bill.Date.toString().trim());
       if (!isNaN(dt)) {
-        pdfDate = dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
-        pdfTime = dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'});
+        pdfDate = dt.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Kolkata'});
+        pdfTime = dt.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Kolkata'});
       }
     } catch(e) {}
   }
 
-  // ── HEADER — white bg, orange border box style ──
+  // ── HEADER — white background ──
   doc.setFillColor(255,255,255);
-  doc.rect(0, 0, W, 50, 'F');
+  doc.rect(0, 0, W, 46, 'F');
 
-  // Orange left accent bar (thin, full page height)
+  // Orange left bar full page height
   doc.setFillColor(255,107,0);
-  doc.rect(0, 0, 2, 297, 'F');
+  doc.rect(0, 0, 2.5, 297, 'F');
 
-  // Logo — 4-pane grid (exact from Image 3)
-  var px = M + 2, py = 10, ps = 14;
+  // ── LOGO — 4-pane grid (from Image 1 which is correct) ──
+  var px = M + 2, py = 9, ps = 15;
   doc.setFillColor(255,107,0);
-  doc.rect(px,           py,           ps/2-0.5, ps/2-0.5, 'F');
+  doc.rect(px,             py,             ps/2-0.6, ps/2-0.6, 'F');
   doc.setFillColor(255,150,60);
-  doc.rect(px+ps/2+0.5,  py,           ps/2-0.5, ps/2-0.5, 'F');
+  doc.rect(px+ps/2+0.6,   py,             ps/2-0.6, ps/2-0.6, 'F');
   doc.setFillColor(255,150,60);
-  doc.rect(px,           py+ps/2+0.5,  ps/2-0.5, ps/2-0.5, 'F');
+  doc.rect(px,             py+ps/2+0.6,   ps/2-0.6, ps/2-0.6, 'F');
   doc.setFillColor(26,26,46);
-  doc.rect(px+ps/2+0.5,  py+ps/2+0.5, ps/2-0.5, ps/2-0.5, 'F');
-  
-  // Brand name
+  doc.rect(px+ps/2+0.6,   py+ps/2+0.6,   ps/2-0.6, ps/2-0.6, 'F');
+
+  // Brand text
   doc.setTextColor(26,26,46);
-  doc.setFontSize(17); doc.setFont('helvetica','bold');
-  doc.text('SMART', px + ps + 4, py + 6);
-  doc.setFontSize(7); doc.setFont('helvetica','normal');
+  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text('SMART', px+ps+4, py+7);
+  doc.setFontSize(6.5); doc.setFont('helvetica','normal');
   doc.setTextColor(255,107,0);
-  doc.text('DOORS & WINDOWS', px + ps + 4, py + 11);
+  doc.text('DOORS & WINDOWS', px+ps+4, py+12);
   doc.setTextColor(170,170,170);
-  doc.setFontSize(6);
-  doc.text('ESTD. 2016', px + ps + 4, py + 16);
+  doc.setFontSize(5.5);
+  doc.text('ESTD. 2016', px+ps+4, py+17);
 
-  // Right side — Invoice label + number + date
-  doc.setTextColor(170,170,170);
-  doc.setFontSize(7); doc.setFont('helvetica','normal');
-  doc.text('INVOICE', W - M, 14, {align:'right'});
+  // Right — INVOICE label + bill number + date
+  doc.setTextColor(150,150,150);
+  doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+  doc.text('INVOICE', W-M, 12, {align:'right'});
   doc.setTextColor(26,26,46);
-  doc.setFontSize(14); doc.setFont('helvetica','bold');
-  doc.text(bill.BillNo, W - M, 22, {align:'right'});
+  doc.setFontSize(13); doc.setFont('helvetica','bold');
+  doc.text(bill.BillNo, W-M, 20, {align:'right'});
   doc.setTextColor(120,120,120);
-  doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-  doc.text(pdfDate + (pdfTime ? '  •  ' + pdfTime + ' IST' : ''), W - M, 28, {align:'right'});
+  doc.setFontSize(7); doc.setFont('helvetica','normal');
+  doc.text(pdfDate, W-M, 26, {align:'right'});
+  if (pdfTime) {
+    doc.setFontSize(6.5);
+    doc.text(pdfTime + ' IST', W-M, 31, {align:'right'});
+  }
 
-  // Divider line under header
-  doc.setDrawColor(230,230,230); doc.setLineWidth(0.3);
-  doc.line(M + 2, 50, W - M, 50);
+  // Thin divider under header
+  doc.setDrawColor(235,235,235); doc.setLineWidth(0.3);
+  doc.line(M+2, 46, W-M, 46);
 
-  // ── FROM + BILL TO ──
-  y = 58;
+  // ── FROM + BILL TO — side by side, vertical divider ──
+  y = 54;
 
-  // FROM label + content
-  doc.setTextColor(170,170,170);
+  // FROM
+  doc.setTextColor(150,150,150);
   doc.setFontSize(6.5); doc.setFont('helvetica','bold');
-  doc.text('FROM', M + 2, y);
+  doc.text('FROM', M+2, y);
   doc.setTextColor(26,26,46);
   doc.setFontSize(8.5); doc.setFont('helvetica','bold');
-  doc.text('Smart Doors & Windows', M + 2, y + 6);
+  doc.text('Smart Doors & Windows', M+2, y+6);
   doc.setFont('helvetica','normal'); doc.setFontSize(7);
   doc.setTextColor(100,100,100);
-  doc.text('Opp Gopalapatnam Police Station,', M + 2, y + 11);
-  doc.text('Baji Junction, Visakhapatnam 530027', M + 2, y + 15.5);
-  doc.text('7396931873 / 8919007089', M + 2, y + 20);
-  doc.text('smartdoorspvcgallery@gmail.com', M + 2, y + 24.5);
+  doc.text('Opp Gopalapatnam Police Station,', M+2, y+11);
+  doc.text('Baji Junction, Visakhapatnam 530027', M+2, y+15.5);
+  doc.text('7396931873 / 8919007089', M+2, y+20);
+  doc.text('smartdoorspvcgallery@gmail.com', M+2, y+24.5);
 
-  // Vertical divider
+  // Vertical divider between FROM and BILL TO
   doc.setDrawColor(220,220,220); doc.setLineWidth(0.3);
-  doc.line(W/2, y - 2, W/2, y + 28);
+  doc.line(W/2-2, y-2, W/2-2, y+28);
 
-  // BILL TO label + content
-  var bx = W/2 + 8;
-  doc.setTextColor(170,170,170);
+  // BILL TO
+  var bx = W/2+6;
+  doc.setTextColor(150,150,150);
   doc.setFontSize(6.5); doc.setFont('helvetica','bold');
   doc.text('BILL TO', bx, y);
   doc.setTextColor(26,26,46);
   doc.setFontSize(10); doc.setFont('helvetica','bold');
-  doc.text((bill.Customer || '—').substring(0, 24), bx, y + 6);
+  doc.text((bill.Customer||'—').substring(0,22), bx, y+6);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
   doc.setTextColor(100,100,100);
-  doc.text((bill.Phone || '—'), bx, y + 12);
-  doc.text((bill.Location || '—').substring(0, 26), bx, y + 17);
+  doc.text((bill.Phone||'—'), bx, y+12);
+  doc.text((bill.Location||'—').substring(0,26), bx, y+17);
+
+  // Divider under FROM/BILL TO
+  doc.setDrawColor(235,235,235); doc.setLineWidth(0.3);
+  doc.line(M+2, y+32, W-M, y+32);
 
   // ── ITEMS TABLE ──
-  y = 96;
+  y = 94;
 
-  // Table header — orange tinted row
+  // Table header — orange tinted, orange left accent
   doc.setFillColor(255,244,236);
-  doc.rect(M + 2, y, W - M*2 - 2, 8, 'F');
-  // Left orange accent on header
+  doc.rect(M+2, y, W-M*2-2, 8, 'F');
   doc.setFillColor(255,107,0);
-  doc.rect(M + 2, y, 2, 8, 'F');
+  doc.rect(M+2, y, 2.5, 8, 'F');
   doc.setTextColor(255,107,0);
   doc.setFontSize(6.8); doc.setFont('helvetica','bold');
-  doc.text('ITEM & MEASUREMENT', M + 7, y + 5.2);
-  doc.text('QTY',     W - M - 52, y + 5.2, {align:'center'});
-  doc.text('UNIT',    W - M - 28, y + 5.2, {align:'center'});
-  doc.text('TOTAL',   W - M - 2,  y + 5.2, {align:'right'});
-
+  doc.text('ITEM & MEASUREMENT', M+8, y+5.2);
+  doc.text('QTY',   W-M-52, y+5.2, {align:'center'});
+  doc.text('UNIT',  W-M-28, y+5.2, {align:'center'});
+  doc.text('TOTAL', W-M-2,  y+5.2, {align:'right'});
   y += 9;
 
   var regularItems = (bill.Items||[]).filter(function(i){ return (i.Product||'').toLowerCase().indexOf('add-on') === -1; });
   var addonItems   = (bill.Items||[]).filter(function(i){ return (i.Product||'').toLowerCase().indexOf('add-on') !== -1; });
   var subtotal = 0;
 
+  // Regular item rows
   regularItems.forEach(function(item, idx) {
-    // Alternating row bg
-    if (idx % 2 === 0) {
+    if (idx%2===0) {
       doc.setFillColor(252,252,252);
-      doc.rect(M + 2, y - 1, W - M*2 - 2, 12, 'F');
+      doc.rect(M+2, y-1, W-M*2-2, 12, 'F');
     }
-    var amt = parseFloat(item.FinalAmount) || 0;
+    var amt = parseFloat(item.FinalAmount)||0;
     subtotal += amt;
-
     doc.setTextColor(26,26,46); doc.setFontSize(8); doc.setFont('helvetica','bold');
-    doc.text((item.Product||'').substring(0, 28), M + 7, y + 4);
+    doc.text((item.Product||'').substring(0,28), M+8, y+4);
     doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
-    doc.setTextColor(150,150,150);
-    var dim = (item.Dimensions||'').substring(0, 32);
-    if (dim) doc.text(dim, M + 7, y + 8.5);
-
-    doc.setTextColor(100,100,100); doc.setFontSize(7.5);
-    doc.text('1', W - M - 52, y + 4, {align:'center'});
-    doc.text('Rs.' + (parseFloat(item.UnitPrice)||0).toLocaleString('en-IN'), W - M - 28, y + 4, {align:'center'});
+    doc.setTextColor(160,160,160);
+    var dim = (item.Dimensions||'').substring(0,34);
+    if (dim) doc.text(dim, M+8, y+8.5);
+    doc.setTextColor(120,120,120); doc.setFontSize(7.5);
+    doc.text('1', W-M-52, y+4, {align:'center'});
+    doc.text('Rs.'+(parseFloat(item.UnitPrice)||0).toLocaleString('en-IN'), W-M-28, y+4, {align:'center'});
     doc.setTextColor(26,26,46); doc.setFont('helvetica','bold');
-    doc.text('Rs.' + amt.toLocaleString('en-IN'), W - M - 2, y + 4, {align:'right'});
+    doc.text('Rs.'+amt.toLocaleString('en-IN'), W-M-2, y+4, {align:'right'});
     y += 12;
   });
 
   // Addon rows
   addonItems.forEach(function(item) {
-    var addonAmt  = parseFloat(item.FinalAmount) || 0;
-    var rawNote   = (item.AddonNote || '').toString().trim();
+    var addonAmt  = parseFloat(item.FinalAmount)||0;
+    var rawNote   = (item.AddonNote||'').toString().trim();
     var addonNote = (rawNote && rawNote !== 'NA' && rawNote !== '0') ? rawNote : '';
 
     doc.setFillColor(255,250,245);
-    doc.rect(M + 2, y - 1, W - M*2 - 2, 12, 'F');
-
+    doc.rect(M+2, y-1, W-M*2-2, 12, 'F');
     doc.setTextColor(26,26,46); doc.setFontSize(8); doc.setFont('helvetica','bold');
-    doc.text('Add-on Charges', M + 7, y + 4);
+    doc.text('Add-on Charges', M+8, y+4);
     if (addonNote) {
       doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
-      doc.setTextColor(150,150,150);
-      doc.text(addonNote.substring(0, 38), M + 7, y + 8.5);
+      doc.setTextColor(160,160,160);
+      doc.text(addonNote.substring(0,40), M+8, y+8.5);
     }
-    doc.setTextColor(100,100,100); doc.setFontSize(7.5);
-    doc.text('—', W - M - 52, y + 4, {align:'center'});
-    doc.text('—', W - M - 28, y + 4, {align:'center'});
+    doc.setTextColor(120,120,120); doc.setFontSize(7.5);
+    doc.text('—', W-M-52, y+4, {align:'center'});
+    doc.text('—', W-M-28, y+4, {align:'center'});
     doc.setTextColor(26,26,46); doc.setFont('helvetica','bold');
-    doc.text('Rs.' + addonAmt.toLocaleString('en-IN'), W - M - 2, y + 4, {align:'right'});
+    doc.text('Rs.'+addonAmt.toLocaleString('en-IN'), W-M-2, y+4, {align:'right'});
     y += 12;
   });
 
   // Table bottom line
   doc.setDrawColor(230,230,230); doc.setLineWidth(0.3);
-  doc.line(M + 2, y, W - M, y);
+  doc.line(M+2, y, W-M, y);
 
   // ── SUMMARY ──
   y += 8;
-  var discPct  = bill.Items && bill.Items[0] ? parseFloat(bill.Items[0].DiscountPct) || 0 : 0;
+  var discPct  = bill.Items&&bill.Items[0] ? parseFloat(bill.Items[0].DiscountPct)||0 : 0;
   var discAmt  = Math.round(subtotal * discPct / 100);
-  var addonTot = addonItems.reduce(function(s,i){ return s + (parseFloat(i.FinalAmount)||0); }, 0);
-  var sx = W - M - 75;
+  var addonTot = addonItems.reduce(function(s,i){ return s+(parseFloat(i.FinalAmount)||0); }, 0);
+  var sx = W-M-72;
 
-  // Subtotal
   doc.setTextColor(120,120,120); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
   doc.text('Subtotal', sx, y);
   doc.setTextColor(26,26,46); doc.setFont('helvetica','bold');
-  doc.text('Rs.' + subtotal.toLocaleString('en-IN'), W - M - 2, y, {align:'right'});
+  doc.text('Rs.'+subtotal.toLocaleString('en-IN'), W-M-2, y, {align:'right'});
 
-  // Discount
   if (discPct > 0) {
     y += 7;
     doc.setTextColor(22,163,74); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
-    doc.text('Discount (' + discPct + '%)', sx, y);
+    doc.text('Discount ('+discPct+'%)', sx, y);
     doc.setFont('helvetica','bold');
-    doc.text('- Rs.' + discAmt.toLocaleString('en-IN'), W - M - 2, y, {align:'right'});
+    doc.text('- Rs.'+discAmt.toLocaleString('en-IN'), W-M-2, y, {align:'right'});
   }
 
-  // Addon total
   if (addonTot > 0) {
     y += 7;
     doc.setTextColor(255,107,0); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
     doc.text('Add-on Charges', sx, y);
     doc.setFont('helvetica','bold');
-    doc.text('+ Rs.' + addonTot.toLocaleString('en-IN'), W - M - 2, y, {align:'right'});
+    doc.text('+ Rs.'+addonTot.toLocaleString('en-IN'), W-M-2, y, {align:'right'});
   }
 
-  // Total box — full width orange
+  // Total — full width orange pill
   y += 10;
   doc.setFillColor(255,107,0);
-  doc.roundedRect(sx - 4, y - 6, W - M - sx + 2, 13, 2, 2, 'F');
+  doc.roundedRect(sx-4, y-6, W-M-sx+2, 13, 2, 2, 'F');
   doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
-  doc.text('Total Amount', sx, y + 2);
+  doc.text('Total Amount', sx, y+2);
   doc.setFontSize(11);
-  doc.text('Rs.' + bill.Total.toLocaleString('en-IN'), W - M - 2, y + 2, {align:'right'});
+  doc.text('Rs.'+bill.Total.toLocaleString('en-IN'), W-M-2, y+2, {align:'right'});
 
   // Paid / Balance
   y += 18;
   doc.setFontSize(7.5); doc.setFont('helvetica','normal');
   doc.setTextColor(100,100,100);
-  doc.text('Amount Paid: Rs.' + bill.Paid.toLocaleString('en-IN'), M + 2, y);
-  doc.setTextColor(bill.Balance > 0 ? 220 : 22, bill.Balance > 0 ? 50 : 163, bill.Balance > 0 ? 50 : 74);
+  doc.text('Amount Paid: Rs.'+bill.Paid.toLocaleString('en-IN'), M+2, y);
+  doc.setTextColor(bill.Balance>0?220:22, bill.Balance>0?50:163, bill.Balance>0?50:74);
   doc.setFont('helvetica','bold');
-  doc.text('Balance Due: Rs.' + bill.Balance.toLocaleString('en-IN'), W - M - 2, y, {align:'right'});
+  doc.text('Balance Due: Rs.'+bill.Balance.toLocaleString('en-IN'), W-M-2, y, {align:'right'});
 
-  // ── T&C ──
+  // ── T&C — orange bullet dots, 2 columns, compact ──
   y += 14;
-  doc.setDrawColor(255,107,0); doc.setLineWidth(0.5);
-  doc.line(M + 2, y, M + 5, y); // small orange accent line before title
-  doc.setDrawColor(230,230,230); doc.setLineWidth(0.3);
-  doc.line(M + 6, y, W - M, y);
-
+  // Small orange accent + divider
+  doc.setFillColor(255,107,0);
+  doc.rect(M+2, y, 3, 0.8, 'F');
+  doc.setDrawColor(235,235,235); doc.setLineWidth(0.3);
+  doc.line(M+7, y+0.4, W-M, y+0.4);
   y += 6;
+
   doc.setTextColor(26,26,46); doc.setFontSize(7); doc.setFont('helvetica','bold');
-  doc.text('TERMS & CONDITIONS', M + 2, y);
+  doc.text('TERMS & CONDITIONS', M+2, y);
   y += 5;
 
   var tcs = [
-    '01  Items once sold are not returnable or exchangeable.',
-    '02  Delivery timeline subject to material availability and will be communicated separately.',
-    '03  Customer must ensure site is ready before installation — delays due to site unreadiness are not our responsibility.',
-    '04  Prices are subject to change after quotation expiry due to material cost fluctuations.',
-    '05  Measurements taken by our team are final — changes after production begins will incur additional charges.',
-    '06  Slight colour variations may occur between catalogue samples and actual product due to contrast material batches.',
-    '07  Any disputes are subject to Visakhapatnam jurisdiction only.',
-    '08  The company reserves the right to cancel an order if advance payment is not received within 7 days of confirmation.'
+    ['01', 'Items once sold are not returnable or exchangeable.'],
+    ['02', 'Delivery timeline subject to material availability and will be communicated separately.'],
+    ['03', 'Customer must ensure site is ready before installation — delays due to site unreadiness are not our responsibility.'],
+    ['04', 'Prices are subject to change after quotation expiry due to material cost fluctuations.'],
+    ['05', 'Measurements taken by our team are final — changes after production begins will incur additional charges.'],
+    ['06', 'Slight colour variations may occur between catalogue samples and actual product due to contrast material batches.'],
+    ['07', 'Any disputes are subject to Visakhapatnam jurisdiction only.'],
+    ['08', 'The company reserves the right to cancel an order if advance payment is not received within 7 days of confirmation.']
   ];
 
-  doc.setFont('helvetica','normal'); doc.setFontSize(6);
+  doc.setFontSize(6); doc.setFont('helvetica','normal');
   doc.setTextColor(100,100,100);
-
-  var colW = (W - M*2 - 10) / 2;
-  var leftX = M + 2, rightX = M + 2 + colW + 8;
-  var tcY = y;
+  var colW = (W - M*2 - 12) / 2;
+  var leftX = M+2, rightX = M+2+colW+10;
+  var tcStartY = y;
 
   tcs.forEach(function(tc, i) {
     var col = i < 4 ? leftX : rightX;
-    var row = i < 4 ? i : i - 4;
-    var lineY = tcY + row * 10;
-
-    // Orange dot bullet
+    var row = i < 4 ? i : i-4;
+    var lineY = tcStartY + row * 11;
+    // Orange dot
     doc.setFillColor(255,107,0);
-    doc.circle(col + 1, lineY - 1, 0.8, 'F');
-
-    // Wrap text manually (max ~55 chars per line for narrow col)
-    var words = tc.substring(3).split(' '); // strip "01 " prefix
+    doc.circle(col+1.5, lineY-0.5, 1, 'F');
+    // Number
+    doc.setTextColor(150,150,150);
+    doc.text(tc[0], col+4, lineY);
+    // Text — split into 2 lines if needed
+    doc.setTextColor(100,100,100);
+    var words = tc[1].split(' ');
     var line1 = '', line2 = '';
     words.forEach(function(w) {
-      if ((line1 + ' ' + w).trim().length <= 52) line1 = (line1 + ' ' + w).trim();
-      else line2 = (line2 + ' ' + w).trim();
+      if ((line1+' '+w).trim().length <= 48) line1 = (line1+' '+w).trim();
+      else line2 = (line2+' '+w).trim();
     });
-    doc.setTextColor(100,100,100);
-    doc.text(tc.substring(0,2), col + 3, lineY); // number
-    doc.text(line1, col + 8, lineY);
-    if (line2) doc.text(line2, col + 8, lineY + 4);
+    doc.text(line1, col+9, lineY);
+    if (line2) doc.text(line2, col+9, lineY+4);
   });
 
   // ── FOOTER ──
   y = 280;
-  doc.setFillColor(245,245,245);
+  doc.setFillColor(26,26,46);
   doc.rect(0, y, W, 17, 'F');
   doc.setFillColor(255,107,0);
-  doc.rect(0, y, 2, 17, 'F');
+  doc.rect(0, y, 2.5, 17, 'F');
 
-  // Thank you + arrow icon (text based)
+  // Thank you pill button
   doc.setFillColor(255,107,0);
-  doc.roundedRect(W/2 - 28, y + 3.5, 56, 8, 1.5, 1.5, 'F');
+  doc.roundedRect(W/2-30, y+3, 60, 8, 1.5, 1.5, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont('helvetica','bold');
-  doc.text('↓  Thank you for your business!', W/2, y + 8.5, {align:'center'});
+  doc.text('↓  Thank you for your business!', W/2, y+8, {align:'center'});
 
-  // Contact left
-  doc.setTextColor(120,120,120); doc.setFont('helvetica','normal'); doc.setFontSize(6);
-  doc.text('smartdoorspvcgallery@gmail.com', M + 4, y + 7);
-  doc.text('7396931873  /  8919007089', M + 4, y + 12);
+  // Contact info left-aligned
+  doc.setTextColor(150,150,170); doc.setFont('helvetica','normal'); doc.setFontSize(6);
+  doc.text('smartdoorspvcgallery@gmail.com', M+4, y+7);
+  doc.text('7396931873  /  8919007089', M+4, y+12);
 
-  doc.save('Bill_' + bill.BillNo + '.pdf');
+  doc.save('Bill_'+bill.BillNo+'.pdf');
   showToast('📄 PDF downloaded!');
 }
 </script>
