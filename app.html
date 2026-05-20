@@ -1485,6 +1485,9 @@ async function submitMeasurement() {
 
   var items = collectItems();
   if (!items.length) { showToast('Add at least one product with measurements'); return; }
+  if (photoDataURLs.some(function(d,i){ return d===null && photoFileNames[i]; })) {
+    showToast('⏳ Photos still compressing, please wait...'); return;
+  }
 
   document.getElementById('saving-overlay').classList.add('active');
   savingStep(0, 'Preparing data...');
@@ -1998,10 +2001,12 @@ function loadSales() {
       html += '<div id="bill-detail-'+b.BillNo+'" style="display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">';
       html += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">ITEMS</div>';
       (b.Items||[]).forEach(function(item){
+        var isAddon = (item.Product||'').toLowerCase().indexOf('add-on') !== -1;
+        var addonNote = item.AddonNote && item.AddonNote !== 'NA' ? ' — '+item.AddonNote : '';
         html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--bg)">';
-        html += '<span style="color:var(--text);font-weight:600">'+(item.Product||'')+'</span>';
-        html += '<span style="color:var(--text2)">'+(item.Dimensions||'')+'</span>';
-        html += '<span style="font-weight:700;color:var(--text)">Rs.'+(parseFloat(item.FinalAmount)||0).toLocaleString('en-IN')+'</span>';
+        html += '<span style="color:'+(isAddon?'var(--o)':'var(--text)')+';font-weight:600">'+(item.Product||'')+(isAddon?addonNote:'')+'</span>';
+        html += '<span style="color:var(--text2)">'+(isAddon?'':item.Dimensions||'')+'</span>';
+        html += '<span style="font-weight:700;color:'+(isAddon?'var(--o)':'var(--text)')+'">Rs.'+(parseFloat(item.FinalAmount)||0).toLocaleString('en-IN')+'</span>';
         html += '</div>';
       });
       html += '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;font-weight:800">';
@@ -2089,7 +2094,8 @@ function generatePDF(bill) {
   doc.rect(0, 38, W, 10, 'F');
   doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica','bold');
   doc.text('BILL NO: '+bill.BillNo, margin, 45);
-  doc.text('DATE: '+bill.Date, W-margin, 45, {align:'right'});
+  var pdfDate = bill.Date ? new Date(bill.Date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'}) : '—';
+  doc.text('DATE: '+pdfDate, W-margin, 45, {align:'right'});
 
   // Bill To
   var y = 56;
