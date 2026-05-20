@@ -2112,13 +2112,15 @@ function generatePDF(bill) {
   var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
   var W = 210, M = 16, y = 0;
 
-  // ── DATE ──
+  // ── DATE + TIME ──
   var pdfDate = '—';
   if (bill.Date) {
     try {
       var dt = new Date(bill.Date.toString().trim());
       if (!isNaN(dt)) {
-        pdfDate = dt.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Kolkata'});
+        var datePart = dt.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Kolkata'});
+        var timePart = dt.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Kolkata'});
+        pdfDate = datePart + '  ' + timePart;
       }
     } catch(e) {}
   }
@@ -2384,7 +2386,7 @@ function generatePDF(bill) {
   doc.text('Rs.'+finalTotal.toLocaleString('en-IN'), W-M-2, y+2, {align:'right'});
 
   // ── PAID / BALANCE ──
-  y += 18;
+  y += 28;
   doc.setDrawColor(238,238,238); doc.setLineWidth(0.3);
   doc.line(M+2, y-4, W-M, y-4);
   doc.setFontSize(9); doc.setFont('helvetica','normal');
