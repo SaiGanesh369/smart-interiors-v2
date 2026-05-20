@@ -1037,7 +1037,7 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('on');
   setTimeout(function(){ t.classList.remove('on'); }, 2500);
-},
+}
 function fmtDate(d) {
   if (!d) return '—';
   var dt = new Date(d);
@@ -1819,7 +1819,7 @@ function renderQuotes(all, filterStatus, scr) {
       var statusClass = q.Status==='APPROVED'?'badge-green':q.Status==='DENIED'?'badge-red':'badge-orange';
       html += '<div class="q-card" id="qcard-'+q.QuoteID+'">';
       html += '<div class="q-card-head">';
-      html += '<div><div class="q-id">'+q.QuoteID+'</div><div class="q-cust">'+(q.Customer||'—')+'</div><div class="q-meta">'+fmtDate(b.Date)+' · '+q.Location+'</div></div>';
+      html += '<div><div class="q-id">'+q.QuoteID+'</div><div class="q-cust">'+(q.Customer||'—')+'</div><div class="q-meta">'+fmtDate(q.Date)+' · '+q.Location+'</div></div>';
       html += '<span class="badge '+statusClass+'">'+q.Status+'</span>';
       html += '</div>';
       html += '<div class="q-items">';
@@ -1882,6 +1882,17 @@ function denyQuote(quoteId) {
     loadQuotations();
   });
 }
+function toggleBillDetail(billNo) {
+  var detail = document.getElementById('bill-detail-'+billNo);
+  var btn = document.getElementById('bill-toggle-'+billNo);
+  if (detail.style.display === 'none') {
+    detail.style.display = 'block';
+    btn.textContent = '▲ Hide details';
+  } else {
+    detail.style.display = 'none';
+    btn.textContent = '▼ Show details';
+  }
+}
   // ══════════════════════════════
 // SALES
 // ══════════════════════════════
@@ -1918,6 +1929,22 @@ function loadSales() {
       html += '<div class="bill-amt-col"><div class="ba-label">Total</div><div class="ba-val">Rs.'+b.Total.toLocaleString('en-IN')+'</div></div>';
       html += '<div class="bill-amt-col paid"><div class="ba-label">Paid</div><div class="ba-val">Rs.'+b.Paid.toLocaleString('en-IN')+'</div></div>';
       html += '<div class="bill-amt-col '+balClass+'"><div class="ba-label">Balance</div><div class="ba-val">Rs.'+b.Balance.toLocaleString('en-IN')+'</div></div>';
+      html += '</div>';
+      html += '<div id="bill-detail-'+b.BillNo+'" style="display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">';
+      html += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">ITEMS</div>';
+      (b.Items||[]).forEach(function(item){
+        html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--bg)">';
+        html += '<span style="color:var(--text);font-weight:600">'+(item.Product||'')+'</span>';
+        html += '<span style="color:var(--text2)">'+(item.Dimensions||'')+'</span>';
+        html += '<span style="font-weight:700;color:var(--text)">Rs.'+(parseFloat(item.FinalAmount)||0).toLocaleString('en-IN')+'</span>';
+        html += '</div>';
+      });
+      html += '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;font-weight:800">';
+      html += '<span>Total</span><span style="color:var(--o)">Rs.'+b.Total.toLocaleString('en-IN')+'</span>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div style="text-align:center;margin-top:8px">';
+      html += '<button onclick="toggleBillDetail(\''+b.BillNo+'\')" id="bill-toggle-'+b.BillNo+'" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:600">▼ Show details</button>';
       html += '</div>';
       html += '<div class="bill-actions">';
       html += '<button class="bill-btn bill-btn-pdf" onclick="downloadPDF(\''+b.BillNo+'\')">📄 PDF</button>';
