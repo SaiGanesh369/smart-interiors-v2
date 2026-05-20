@@ -1601,6 +1601,8 @@ function showMSuccess(entry, quoteCreated, quoteId, quoteTotal, discountVal) {
     badge.classList.add('show');
     document.getElementById('quote-badge-sub').textContent =
       quoteId+' · Rs.'+quoteTotal.toLocaleString('en-IN')+(parseFloat(discountVal)>0?' (after '+discountVal+'% disc)':'')+' · Pending approval';
+    badge.style.cursor = 'pointer';
+    badge.onclick = function(){ resetMForm(); goScreen('quotations'); };
   } else { badge.classList.remove('show'); }
 
   var summary = buildWASummary(entry);
@@ -1830,12 +1832,19 @@ function renderQuotes(all, filterStatus, scr) {
       html += '<div class="q-total-row"><span>Total</span><span class="q-total-amt">Rs.'+Math.round(q.Total).toLocaleString('en-IN')+'</span></div>';
 
       if (q.Status === 'DRAFT') {
-        html += '<div class="q-edit-row">';
+        html += '<div style="background:var(--o-bg);border:1.5px solid var(--o-border);border-radius:10px;padding:12px;margin-top:12px">';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
         html += '<label class="q-edit-label">Discount %</label>';
-        html += '<input class="q-edit-input" type="number" id="disc-'+q.QuoteID+'" value="'+(q.DiscountPct||0)+'" min="0" max="100">';
-        html += '<label class="q-edit-label" style="margin-left:8px">Addon Rs.</label>';
-        html += '<input class="q-edit-input" type="number" id="addon-'+q.QuoteID+'" value="0" min="0">';
-        html += '<input class="q-edit-input" type="text" id="addonnote-'+q.QuoteID+'" placeholder="Addon note" style="flex:2">';
+        html += '<input class="q-edit-input" type="number" id="disc-'+q.QuoteID+'" value="'+(q.DiscountPct||0)+'" min="0" max="100" oninput="recalcQuoteTotal(\''+q.QuoteID+'\','+JSON.stringify(q.Items)+')" style="max-width:80px">';
+        html += '<span style="font-size:12px;color:var(--text2);margin-left:4px">off items total</span>';
+        html += '</div>';
+        html += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase">Add-ons</div>';
+        html += '<div id="addons-list-'+q.QuoteID+'"></div>';
+        html += '<button onclick="addAddonRow(\''+q.QuoteID+'\')" style="width:100%;padding:8px;border:1.5px dashed var(--o-border);background:none;color:var(--o);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">+ Add Addon</button>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1.5px solid var(--o-border)">';
+        html += '<span style="font-size:13px;font-weight:700;color:var(--text)">Final Total</span>';
+        html += '<span id="live-total-'+q.QuoteID+'" style="font-size:18px;font-weight:800;color:var(--o)">Rs.'+Math.round(q.Total).toLocaleString('en-IN')+'</span>';
+        html += '</div>';
         html += '</div>';
         html += '<div class="q-actions">';
         html += '<button class="q-btn q-deny"  onclick="denyQuote(\''+q.QuoteID+'\')">✕ Deny</button>';
@@ -1848,23 +1857,70 @@ function renderQuotes(all, filterStatus, scr) {
   scr.innerHTML = html;
   window._allQuotes = all;
   window._qFilterStatus = filterStatus;
+  window._quoteItemsMap = {};
+  all.forEach(function(q){ window._quoteItemsMap[q.QuoteID] = q.Items; });
 }
 
 function qFilter(status) {
   var scr = document.getElementById('scr-quotations');
   renderQuotes(window._allQuotes || [], status, scr);
 }
+function addAddonRow(quoteId) {
+  var list = document.getElementById('addons-list-'+quoteId);
+  if (!list) return;
+  var idx = list.children.length;
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center';
+  div.innerHTML =
+    '<input class="q-edit-input" type="text" placeholder="Addon description" style="flex:2" oninput="recalcQuoteTotal(\''+quoteId+'\',null)">' +
+    '<input class="q-edit-input" type="number" placeholder="Rs." style="max-width:80px" oninput="recalcQuoteTotal(\''+quoteId+'\',null)">' +
+    '<button onclick="this.parentElement.remove();recalcQuoteTotal(\''+quoteId+'\',null)" style="background:var(--red-bg);color:var(--red);border:none;border-radius:6px;padding:6px 8px;font-size:12px;cursor:pointer;font-weight:700">✕</button>';
+  list.appendChild(div);
+}
+
+function getAddonRows(quoteId) {
+  var list = document.getElementById('addons-list-'+quoteId);
+  if (!list) return [];
+  var addons = [];
+  Array.from(list.children).forEach(function(row) {
+    var inputs = row.querySelectorAll('input');
+    var note = inputs[0] ? inputs[0].value.trim() : '';
+    var amt  = parseFloat(inputs[1] ? inputs[1].value : 0) || 0;
+    if (amt > 0) addons.push({ note: note, amt: amt });
+  });
+  return addons;
+}
+
+function recalcQuoteTotal(quoteId, items) {
+  var disc = parseFloat((document.getElementById('disc-'+quoteId)||{}).value) || 0;
+  var addons = getAddonRows(quoteId);
+  var addonTotal = addons.reduce(function(s,a){ return s+a.amt; }, 0);
+
+  // Use stored items if not passed
+  if (!items) items = window._quoteItemsMap ? window._quoteItemsMap[quoteId] : null;
+  var baseTotal = 0;
+  if (items) {
+    items.forEach(function(item){
+      baseTotal += parseFloat(item.total)||0;
+    });
+  }
+  var afterDisc = Math.round(baseTotal * (1 - disc/100));
+  var finalTotal = afterDisc + addonTotal;
+  var el = document.getElementById('live-total-'+quoteId);
+  if (el) el.textContent = 'Rs.' + finalTotal.toLocaleString('en-IN');
+}  
 
 function approveQuote(quoteId) {
   var disc = document.getElementById('disc-'+quoteId);
-  var addon = document.getElementById('addon-'+quoteId);
-  var addonnote = document.getElementById('addonnote-'+quoteId);
+  var addons = getAddonRows(quoteId);
+  var totalAddon = addons.reduce(function(s,a){ return s+a.amt; },0);
+  var addonNotes = addons.map(function(a){ return a.note+'(Rs.'+a.amt+')'; }).join(', ');
   showOv('Approving...');
   api({
     action: 'approveQuotation', quoteId: quoteId,
     editedDisc: disc ? parseFloat(disc.value)||0 : null,
-    addonAmt: addon ? parseFloat(addon.value)||0 : 0,
-    addonNote: addonnote ? addonnote.value : ''
+    addonAmt: totalAddon,
+    addonNote: addonNotes || ''
   }, function(err, res) {
     hideOv();
     if (err || !res || res.error) { showToast('Failed: '+(res?res.error:err)); return; }
