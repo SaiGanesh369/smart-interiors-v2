@@ -1037,6 +1037,13 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('on');
   setTimeout(function(){ t.classList.remove('on'); }, 2500);
+},
+function fmtDate(d) {
+  if (!d) return '—';
+  var dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) +
+    ', ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
 }
 
 // ══════════════════════════════
@@ -1124,7 +1131,7 @@ function loadDashboard() {
           '<div class="bill-info">' +
             '<div class="bill-no">' + b.BillNo + '</div>' +
             '<div class="bill-cust">' + (b.Customer || '—') + '</div>' +
-            '<div class="bill-date">' + (b.Date || '') + '</div>' +
+            '<div class="bill-date">' + fmtDate(b.Date) + '</div>' +
           '</div>' +
           '<div class="bill-amt">Rs.' + (b.Amount || 0).toLocaleString('en-IN') + '</div>' +
         '</div>';
@@ -1683,7 +1690,7 @@ function loadSaved() {
       var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
       var photoInd = photoLinks.length ? '<span style="color:#2563EB;font-size:11px">📷 '+photoLinks.length+' photo(s)</span>' : '';
       return '<div class="entry-card" onclick="openEntryModal('+idx+')">' +
-        '<div class="ec-header"><span class="ec-worker">👤 '+e.TeamMember+'</span><span class="ec-date">'+e.Date+' · '+e.Time+'</span></div>' +
+        '<div class="ec-header"><span class="ec-worker">👤 '+e.TeamMember+'</span><span class="ec-date">'+fmtDate(e.Date)+'</span></div>' +
         '<div class="ec-meta">📍 '+e.Location+(e.Customer&&e.Customer!=='—'?' · 🏠 '+e.Customer:'')+(e.Phone&&e.Phone!=='—'?' · 📞 '+e.Phone:'')+'</div>' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px">' +
           '<span style="font-size:11px;color:var(--text3)">'+(e.Products||'')+'</span>'+photoInd+
@@ -1699,7 +1706,7 @@ function openEntryModal(idx) {
   var lines = [];
   lines.push('📐 Smart Doors & Windows — Site Measurement');
   lines.push('━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('📅 Date: '+e.Date+'   🕐 Time: '+e.Time);
+  lines.push('📅 '+fmtDate(e.Date));
   lines.push('👤 Team Member: '+e.TeamMember);
   lines.push('📍 Location: '+e.Location);
   if (e.GPSLink&&e.GPSLink!=='—') lines.push('🗺 Directions: '+e.GPSLink);
@@ -1710,7 +1717,7 @@ function openEntryModal(idx) {
   if (e.Notes) lines.push('\n📝 Notes: '+e.Notes);
   lines.push('\n━━━━━━━━━━━━━━━━━━━━━');
   document.getElementById('modal-summary').textContent = lines.join('\n');
-  document.getElementById('modal-title').textContent = e.TeamMember+' · '+e.Date;
+  document.getElementById('modal-title').textContent = e.TeamMember+' · '+fmtDate(e.Date);
   var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
   var photosSection = document.getElementById('modal-photos');
   if (photoLinks.length) {
@@ -1812,7 +1819,7 @@ function renderQuotes(all, filterStatus, scr) {
       var statusClass = q.Status==='APPROVED'?'badge-green':q.Status==='DENIED'?'badge-red':'badge-orange';
       html += '<div class="q-card" id="qcard-'+q.QuoteID+'">';
       html += '<div class="q-card-head">';
-      html += '<div><div class="q-id">'+q.QuoteID+'</div><div class="q-cust">'+(q.Customer||'—')+'</div><div class="q-meta">'+q.Date+' · '+q.Location+'</div></div>';
+      html += '<div><div class="q-id">'+q.QuoteID+'</div><div class="q-cust">'+(q.Customer||'—')+'</div><div class="q-meta">'+fmtDate(b.Date)+' · '+q.Location+'</div></div>';
       html += '<span class="badge '+statusClass+'">'+q.Status+'</span>';
       html += '</div>';
       html += '<div class="q-items">';
@@ -1904,7 +1911,7 @@ function loadSales() {
       var balClass = b.Balance > 0 ? 'balance' : 'paid';
       html += '<div class="bill-card">';
       html += '<div class="bill-card-head">';
-      html += '<div><div class="bill-no-lbl">'+b.BillNo+'</div><div class="bill-cust-name">'+(b.Customer||'—')+'</div><div class="bill-card-meta">'+b.Date+' · '+b.Location+'</div></div>';
+      html += '<div><div class="bill-no-lbl">'+b.BillNo+'</div><div class="bill-cust-name">'+(b.Customer||'—')+'</div><div class="bill-card-meta">'+fmtDate(b.Date)+' · '+b.Location+'</div></div>';
       html += '<span class="badge '+(b.Balance>0?'badge-orange':'badge-green')+'">'+(b.Balance>0?'Pending':'Paid')+'</span>';
       html += '</div>';
       html += '<div class="bill-amounts">';
