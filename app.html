@@ -2107,18 +2107,22 @@ function generatePDF(bill) {
 
   // Calculate date
   var pdfDate = '—';
+  var pdfTime = '—';
   if (bill.Date) {
     try {
       var dt = new Date(bill.Date.toString().trim());
-      if (!isNaN(dt)) pdfDate = dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
+      if (!isNaN(dt)) {
+        pdfDate = dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
+        pdfTime = dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'});
+      }
     } catch(e) {}
   }
 
   // ── HEADER ──────────────────────────────
-  doc.setFillColor(26,26,46);
+  doc.setFillColor(255,255,255);
   doc.rect(0, 0, W, 42, 'F');
   doc.setFillColor(255,107,0);
-  doc.rect(0, 42, W, 1.5, 'F');
+  doc.rect(0, 0, 3, 297, 'F');
 
   // Logo panes
   var px = M, py = 10, ps = 8;
@@ -2128,26 +2132,28 @@ function generatePDF(bill) {
   doc.setFillColor(255,255,255); doc.rect(px+ps/2+0.4, py+ps/2+0.4, ps/2-0.4, ps/2-0.4,'F');
 
   // Brand
-  doc.setTextColor(255,255,255);
+  doc.setTextColor(26,26,46);
   doc.setFontSize(16); doc.setFont('helvetica','bold');
   doc.text('SMART', M+11, 17);
   doc.setFontSize(6.5); doc.setFont('helvetica','normal');
   doc.setTextColor(255,107,0);
   doc.text('DOORS & WINDOWS', M+11, 22);
-  doc.setTextColor(150,150,170);
+  doc.setTextColor(150,150,150);
   doc.setFontSize(6);
   doc.text('ESTD. 2016', M+11, 26.5);
 
   // Right side - Bill info
-  doc.setTextColor(150,150,170);
+  doc.setTextColor(150,150,150);
   doc.setFontSize(7); doc.setFont('helvetica','normal');
   doc.text('INVOICE', W-M, 12, {align:'right'});
-  doc.setTextColor(255,255,255);
+  doc.setTextColor(26,26,46);
   doc.setFontSize(13); doc.setFont('helvetica','bold');
   doc.text(bill.BillNo, W-M, 20, {align:'right'});
-  doc.setTextColor(150,150,170);
+  doc.setTextColor(150,150,150);
   doc.setFontSize(7); doc.setFont('helvetica','normal');
   doc.text(pdfDate, W-M, 26, {align:'right'});
+  doc.setFontSize(6.5);
+  doc.text(pdfTime + ' IST', W-M, 31, {align:'right'});
 
   // ── FROM + BILL TO ───────────────────────
   y = 50;
@@ -2220,14 +2226,15 @@ function generatePDF(bill) {
   // Addon rows
   addonItems.forEach(function(item) {
     var addonAmt  = parseFloat(item.FinalAmount)||0;
-    var addonNote = (item.AddonNote && item.AddonNote !== 'NA') ? item.AddonNote : 'Extra charges';
+    var rawNote = (item.AddonNote || '').toString().trim();
+    var addonNote = (rawNote && rawNote !== 'NA' && rawNote !== '0') ? rawNote : '';
     doc.setFillColor(255,244,236);
     doc.rect(M, y-1, W-M*2, 11, 'F');
     doc.setTextColor(255,107,0); doc.setFontSize(8); doc.setFont('helvetica','bold');
     doc.text('Add-on Charges', M+3, y+4);
     doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
     doc.setTextColor(180,80,0);
-    doc.text(addonNote.substring(0,35), M+3, y+8);
+    if (addonNote) doc.text(addonNote.substring(0,35), M+3, y+8);
     doc.setTextColor(255,107,0); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
     doc.text('—', W-M-52, y+4, {align:'center'});
     doc.text('—', W-M-28, y+4, {align:'center'});
@@ -2315,13 +2322,13 @@ function generatePDF(bill) {
 
   // ── FOOTER ──────────────────────────────
   y = 280;
-  doc.setFillColor(26,26,46);
+  doc.setFillColor(248,248,248);
   doc.rect(0, y, W, 17, 'F');
   doc.setFillColor(255,107,0);
   doc.rect(0, y, 1.5, 17, 'F');
   doc.setTextColor(255,107,0); doc.setFontSize(7); doc.setFont('helvetica','bold');
   doc.text('Thank you for your business!', W/2, y+6, {align:'center'});
-  doc.setTextColor(170,170,190); doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+  doc.setTextColor(120,120,120); doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
   doc.text('7396931873  /  8919007089  |  smartdoorspvcgallery@gmail.com  |  Visakhapatnam', W/2, y+11.5, {align:'center'});
 
   doc.save('Bill_'+bill.BillNo+'.pdf');
