@@ -1318,7 +1318,20 @@ function apiAsync(payload) {
   return fetch(SHEETS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    redirect: 'follow'
+  })
+  .then(function(r){
+    // Apps Script redirects POST to a different URL — follow it
+    if (r.redirected) {
+      return fetch(r.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload),
+        redirect: 'follow'
+      });
+    }
+    return r;
   })
   .then(function(r){ return r.text(); })
   .then(function(t){ try{ return JSON.parse(t); } catch(e){ return {raw:t}; } })
