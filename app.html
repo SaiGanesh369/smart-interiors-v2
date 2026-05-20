@@ -1320,7 +1320,7 @@ async function uploadPhotosToDrive(entryId) {
       console.error('Photo upload error:', e);
     }
   }
-
+  hideOv();
   if (links.length) {
     showToast('✅ ' + links.length + ' photo(s) saved to Drive');
   }
