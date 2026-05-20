@@ -1040,8 +1040,9 @@ function fmtDate(d) {
   if (!d) return '—';
   var dt = new Date(d);
   if (isNaN(dt)) return d;
-  return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) +
-    ', ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+  var opts = {timeZone:'Asia/Kolkata'};
+  return dt.toLocaleDateString('en-IN',Object.assign({day:'numeric',month:'short',year:'numeric'},opts)) +
+    ', ' + dt.toLocaleTimeString('en-IN',Object.assign({hour:'2-digit',minute:'2-digit',hour12:true},opts));
 }
 
 // ══════════════════════════════
@@ -1076,9 +1077,10 @@ function buildNav(role) {
 var currentScreen = 'dashboard';
 
 function goScreen(id) {
-  // Hide all screens
+  // Hide all screens including success screen
   document.querySelectorAll('.screen').forEach(function(s) {
     s.classList.remove('on');
+    s.style.display = '';
   });
   // Show target
   var target = document.getElementById('scr-' + id);
@@ -1562,7 +1564,7 @@ function calcQuoteItems(items, discPct) {
 
 function buildMRows(entry) {
   var rows = [];
-  var time = new Date(entry.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var time = new Date(entry.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'});
   var photoCell = (entry.photoLinks&&entry.photoLinks.length) ? entry.photoLinks.join('\n') : '';
   entry.items.forEach(function(item,ii) {
     item.measurements.forEach(function(m,mi) {
@@ -1628,7 +1630,7 @@ function buildWASummary(e) {
   var lines = [];
   lines.push('📐 *Smart Doors & Windows — Site Measurement*');
   lines.push('━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('📅 Date: '+e.date+'   🕐 Time: '+timeStr);
+  lines.push('📅 '+fmtDate(e.timestamp));
   lines.push('👤 Team Member: '+e.worker);
   lines.push('📍 Location: '+e.location);
   if (e.gpsLink&&e.gpsLink!=='—') lines.push('🗺 Directions: '+e.gpsLink);
