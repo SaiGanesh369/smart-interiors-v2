@@ -1303,11 +1303,7 @@ async function uploadPhotosToDrive(entryId) {
         entryId: entryId,
         folderId: DRIVE_FOLDER_ID,
         photos: [valid[j]]
-      }, 25000);
-      if (res && res.error === 'timeout') {
-        showToast('⚠️ Photo upload timed out, saving without photo');
-        break;
-      }
+      });
       if (res && res.links && res.links[0]) {
         links.push(res.links[0]);
       } else if (res && res.errors) {
@@ -1318,21 +1314,15 @@ async function uploadPhotosToDrive(entryId) {
   return links;
 }
 
-function apiAsync(payload, timeoutMs) {
-  var timeout = timeoutMs || 30000;
-  var controller = new AbortController();
-  var timer = setTimeout(function(){ controller.abort(); }, timeout);
+function apiAsync(payload) {
   return fetch(SHEETS_URL, {
-    method:'POST', headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify(payload), signal: controller.signal
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
   })
-  .then(function(r){ clearTimeout(timer); return r.text(); })
+  .then(function(r){ return r.text(); })
   .then(function(t){ try{ return JSON.parse(t); } catch(e){ return {raw:t}; } })
-  .catch(function(e){
-    clearTimeout(timer);
-    if (e.name === 'AbortError') return { error: 'timeout' };
-    throw e;
-  });
+  .catch(function(e){ throw e; });
 }
 
 function attachMeasInputRules(input) {
