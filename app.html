@@ -1304,6 +1304,7 @@ async function uploadPhotosToDrive(entryId) {
         folderId: DRIVE_FOLDER_ID,
         photos: [valid[j]]
       });
+      console.log('Upload response:', JSON.stringify(res));
       if (res && res.links && res.links[0]) {
         links.push(res.links[0]);
       } else if (res && res.errors) {
