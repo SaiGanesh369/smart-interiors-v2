@@ -638,6 +638,33 @@ html, body {
   pointer-events: none;
 }
 .toast.on { opacity: 1; transform: translateY(0); }
+  /* QUOTATIONS */
+.q-tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.q-tab { border:1.5px solid var(--border); border-radius:20px; padding:6px 14px; background:var(--white); font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:600; color:var(--text2); cursor:pointer; }
+.q-tab.on { background:var(--o); color:white; border-color:var(--o); }
+.q-count { background:rgba(255,255,255,0.3); border-radius:10px; padding:1px 6px; font-size:11px; }
+.q-card { background:var(--white); border-radius:14px; border:1.5px solid var(--border); padding:14px; margin-bottom:12px; box-shadow:var(--shadow); }
+.q-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.q-id { font-size:11px; font-weight:700; color:var(--o); letter-spacing:0.3px; }
+.q-cust { font-size:15px; font-weight:700; color:var(--text); margin-top:2px; }
+.q-meta { font-size:11px; color:var(--text3); margin-top:2px; }
+.badge { font-size:11px; font-weight:700; border-radius:8px; padding:4px 10px; }
+.badge-orange { background:var(--o-bg); color:var(--o); }
+.badge-green  { background:var(--green-bg); color:var(--green); }
+.badge-red    { background:var(--red-bg); color:var(--red); }
+.q-items { border-top:1px solid var(--border); padding-top:10px; margin-top:6px; display:flex; flex-direction:column; gap:6px; }
+.q-item-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text2); gap:8px; }
+.q-item-row span:first-child { font-weight:600; color:var(--text); min-width:100px; }
+.q-item-amt { font-weight:700; color:var(--text); white-space:nowrap; }
+.q-total-row { display:flex; justify-content:space-between; align-items:center; border-top:1.5px solid var(--border); margin-top:10px; padding-top:10px; font-weight:700; font-size:14px; }
+.q-total-amt { font-size:18px; font-weight:800; color:var(--o); }
+.q-edit-row { display:flex; align-items:center; gap:6px; margin-top:12px; flex-wrap:wrap; }
+.q-edit-label { font-size:11px; font-weight:600; color:var(--text2); white-space:nowrap; }
+.q-edit-input { border:1.5px solid var(--border); border-radius:8px; padding:7px 10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; color:var(--text); background:var(--bg); flex:1; min-width:60px; }
+.q-actions { display:flex; gap:8px; margin-top:10px; }
+.q-btn { flex:1; padding:12px; border:none; border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; cursor:pointer; }
+.q-deny    { background:var(--red-bg); color:var(--red); }
+.q-approve { background:var(--o); color:white; box-shadow:0 4px 12px rgba(255,107,0,0.3); }
 </style>
 </head>
 <body>
@@ -1032,6 +1059,7 @@ function goScreen(id) {
   if (id === 'dashboard')    loadDashboard();
   if (id === 'users')        loadPendingUsers();
   if (id === 'measurements') initMeasScreen();
+  if (id === 'quotations') loadQuotations();
 }
 
 // ══════════════════════════════
@@ -1712,6 +1740,107 @@ function initMeasScreen() {
     });
   }
 })();
+  // ══════════════════════════════
+// QUOTATIONS
+// ══════════════════════════════
+function loadQuotations() {
+  var scr = document.getElementById('scr-quotations');
+  scr.innerHTML = '<div class="empty-state"><div class="emo">⏳</div><p>Loading quotations...</p></div>';
+  api({ action: 'getPendingQuotations' }, function(err, res) {
+    if (err || !res || res.error || !res.quotes || !res.quotes.length) {
+      scr.innerHTML = '<div class="screen-title">Quotations</div><div class="empty-state"><div class="emo">📄</div><p>No quotations yet.<br>Save a measurement to auto-generate one.</p></div>';
+      return;
+    }
+    var all = res.quotes;
+    var filterStatus = 'DRAFT';
+    renderQuotes(all, filterStatus, scr);
+  });
+}
+
+function renderQuotes(all, filterStatus, scr) {
+  var filtered = all.filter(function(q){ return filterStatus === 'ALL' || q.Status === filterStatus; });
+  var tabs = ['DRAFT','APPROVED','DENIED','ALL'];
+  var counts = {};
+  tabs.forEach(function(t){ counts[t] = t==='ALL' ? all.length : all.filter(function(q){ return q.Status===t; }).length; });
+
+  var html = '<div class="screen-title">Quotations</div>';
+  html += '<div class="q-tabs">';
+  tabs.forEach(function(t){
+    html += '<button class="q-tab'+(t===filterStatus?' on':'')+'" onclick="qFilter(\''+t+'\')">' +
+      t + (counts[t]?' <span class="q-count">'+counts[t]+'</span>':'') + '</button>';
+  });
+  html += '</div>';
+
+  if (!filtered.length) {
+    html += '<div class="empty-state"><div class="emo">📭</div><p>No '+filterStatus+' quotations.</p></div>';
+  } else {
+    filtered.forEach(function(q) {
+      var statusClass = q.Status==='APPROVED'?'badge-green':q.Status==='DENIED'?'badge-red':'badge-orange';
+      html += '<div class="q-card" id="qcard-'+q.QuoteID+'">';
+      html += '<div class="q-card-head">';
+      html += '<div><div class="q-id">'+q.QuoteID+'</div><div class="q-cust">'+(q.Customer||'—')+'</div><div class="q-meta">'+q.Date+' · '+q.Location+'</div></div>';
+      html += '<span class="badge '+statusClass+'">'+q.Status+'</span>';
+      html += '</div>';
+      html += '<div class="q-items">';
+      (q.Items||[]).forEach(function(item){
+        html += '<div class="q-item-row"><span>'+item.product+'</span><span>'+item.dimensions+'</span><span class="q-item-amt">Rs.'+Math.round(item.total).toLocaleString('en-IN')+'</span></div>';
+      });
+      html += '</div>';
+      html += '<div class="q-total-row"><span>Total</span><span class="q-total-amt">Rs.'+Math.round(q.Total).toLocaleString('en-IN')+'</span></div>';
+
+      if (q.Status === 'DRAFT') {
+        html += '<div class="q-edit-row">';
+        html += '<label class="q-edit-label">Discount %</label>';
+        html += '<input class="q-edit-input" type="number" id="disc-'+q.QuoteID+'" value="'+(q.DiscountPct||0)+'" min="0" max="100">';
+        html += '<label class="q-edit-label" style="margin-left:8px">Addon Rs.</label>';
+        html += '<input class="q-edit-input" type="number" id="addon-'+q.QuoteID+'" value="0" min="0">';
+        html += '<input class="q-edit-input" type="text" id="addonnote-'+q.QuoteID+'" placeholder="Addon note" style="flex:2">';
+        html += '</div>';
+        html += '<div class="q-actions">';
+        html += '<button class="q-btn q-deny"  onclick="denyQuote(\''+q.QuoteID+'\')">✕ Deny</button>';
+        html += '<button class="q-btn q-approve" onclick="approveQuote(\''+q.QuoteID+'\')">✓ Approve</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+  }
+  scr.innerHTML = html;
+  window._allQuotes = all;
+  window._qFilterStatus = filterStatus;
+}
+
+function qFilter(status) {
+  var scr = document.getElementById('scr-quotations');
+  renderQuotes(window._allQuotes || [], status, scr);
+}
+
+function approveQuote(quoteId) {
+  var disc = document.getElementById('disc-'+quoteId);
+  var addon = document.getElementById('addon-'+quoteId);
+  var addonnote = document.getElementById('addonnote-'+quoteId);
+  showOv('Approving...');
+  api({
+    action: 'approveQuotation', quoteId: quoteId,
+    editedDisc: disc ? parseFloat(disc.value)||0 : null,
+    addonAmt: addon ? parseFloat(addon.value)||0 : 0,
+    addonNote: addonnote ? addonnote.value : ''
+  }, function(err, res) {
+    hideOv();
+    if (err || !res || res.error) { showToast('Failed: '+(res?res.error:err)); return; }
+    showToast('✅ Approved! Bill No: '+res.billNo);
+    loadQuotations();
+  });
+}
+
+function denyQuote(quoteId) {
+  showOv('Denying...');
+  api({ action: 'denyQuotation', quoteId: quoteId }, function(err, res) {
+    hideOv();
+    if (err || !res || res.error) { showToast('Failed'); return; }
+    showToast('❌ Quotation denied');
+    loadQuotations();
+  });
+}
 </script>
 </body>
 </html>
