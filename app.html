@@ -338,209 +338,293 @@ html, body {
 .nav-btn.on::after { opacity: 1; }
 
 /* ══════════════════════════════
-   MEASUREMENTS FORM
+   MEASUREMENTS — OLD FORM STYLE
 ══════════════════════════════ */
 .m-tabs {
-  display: flex; gap: 0;
-  background: var(--bg);
-  border-radius: 10px;
-  padding: 3px; margin-bottom: 14px;
+  display: flex; background: var(--bg);
+  border-radius: 10px; padding: 3px; margin-bottom: 12px;
 }
 .m-tab {
   flex: 1; border: none; border-radius: 8px;
   padding: 10px 8px;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px; font-weight: 600;
-  color: var(--text2); cursor: pointer;
-  background: none; transition: all 0.18s;
+  color: var(--text2); cursor: pointer; background: none;
+  transition: all 0.18s;
 }
-.m-tab.on {
-  background: var(--white); color: var(--text);
-  box-shadow: 0 1px 6px rgba(15,23,42,0.1);
-}
+.m-tab.on { background: var(--white); color: var(--text); box-shadow: 0 1px 6px rgba(15,23,42,0.1); }
 
-.form-section {
-  background: var(--white);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 16px;
-  margin-bottom: 12px;
+.mcard {
+  background: var(--white); border-radius: 16px;
+  padding: 16px; margin-bottom: 12px;
+  box-shadow: var(--shadow); border: 1.5px solid var(--border);
 }
-.form-section-title {
-  font-size: 13px; font-weight: 700;
-  color: var(--text2); letter-spacing: 0.3px;
-  margin-bottom: 14px;
+.mcard-title {
+  font-size: 14px; font-weight: 800; color: var(--o);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
 }
-
-.field { margin-bottom: 12px; }
-.field:last-child { margin-bottom: 0; }
-.field label {
-  display: block; font-size: 12px; font-weight: 600;
-  color: var(--text2); margin-bottom: 5px;
+.mlabel {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--text2); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 5px; margin-top: 12px;
 }
-.field .opt { font-weight: 400; color: var(--text3); }
-.field input, .field select, .field textarea {
+.mlabel:first-of-type { margin-top: 0; }
+.mreq { color: var(--red); }
+.mcard select, .mcard input[type="text"],
+.mcard input[type="tel"], .mcard textarea {
   width: 100%; padding: 11px 13px;
   border: 1.5px solid var(--border); border-radius: 10px;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px; color: var(--text);
-  background: var(--bg); transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--bg); transition: border-color 0.2s;
   -webkit-appearance: none; appearance: none;
 }
-.field textarea { resize: none; }
-.field input:focus, .field select:focus, .field textarea:focus {
-  outline: none; border-color: var(--o);
-  background: var(--white);
+.mcard select:focus, .mcard input:focus, .mcard textarea:focus {
+  outline: none; border-color: var(--o); background: var(--white);
   box-shadow: 0 0 0 3px rgba(255,107,0,0.1);
 }
+.mcard textarea { resize: vertical; min-height: 65px; }
+.merr { color: var(--red); font-size: 12px; margin-top: 4px; display: none; }
 
-.gps-btn {
-  padding: 11px 14px; border: 1.5px solid var(--border);
-  border-radius: 10px; background: var(--bg);
-  font-size: 16px; cursor: pointer;
-  transition: border-color 0.2s;
+/* GPS */
+.gps-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: #F0F7FF; border: 1.5px solid #BFDBFE;
+  border-radius: 10px; padding: 10px 12px; margin-top: 10px;
 }
-.gps-btn:active { border-color: var(--o); }
+.gps-icon { font-size: 1.1rem; flex-shrink: 0; }
+.gps-text { flex: 1; font-size: 12px; color: #2563EB; line-height: 1.4; }
+.gps-text strong { display: block; font-size: 13px; }
+.btn-gps {
+  background: #2563EB; color: white; border: none;
+  border-radius: 8px; padding: 7px 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.gps-status { font-size: 11.5px; margin-top: 6px; color: var(--text3); line-height: 1.5; }
+.gps-status.ok  { color: var(--green); }
+.gps-status.err { color: var(--red); }
 
-/* Product blocks */
-.product-block {
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 12px; padding: 14px;
-  margin-bottom: 10px; position: relative;
+/* Item blocks */
+.items-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.item-block { background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; }
+.item-header {
+  background: linear-gradient(90deg,#FFF0E6,#FFF7F2);
+  padding: 10px 14px; display: flex; justify-content: space-between;
+  align-items: center; border-bottom: 1.5px solid #FFE0C8;
 }
-.product-block-head {
-  display: flex; align-items: center;
-  justify-content: space-between; margin-bottom: 12px;
+.item-label { font-weight: 800; font-size: 13px; color: var(--o); text-transform: uppercase; letter-spacing: 0.4px; }
+.btn-remove-item {
+  background: none; border: 1.5px solid var(--red);
+  color: var(--red); border-radius: 7px;
+  padding: 3px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
 }
-.product-num {
-  font-size: 11px; font-weight: 700;
-  color: var(--o); letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-.remove-product {
-  background: var(--red-bg); border: none;
-  color: var(--red); border-radius: 6px;
-  font-size: 11px; font-weight: 700;
-  padding: 4px 8px; cursor: pointer;
-}
+.item-body { padding: 12px 14px; }
+.louver-type-row, .direction-row { margin-top: 10px; display: none; }
 
 /* Measurement rows */
-.meas-row {
-  display: flex; gap: 8px; align-items: center;
-  margin-bottom: 8px;
+.meas-rows { display: flex; flex-direction: column; gap: 8px; }
+.meas-row { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; }
+.meas-num { font-weight: 800; font-size: 12px; color: var(--text3); min-width: 18px; text-align: center; padding-top: 13px; }
+.meas-fields { flex: 1; }
+.meas-grid-2 { display: grid; grid-template-columns: 1fr 20px 1fr; align-items: center; gap: 4px; }
+.meas-grid-3 { display: grid; grid-template-columns: 1fr 14px 1fr 14px 1fr; align-items: center; gap: 4px; }
+.meas-grid-2 input, .meas-grid-3 input {
+  text-align: center; font-size: 15px; font-weight: 600;
+  padding: 11px 6px; background: #FFFBF7; border: 1.5px solid #FFD4B0;
+  border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text); -webkit-appearance: none;
 }
-.meas-row .meas-num {
-  font-size: 12px; font-weight: 700;
-  color: var(--text3); min-width: 18px;
-}
-.meas-input {
-  flex: 1; padding: 9px 10px;
-  border: 1.5px solid var(--border); border-radius: 8px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13px; color: var(--text);
-  background: var(--white); text-align: center;
-  -webkit-appearance: none;
-}
-.meas-input:focus {
-  outline: none; border-color: var(--o);
+.meas-grid-2 input:focus, .meas-grid-3 input:focus {
+  outline: none; background: var(--white); border-color: var(--o);
   box-shadow: 0 0 0 2px rgba(255,107,0,0.1);
 }
-.meas-input.placeholder-label {
-  background: var(--bg); color: var(--text3);
-  font-size: 11px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.5px;
-  border-style: dashed; pointer-events: none;
-}
-.remove-meas {
-  background: none; border: none;
-  color: var(--text3); font-size: 16px;
-  cursor: pointer; padding: 4px; line-height: 1;
-}
-
-.add-meas-btn {
-  background: none; border: 1.5px dashed var(--border);
-  border-radius: 8px; width: 100%;
-  padding: 8px; font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 12px; font-weight: 600; color: var(--text3);
-  cursor: pointer; margin-top: 4px;
-}
-.add-meas-btn:hover { border-color: var(--o); color: var(--o); }
-
-.add-product-btn {
-  width: 100%; padding: 13px;
-  background: none; border: 2px dashed var(--o-border);
-  border-radius: 12px; color: var(--o);
+.meas-middle-optional { background: var(--bg) !important; border-color: var(--border) !important; color: var(--text3) !important; }
+.meas-sep { text-align: center; font-size: 16px; font-weight: 800; color: var(--text3); }
+.meas-labels { display: grid; gap: 4px; margin-top: 3px; }
+.meas-labels-2 { grid-template-columns: 1fr 20px 1fr; }
+.meas-labels-3 { grid-template-columns: 1fr 14px 1fr 14px 1fr; }
+.fl { font-size: 10px; color: var(--o); font-weight: 700; text-transform: uppercase; text-align: center; letter-spacing: 0.3px; }
+.fl-x { visibility: hidden; }
+.fl-optional { color: var(--text3) !important; }
+.btn-del-meas { background: none; border: none; color: var(--border); font-size: 18px; cursor: pointer; padding: 4px; margin-top: 8px; }
+.btn-del-meas:active { color: var(--red); }
+.btn-add-meas {
+  width: 100%; margin-top: 8px; padding: 9px;
+  border: 1.5px dashed var(--border); background: var(--white);
+  color: var(--text3); border-radius: 9px;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px; font-weight: 700; cursor: pointer;
-  transition: background 0.15s;
+  font-size: 13px; font-weight: 700; cursor: pointer;
 }
-.add-product-btn:hover { background: var(--o-bg); }
+.btn-add-item {
+  width: 100%; margin-top: 6px; padding: 14px;
+  border: 2px dashed var(--o-border); background: var(--o-bg);
+  color: var(--o); border-radius: 13px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+}
 
-/* Photo upload */
+/* Fraction helper */
+.fraction-helper {
+  background: var(--o-bg); border: 1.5px solid var(--o-border);
+  border-radius: 10px; padding: 11px 13px; margin-top: 12px;
+}
+.fh-title { font-size: 11px; font-weight: 700; color: var(--o); margin-bottom: 8px; text-transform: uppercase; }
+.fraction-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; }
+.frac-btn {
+  background: var(--white); border: 1.5px solid var(--o-border);
+  border-radius: 7px; padding: 7px 4px; text-align: center; cursor: pointer;
+}
+.frac-btn:active { background: var(--o); color: white; border-color: var(--o); }
+.frac-sym { font-size: 15px; font-weight: 700; display: block; }
+.frac-dec { font-size: 10px; color: var(--text3); display: block; margin-top: 1px; }
+.frac-hint { font-size: 11px; color: var(--text3); margin-top: 7px; line-height: 1.5; }
+
+/* Photos */
 .photo-upload-area {
   border: 2px dashed var(--border); border-radius: 12px;
   padding: 20px; text-align: center; cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  background: var(--bg); transition: border-color 0.2s, background 0.2s;
 }
 .photo-upload-area:hover { border-color: var(--o); background: var(--o-bg); }
-.photo-thumb {
-  position: relative; width: 72px; height: 72px;
+.photo-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.photo-thumb-wrap { position: relative; display: inline-block; }
+.photo-thumb { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; border: 1.5px solid var(--border); }
+.photo-remove {
+  position: absolute; top: -6px; right: -6px;
+  background: var(--red); color: white; border: none;
+  border-radius: 50%; width: 18px; height: 18px;
+  font-size: 10px; cursor: pointer; line-height: 18px; text-align: center;
 }
-.photo-thumb img {
-  width: 72px; height: 72px;
-  object-fit: cover; border-radius: 8px;
-  border: 1.5px solid var(--border);
-}
-.photo-thumb .rm-photo {
-  position: absolute; top: -5px; right: -5px;
-  background: var(--red); color: white;
-  border: none; border-radius: 50%;
-  width: 18px; height: 18px;
-  font-size: 10px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700;
-}
+.photo-upload-status { font-size: 11.5px; margin-top: 6px; color: var(--text3); text-align: center; }
+.photo-upload-status.ok  { color: var(--green); }
+.photo-upload-status.err { color: var(--red); }
 
 /* Submit */
-.cta-submit {
-  width: 100%; padding: 15px;
+.btn-submit-m {
+  width: 100%; padding: 16px;
   background: var(--o); color: white; border: none;
-  border-radius: 12px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 15px; font-weight: 700;
-  cursor: pointer; letter-spacing: 0.1px;
-  box-shadow: 0 4px 16px rgba(255,107,0,0.35);
-  transition: opacity 0.15s, transform 0.1s;
+  border-radius: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 4px 18px rgba(255,107,0,0.32);
 }
-.cta-submit:active { opacity: 0.9; transform: scale(0.98); }
 
-/* Saved entries */
+/* Saving overlay */
+.saving-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(26,26,46,0.72); backdrop-filter: blur(3px);
+  flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+.saving-overlay.active { display: flex; }
+.saving-card {
+  background: var(--white); border-radius: 20px;
+  padding: 28px 32px; text-align: center;
+  max-width: 300px; width: 88%; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+.saving-spinner {
+  width: 48px; height: 48px; border: 4px solid var(--o-border);
+  border-top-color: var(--o); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+}
+.saving-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.saving-step { font-size: 12.5px; color: var(--text2); line-height: 1.6; min-height: 1.6em; transition: opacity 0.3s; }
+.saving-steps-track { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
+.saving-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+.saving-dot.done   { background: var(--green); }
+.saving-dot.active { background: var(--o); }
+
+/* Success quote badge */
+.quote-badge {
+  display: none; background: var(--o-bg);
+  border: 1.5px solid var(--o-border); border-radius: 12px;
+  padding: 14px 16px; margin: 0 16px 14px;
+  align-items: center; gap: 12px;
+}
+.quote-badge.show { display: flex; }
+
+/* WA box */
+.wa-box { background: #E7F8EE; border: 1.5px solid #86EFAC; border-radius: 14px; padding: 16px; margin: 0 16px 14px; }
+.wa-title { font-weight: 800; color: #15803D; font-size: 14px; margin-bottom: 10px; }
+.wa-summary {
+  background: var(--white); border-radius: 10px; padding: 12px;
+  font-size: 13px; line-height: 1.7; white-space: pre-wrap;
+  color: var(--text); border: 1px solid #BBF7D0;
+  max-height: 240px; overflow-y: auto; word-break: break-word;
+}
+.wa-buttons { display: flex; gap: 8px; margin-top: 10px; }
+.btn-wa-send {
+  flex: 1; padding: 12px 8px; background: #25D366; color: white;
+  border: none; border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.btn-copy-wa {
+  flex: 1; padding: 12px 8px; background: var(--bg); color: var(--text);
+  border: none; border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.copy-confirm { text-align: center; font-size: 12px; color: #15803D; margin-top: 6px; display: none; }
+
+/* Entry cards (view saved) */
 .entry-card {
-  background: var(--white); border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 14px; margin-bottom: 10px;
-  cursor: pointer; transition: border-color 0.15s;
+  background: var(--white); border-radius: 12px; padding: 13px;
+  margin-bottom: 10px; border: 1.5px solid var(--border);
+  font-size: 13px; cursor: pointer; transition: box-shadow 0.15s, border-color 0.15s;
 }
-.entry-card:hover { border-color: var(--o); }
-.entry-card .ec-date {
-  font-size: 11px; font-weight: 700; color: var(--o);
-  letter-spacing: 0.3px; margin-bottom: 4px;
+.entry-card:active { box-shadow: var(--shadow); border-color: var(--o-border); }
+.ec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.ec-worker { font-weight: 700; color: var(--o); }
+.ec-date { font-size: 11px; color: var(--text3); }
+.ec-meta { color: var(--text2); font-size: 12px; line-height: 1.7; }
+.ec-tap { font-size: 11px; color: var(--text3); margin-top: 5px; text-align: right; }
+
+/* Entry modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9998;
+  background: rgba(26,26,46,0.65); backdrop-filter: blur(3px);
+  align-items: flex-end; justify-content: center;
 }
-.entry-card .ec-loc {
-  font-size: 15px; font-weight: 700; color: var(--text);
+.modal-overlay.active { display: flex; }
+.modal-sheet {
+  background: var(--white); border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 480px; max-height: 88vh;
+  overflow-y: auto; padding: 0 0 32px;
+  animation: slideUp 0.25s ease;
 }
-.entry-card .ec-team {
-  font-size: 12px; color: var(--text3); margin-top: 2px;
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px 10px; border-bottom: 1.5px solid var(--border);
+  position: sticky; top: 0; background: var(--white); z-index: 1;
 }
-.entry-card .ec-products {
-  font-size: 12px; color: var(--text2);
-  margin-top: 6px; line-height: 1.5;
+.modal-title { font-weight: 800; font-size: 15px; color: var(--o); }
+.modal-close {
+  background: var(--bg); border: none; border-radius: 50%;
+  width: 30px; height: 30px; font-size: 15px; cursor: pointer;
 }
-.entry-card .ec-photo {
-  display: inline-block; margin-top: 6px;
-  font-size: 11px; font-weight: 600; color: var(--o);
+.modal-body { padding: 14px 18px; }
+.modal-summary {
+  background: var(--bg); border-radius: 10px; padding: 12px;
+  font-size: 13px; line-height: 1.8; white-space: pre-wrap;
+  color: var(--text); border: 1.5px solid var(--border);
+  max-height: 300px; overflow-y: auto; word-break: break-word; margin-bottom: 14px;
 }
+.modal-photos { margin-bottom: 14px; }
+.modal-photos-title { font-weight: 700; font-size: 13px; color: #2563EB; margin-bottom: 8px; }
+.modal-photo-link {
+  display: flex; align-items: center; gap: 8px;
+  background: #EFF6FF; border: 1px solid #BFDBFE; color: #2563EB;
+  border-radius: 9px; padding: 10px 13px; font-size: 13px;
+  text-decoration: none; margin-bottom: 6px; font-weight: 600;
+}
+.modal-actions { display: flex; gap: 8px; }
+.modal-btn {
+  flex: 1; padding: 12px 8px; border-radius: 10px; border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px; font-weight: 800; cursor: pointer;
+}
+.modal-btn-copy  { background: var(--bg); color: var(--text); }
+.modal-btn-close { background: var(--o); color: white; }
 
 /* Toast */
 .toast {
@@ -638,94 +722,161 @@ html, body {
   <!-- ══ MEASUREMENTS SCREEN ══ -->
   <div class="screen" id="scr-measurements">
 
-    <!-- Tab switcher: New Entry / View Saved -->
+    <!-- Tab switcher -->
     <div class="m-tabs">
-      <button class="m-tab on" id="mtab-new"    onclick="mTab('new')">New Entry</button>
-      <button class="m-tab"    id="mtab-saved"  onclick="mTab('saved')">View Saved</button>
+      <button class="m-tab on" id="mtab-new"   onclick="mTab('new')">New Entry</button>
+      <button class="m-tab"   id="mtab-saved" onclick="mTab('saved')">View Saved</button>
     </div>
 
-    <!-- ── NEW ENTRY FORM ── -->
+    <!-- ── NEW ENTRY ── -->
     <div id="m-new">
 
-      <!-- Step 1: Basic Info -->
-      <div class="form-section">
-        <div class="form-section-title">📋 Basic Info</div>
+      <div class="mcard">
+        <div class="mcard-title">👤 Team Member &amp; Site Info</div>
+        <label class="mlabel">Team Member <span class="mreq">*</span></label>
+        <select id="m-worker">
+          <option value="">-- Select --</option>
+          <option>Raju</option><option>Vasu</option><option>Chinna</option><option>Srinu</option><option>Sai</option>
+        </select>
+        <div class="merr" id="merr-worker">Please select team member</div>
 
-        <div class="field">
-          <label>Team Member</label>
-          <select id="m-team">
-            <option value="">Select member</option>
-            <option>Raju</option>
-            <option>Vasu</option>
-            <option>Chinna</option>
-            <option>Srinu</option>
-            <option>Sai</option>
-          </select>
+        <label class="mlabel">Location / Area <span class="mreq">*</span></label>
+        <input type="text" id="m-location" placeholder="e.g. Sainagar, Plot No. 12">
+        <div class="merr" id="merr-location">Please enter location</div>
+
+        <div class="gps-bar">
+          <span class="gps-icon">📍</span>
+          <div class="gps-text"><strong>GPS Location</strong>Saves exact pin for directions</div>
+          <button class="btn-gps" onclick="captureGPS()">Capture</button>
         </div>
+        <div class="gps-status" id="gps-status">Not captured yet</div>
 
-        <div class="field">
-          <label>Location / Site</label>
-          <input type="text" id="m-location" placeholder="e.g. Madhurawada, House No. 12">
-        </div>
+        <label class="mlabel">Customer Name</label>
+        <input type="text" id="m-customer" placeholder="Can update later if unknown">
 
-        <div class="field">
-          <label>Customer Name <span class="opt">(optional)</span></label>
-          <input type="text" id="m-customer" placeholder="Customer name">
-        </div>
+        <label class="mlabel">Customer Phone</label>
+        <input type="tel" id="m-phone" placeholder="e.g. 98765 43210">
 
-        <div class="field">
-          <label>Phone <span class="opt">(optional)</span></label>
-          <input type="tel" id="m-phone" placeholder="10-digit number" maxlength="10">
-        </div>
+        <label class="mlabel">Discount % <span style="font-size:11px;color:var(--text3);font-weight:400">(optional)</span></label>
+        <input type="text" id="m-discount" placeholder="e.g. 10" inputmode="decimal">
+      </div>
 
-        <div class="field">
-          <label>GPS Location <span class="opt">(optional)</span></label>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="m-gps" placeholder="Tap to capture" readonly style="flex:1">
-            <button class="gps-btn" onclick="captureGPS()">📍</button>
+      <div class="mcard">
+        <div class="mcard-title">🪟 Products &amp; Measurements</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Select product first, then add measurements.</p>
+        <div class="items-list" id="items-list"></div>
+        <button class="btn-add-item" onclick="addItem()">+ Add Product / Opening</button>
+
+        <!-- Fraction helper -->
+        <div class="fraction-helper">
+          <div class="fh-title">⚡ Quick Fractions — tap a box first</div>
+          <div class="fraction-grid">
+            <div class="frac-btn" onclick="ins('1/8')"><span class="frac-sym">⅛</span><span class="frac-dec">1/8</span></div>
+            <div class="frac-btn" onclick="ins('1/4')"><span class="frac-sym">¼</span><span class="frac-dec">1/4</span></div>
+            <div class="frac-btn" onclick="ins('3/8')"><span class="frac-sym">⅜</span><span class="frac-dec">3/8</span></div>
+            <div class="frac-btn" onclick="ins('1/2')"><span class="frac-sym">½</span><span class="frac-dec">1/2</span></div>
+            <div class="frac-btn" onclick="ins('5/8')"><span class="frac-sym">⅝</span><span class="frac-dec">5/8</span></div>
+            <div class="frac-btn" onclick="ins('3/4')"><span class="frac-sym">¾</span><span class="frac-dec">3/4</span></div>
+            <div class="frac-btn" onclick="ins('7/8')"><span class="frac-sym">⅞</span><span class="frac-dec">7/8</span></div>
+            <div class="frac-btn" onclick="ins('1/16')"><span class="frac-sym">¹⁄₁₆</span><span class="frac-dec">1/16</span></div>
           </div>
-        </div>
-
-        <div class="field">
-          <label>Notes <span class="opt">(optional)</span></label>
-          <textarea id="m-notes" rows="2" placeholder="Any additional notes..."></textarea>
+          <div class="frac-hint">💡 Type <strong>47 space 1 space</strong> → becomes <strong>47 1/</strong> → type denominator</div>
         </div>
       </div>
 
-      <!-- Step 2: Products -->
-      <div class="form-section">
-        <div class="form-section-title">🪟 Products &amp; Measurements</div>
-        <div id="products-list"></div>
-        <button class="add-product-btn" onclick="addProduct()">+ Add Product</button>
-      </div>
-
-      <!-- Step 3: Photos -->
-      <div class="form-section">
-        <div class="form-section-title">📷 Photos <span class="opt">(optional)</span></div>
+      <div class="mcard">
+        <div class="mcard-title">📷 Reference Photos <span style="font-size:12px;font-weight:400;color:var(--text3)">(optional)</span></div>
         <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
-          <div style="font-size:2rem;margin-bottom:6px">📷</div>
-          <div style="font-size:13px;color:var(--text2);font-weight:500">Tap to add photos</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:3px">Compressed automatically</div>
+          <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(event)" style="display:none">
+          <span style="font-size:1.8rem;display:block;margin-bottom:6px">📸</span>
+          <div style="font-size:13px;font-weight:600;color:var(--text2)">Tap to add photos</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">Compressed automatically before upload</div>
         </div>
-        <input type="file" id="photo-input" multiple accept="image/*" style="display:none" onchange="handlePhotos(this)">
-        <div id="photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+        <div class="photo-previews" id="photo-previews"></div>
+        <div class="photo-upload-status" id="photo-upload-status"></div>
       </div>
 
-      <!-- Submit -->
-      <button class="cta-submit" onclick="submitMeasurement()">Save Measurement</button>
-      <div style="height:8px"></div>
+      <div class="mcard">
+        <div class="mcard-title">📝 Notes</div>
+        <textarea id="m-notes" rows="3" placeholder="e.g. Left wall uneven, white color, mosquito mesh needed..."></textarea>
+      </div>
+
+      <button class="btn-submit-m" onclick="submitMeasurement()">✅ Save &amp; Sync to Sheets</button>
+      <div style="height:16px"></div>
     </div>
 
     <!-- ── VIEW SAVED ── -->
     <div id="m-saved" style="display:none">
       <div id="saved-list">
-        <div class="empty-state">
-          <div class="emo">📂</div>
-          <p>Loading saved entries...</p>
-        </div>
+        <div class="empty-state"><div class="emo">📂</div><p>Loading...</p></div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Entry detail modal -->
+  <div class="modal-overlay" id="entry-modal" onclick="closeEntryModal(event)">
+    <div class="modal-sheet" id="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title">Entry Detail</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-summary" id="modal-summary"></div>
+        <div class="modal-photos" id="modal-photos" style="display:none">
+          <div class="modal-photos-title">📷 Photos</div>
+          <div id="modal-photo-links"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-copy" onclick="copyModalSummary()">📋 Copy</button>
+          <button class="modal-btn modal-btn-close" onclick="closeModal()">✕ Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saving overlay -->
+  <div class="saving-overlay" id="saving-overlay">
+    <div class="saving-card">
+      <div class="saving-spinner"></div>
+      <div class="saving-title">Saving Entry...</div>
+      <div class="saving-step" id="saving-step-text">Preparing data</div>
+      <div class="saving-steps-track">
+        <div class="saving-dot active" id="sdot-0"></div>
+        <div class="saving-dot" id="sdot-1"></div>
+        <div class="saving-dot" id="sdot-2"></div>
+        <div class="saving-dot" id="sdot-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success screen (measurements) -->
+  <div class="screen" id="scr-m-success" style="display:none">
+    <div style="text-align:center;padding:24px 16px 16px">
+      <div style="font-size:3rem;margin-bottom:10px">✅</div>
+      <h2 style="font-size:20px;font-weight:800;color:var(--green);margin-bottom:6px">Saved!</h2>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6" id="m-success-detail"></p>
+    </div>
+    <div class="quote-badge" id="quote-badge">
+      <span style="font-size:1.6rem">📄</span>
+      <div>
+        <div style="font-weight:800;color:var(--o);font-size:14px">Quotation Created!</div>
+        <div style="font-size:12px;color:#92400E;margin-top:3px" id="quote-badge-sub"></div>
+      </div>
+    </div>
+    <div class="wa-box">
+      <div class="wa-title">💬 WhatsApp Summary</div>
+      <div class="wa-summary" id="wa-summary"></div>
+      <div class="wa-buttons">
+        <button class="btn-wa-send" onclick="openWhatsApp()">📲 Send to WhatsApp</button>
+        <button class="btn-copy-wa" onclick="copySummary()">📋 Copy</button>
+      </div>
+      <div class="copy-confirm" id="copy-confirm">✓ Copied!</div>
+    </div>
+    <div style="padding:0 16px 8px">
+      <button class="btn-submit-m" onclick="resetMForm()">+ New Entry</button>
+    </div>
   </div>
 
   <!-- ══ QUOTATIONS SCREEN (placeholder) ══ -->
@@ -878,8 +1029,9 @@ function goScreen(id) {
   currentScreen = id;
 
   // Load data for screen
-  if (id === 'dashboard') loadDashboard();
-  if (id === 'users') loadPendingUsers();
+  if (id === 'dashboard')    loadDashboard();
+  if (id === 'users')        loadPendingUsers();
+  if (id === 'measurements') initMeasScreen();
 }
 
 // ══════════════════════════════
@@ -966,13 +1118,30 @@ function approveUser(username, action) {
 }
 
 // ══════════════════════════════
-// MEASUREMENTS
+// MEASUREMENTS — OLD FORM STYLE
 // ══════════════════════════════
-var PRODUCTS = ['UPVC Window','Aluminium Window','UPVC Door','Aluminium Door','PVC Door','WPC Door','Wood Door','Aluminium Partition','Louver','Other'];
-var DIRECTIONS = ['RI','RO','LI','LO'];
-var LOUVER_TYPES = ['Aluminium','UPVC'];
-var photoFiles = [];
-var productCount = 0;
+var itemCount = 0;
+var lastFocused = null;
+var capturedLat = null, capturedLng = null;
+var photoDataURLs = [], photoFileNames = [];
+
+var M_PRODUCTS  = ['-- Select Product --','UPVC Window','Aluminium Window','UPVC Door','Aluminium Door','PVC Door','WPC Door','Wood Door','Aluminium Partition','Louver','Other'];
+var M_DIRECTIONS = ['-- Door Direction --','RI — Right In','RO — Right Out','LI — Left In','LO — Left Out'];
+var M_LOUVER    = ['-- Louver Type --','Aluminium Louver','UPVC Louver'];
+var DRIVE_FOLDER_ID = '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ';
+
+var PRICE_LIST = {
+  'UPVC Window':         { rate:400,  type:'sqft'  },
+  'Aluminium Window':    { rate:550,  type:'sqft'  },
+  'UPVC Door':           { rate:400,  type:'sqft'  },
+  'Aluminium Door':      { rate:550,  type:'sqft'  },
+  'PVC Door':            { rate:2500, type:'fixed' },
+  'WPC Door':            { rate:4500, type:'fixed' },
+  'Wood Door':           { rate:3000, type:'fixed' },
+  'Aluminium Partition': { rate:450,  type:'sqft'  },
+  'Louver':              { rate:2500, type:'fixed' },
+  'Other':               { rate:0,    type:'fixed' }
+};
 
 function mTab(tab) {
   document.getElementById('m-new').style.display   = tab === 'new'   ? 'block' : 'none';
@@ -982,355 +1151,530 @@ function mTab(tab) {
   if (tab === 'saved') loadSaved();
 }
 
-function addProduct() {
-  productCount++;
-  var idx = productCount;
-  var div = document.createElement('div');
-  div.className = 'product-block';
-  div.id = 'pb-' + idx;
-  div.innerHTML = buildProductBlock(idx);
-  document.getElementById('products-list').appendChild(div);
-  updateMeasRows(idx);
-}
-
-function buildProductBlock(idx) {
-  var opts = PRODUCTS.map(function(p) {
-    return '<option value="' + p + '">' + p + '</option>';
-  }).join('');
-  return '<div class="product-block-head">' +
-    '<span class="product-num">Product ' + idx + '</span>' +
-    '<button class="remove-product" onclick="removeProduct(' + idx + ')">Remove</button>' +
-  '</div>' +
-  '<div class="field">' +
-    '<label>Product Type</label>' +
-    '<select id="prod-' + idx + '" onchange="onProductChange(' + idx + ')">' +
-      '<option value="">Select product</option>' + opts +
-    '</select>' +
-  '</div>' +
-  '<div id="extras-' + idx + '"></div>' +
-  '<div class="field"><label>Opening No.</label>' +
-    '<input type="text" id="opening-' + idx + '" placeholder="e.g. 1">' +
-  '</div>' +
-  '<div id="meas-rows-' + idx + '"></div>' +
-  '<button class="add-meas-btn" onclick="addMeasRow(' + idx + ')">+ Add Measurement</button>';
-}
-
-function onProductChange(idx) {
-  var prod = document.getElementById('prod-' + idx).value;
-  var extrasDiv = document.getElementById('extras-' + idx);
-  var html = '';
-
-  if (prod === 'PVC Door') {
-    html += '<div class="field"><label>Direction</label><select id="dir-' + idx + '">' +
-      DIRECTIONS.map(function(d){ return '<option>' + d + '</option>'; }).join('') +
-    '</select></div>';
-  }
-  if (prod === 'Louver') {
-    html += '<div class="field"><label>Louver Type</label><select id="louver-' + idx + '">' +
-      LOUVER_TYPES.map(function(t){ return '<option>' + t + '</option>'; }).join('') +
-    '</select></div>';
-  }
-  extrasDiv.innerHTML = html;
-  updateMeasRows(idx);
-}
-
-function updateMeasRows(idx) {
-  var prod = document.getElementById('prod-' + idx) ? document.getElementById('prod-' + idx).value : '';
-  var container = document.getElementById('meas-rows-' + idx);
-  if (!container) return;
-  container.innerHTML = '';
-  addMeasRow(idx);
-}
-
-function addMeasRow(idx) {
-  var prod = document.getElementById('prod-' + idx) ? document.getElementById('prod-' + idx).value : '';
-  var container = document.getElementById('meas-rows-' + idx);
-  if (!container) return;
-  var rowCount = container.querySelectorAll('.meas-row-wrap').length + 1;
-  var wrap = document.createElement('div');
-  wrap.className = 'meas-row-wrap';
-  wrap.style.marginBottom = '6px';
-
-  var rowHtml = '<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">' +
-    '<span class="meas-num" style="font-size:11px;color:var(--text3);min-width:16px">' + rowCount + '.</span>';
-
-  if (prod === 'PVC Door') {
-    rowHtml += '<input class="meas-input" placeholder="H" style="flex:1"> ';
-    rowHtml += '<input class="meas-input" placeholder="Top" style="flex:1"> ';
-    rowHtml += '<input class="meas-input" placeholder="Bot (opt)" style="flex:1"> ';
-  } else {
-    rowHtml += '<input class="meas-input" placeholder="H" style="flex:1"> ';
-    rowHtml += '<input class="meas-input" placeholder="W" style="flex:1"> ';
-  }
-
-  rowHtml += '<button class="remove-meas" onclick="this.parentElement.parentElement.remove()">✕</button>';
-  rowHtml += '</div>';
-  wrap.innerHTML = rowHtml;
-  container.appendChild(wrap);
-
-  // Auto-slash formatting on inputs
-  wrap.querySelectorAll('.meas-input').forEach(function(inp) {
-    inp.addEventListener('input', function() {
-      var v = this.value.replace(/[^0-9 \/]/g,'');
-      this.value = v;
-    });
-  });
-}
-
-function removeProduct(idx) {
-  var el = document.getElementById('pb-' + idx);
-  if (el) el.remove();
-}
-
 function captureGPS() {
-  if (!navigator.geolocation) { showToast('GPS not supported'); return; }
-  showToast('Capturing GPS...');
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    var lat = pos.coords.latitude.toFixed(6);
-    var lng = pos.coords.longitude.toFixed(6);
-    document.getElementById('m-gps').value = 'https://maps.google.com/?q=' + lat + ',' + lng;
-    showToast('📍 GPS captured!');
-  }, function() { showToast('Could not get GPS'); });
+  var status = document.getElementById('gps-status');
+  if (!navigator.geolocation) { status.className='gps-status err'; status.textContent='✗ GPS not supported'; return; }
+  status.className = 'gps-status'; status.textContent = '📡 Getting location...';
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      capturedLat = pos.coords.latitude.toFixed(6);
+      capturedLng = pos.coords.longitude.toFixed(6);
+      status.className = 'gps-status ok';
+      status.textContent = '✓ Location saved: ' + capturedLat + ', ' + capturedLng;
+    },
+    function(err) {
+      status.className = 'gps-status err';
+      status.textContent = err.code === 1 ? '✗ Allow location permission.' : '✗ Could not get location.';
+    },
+    { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
+  );
 }
 
-function handlePhotos(input) {
-  var files = Array.from(input.files);
-  files.forEach(function(file) {
-    photoFiles.push(file);
+function compressImage(file, maxPx, quality) {
+  return new Promise(function(resolve) {
     var reader = new FileReader();
     reader.onload = function(e) {
-      var thumb = document.createElement('div');
-      thumb.className = 'photo-thumb';
-      var imgIdx = photoFiles.length - 1;
-      thumb.innerHTML = '<img src="' + e.target.result + '"><button class="rm-photo" onclick="removePhoto(' + imgIdx + ', this)">✕</button>';
-      document.getElementById('photo-previews').appendChild(thumb);
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w >= h) { h = Math.round(h*maxPx/w); w = maxPx; }
+          else { w = Math.round(w*maxPx/h); h = maxPx; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
-  input.value = '';
 }
 
-function removePhoto(idx, btn) {
-  photoFiles[idx] = null;
-  btn.parentElement.remove();
-}
-
-function compressPhoto(file, cb) {
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var img = new Image();
-    img.onload = function() {
-      var canvas = document.createElement('canvas');
-      var MAX = 1200;
-      var w = img.width, h = img.height;
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      cb(canvas.toDataURL('image/jpeg', 0.72));
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function submitMeasurement() {
-  var team     = document.getElementById('m-team').value;
-  var location = document.getElementById('m-location').value.trim();
-  if (!team)     { showToast('Please select a team member'); return; }
-  if (!location) { showToast('Please enter a location'); return; }
-
-  var blocks = document.querySelectorAll('.product-block');
-  if (!blocks.length) { showToast('Please add at least one product'); return; }
-
-  // Build rows
-  var rows = [];
-  var now  = new Date();
-  var dateStr = now.toISOString().split('T')[0];
-  var timeStr = now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-  var customer = document.getElementById('m-customer').value.trim() || '—';
-  var phone    = document.getElementById('m-phone').value.trim()    || '—';
-  var gps      = document.getElementById('m-gps').value.trim()      || '—';
-  var notes    = document.getElementById('m-notes').value.trim()    || '—';
-
-  var valid = true;
-  blocks.forEach(function(block, bi) {
-    var idx  = block.id.replace('pb-','');
-    var prod = document.getElementById('prod-' + idx);
-    if (!prod || !prod.value) { showToast('Select a product for Product ' + (bi+1)); valid = false; return; }
-    var product   = prod.value;
-    var openingNo = (document.getElementById('opening-' + idx) || {}).value || (bi+1).toString();
-    var direction = '—';
-    var louverType = '';
-    if (product === 'PVC Door') {
-      var dirEl = document.getElementById('dir-' + idx);
-      if (dirEl) direction = dirEl.value;
-    }
-    if (product === 'Louver') {
-      var lEl = document.getElementById('louver-' + idx);
-      if (lEl) louverType = lEl.value;
-      product = 'Louver (' + (louverType || 'Aluminium') + ')';
-    }
-
-    var measWraps = block.querySelectorAll('.meas-row-wrap');
-    measWraps.forEach(function(wrap, mi) {
-      var inputs = wrap.querySelectorAll('.meas-input');
-      var h = inputs[0] ? inputs[0].value.trim() : '';
-      var w = inputs[1] ? inputs[1].value.trim() : '';
-      var bot = inputs[2] ? inputs[2].value.trim() : '';
-      if (!h) return;
-
-      var measStr = '';
-      if (prod.value === 'PVC Door') {
-        measStr = 'H:' + h + (w ? ' Top:' + w : '') + (bot ? ' Bot:' + bot : '');
-      } else {
-        measStr = 'H:' + h + (w ? ' W:' + w : '');
-      }
-
-      rows.push({
-        Date: dateStr, Time: timeStr,
-        TeamMember: team, Location: location,
-        Customer: customer, Phone: phone, GPSLink: gps,
-        Product: product, Direction: direction,
-        OpeningNo: openingNo, MeasNo: mi + 1,
-        Height: h, Width: prod.value === 'PVC Door' ? '' : w,
-        Top: prod.value === 'PVC Door' ? w : '',
-        Bottom: bot, Measurement: measStr,
-        Notes: notes, Photos: ''
-      });
+function handlePhotos(event) {
+  var files = Array.from(event.target.files);
+  var statusEl = document.getElementById('photo-upload-status');
+  files.forEach(function(file) {
+    var idx = photoDataURLs.length;
+    photoDataURLs.push(null); photoFileNames.push(file.name);
+    statusEl.textContent = '🗜 Compressing...'; statusEl.className = 'photo-upload-status';
+    compressImage(file, 1200, 0.72).then(function(compressed) {
+      photoDataURLs[idx] = compressed;
+      statusEl.textContent = '✓ Photo ready'; statusEl.className = 'photo-upload-status ok';
+      var previews = document.getElementById('photo-previews');
+      var wrap = document.createElement('div');
+      wrap.className = 'photo-thumb-wrap'; wrap.id = 'pw-' + idx;
+      wrap.innerHTML = '<img src="' + compressed + '" class="photo-thumb"><button class="photo-remove" onclick="removePhoto(' + idx + ')">✕</button>';
+      previews.appendChild(wrap);
     });
   });
+  event.target.value = '';
+}
 
-  if (!valid || !rows.length) { if (!rows.length) showToast('Add at least one measurement'); return; }
+function removePhoto(idx) {
+  photoDataURLs[idx] = null; photoFileNames[idx] = null;
+  var el = document.getElementById('pw-' + idx); if (el) el.remove();
+}
 
-  // Save with/without photos
-  var activePhotos = photoFiles.filter(Boolean);
-  if (!activePhotos.length) {
-    doSaveRows(rows, []);
+async function uploadPhotosToDrive(entryId) {
+  var valid = photoDataURLs.map(function(d,i){ return d?{data:d,name:photoFileNames[i]||('photo_'+(i+1)+'.jpg')}:null; }).filter(Boolean);
+  if (!valid.length) return [];
+  var links = [];
+  for (var i = 0; i < valid.length; i++) {
+    try {
+      var res = await apiAsync({ action:'uploadPhotos', entryId:entryId, folderId:DRIVE_FOLDER_ID, photos:[valid[i]] });
+      if (res.links && res.links[0]) links.push(res.links[0]);
+    } catch(e) {}
+  }
+  return links;
+}
+
+function apiAsync(payload) {
+  return fetch(SHEETS_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) })
+    .then(function(r){ return r.text(); })
+    .then(function(t){ try{ return JSON.parse(t); } catch(e){ return {raw:t}; } });
+}
+
+function attachMeasInputRules(input) {
+  input.addEventListener('keypress', function(e) {
+    if (!/[\d\s\/]/.test(e.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab'].includes(e.key)) e.preventDefault();
+  });
+  input.addEventListener('input', function() {
+    var cleaned = this.value.replace(/[^\d\s\/]/g,'');
+    if (cleaned !== this.value) { var pos = this.selectionStart; this.value = cleaned; this.selectionStart = this.selectionEnd = pos; }
+    var match = this.value.match(/^(.*?)(\d+) (\d+) $/);
+    if (match) { var nv = match[1]+match[2]+' '+match[3]+'/'; this.value = nv; this.selectionStart = this.selectionEnd = nv.length; }
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.key !== ' ' && e.key !== 'Spacebar') return;
+    var cursor = this.selectionStart, before = this.value.substring(0,cursor);
+    var m = before.match(/^(.*?)(\d+) (\d+)$/);
+    if (m && !before.includes('/')) {
+      e.preventDefault();
+      var nv = m[1]+m[2]+' '+m[3]+'/';
+      this.value = nv + this.value.substring(cursor);
+      this.selectionStart = this.selectionEnd = nv.length;
+    }
+  });
+  input.addEventListener('focus', function(){ lastFocused = input; });
+}
+
+function addItem() {
+  itemCount++;
+  var id = itemCount;
+  var list = document.getElementById('items-list');
+  var div = document.createElement('div');
+  div.className = 'item-block'; div.id = 'item-' + id;
+  var prodOpts = M_PRODUCTS.map(function(p){ return '<option value="'+(p==='-- Select Product --'?'':p)+'">'+p+'</option>'; }).join('');
+  var louverOpts = M_LOUVER.map(function(t,i){ return '<option value="'+(i===0?'':t)+'">'+t+'</option>'; }).join('');
+  var dirOpts = M_DIRECTIONS.map(function(d,i){ return '<option value="'+(i===0?'':d.split(' ')[0])+'">'+d+'</option>'; }).join('');
+  div.innerHTML =
+    '<div class="item-header">' +
+      '<span class="item-label">Opening ' + id + '</span>' +
+      '<button class="btn-remove-item" onclick="removeItem(' + id + ')">Remove</button>' +
+    '</div>' +
+    '<div class="item-body">' +
+      '<label class="mlabel" style="margin-top:0">Product Type *</label>' +
+      '<select id="prod-'+id+'" onchange="onProdChange('+id+')">'+prodOpts+'</select>' +
+      '<div class="louver-type-row" id="louver-row-'+id+'"><label class="mlabel">Louver Type *</label><select id="louver-'+id+'">'+louverOpts+'</select></div>' +
+      '<div class="direction-row" id="dir-row-'+id+'"><label class="mlabel">Door Direction *</label><select id="dir-'+id+'">'+dirOpts+'</select></div>' +
+      '<div id="meas-section-'+id+'" style="display:none;margin-top:10px">' +
+        '<label class="mlabel" style="margin-bottom:8px">Measurements</label>' +
+        '<div class="meas-rows" id="meas-rows-'+id+'"></div>' +
+        '<button class="btn-add-meas" onclick="addMeasRow('+id+')">+ Add Row</button>' +
+      '</div>' +
+    '</div>';
+  list.appendChild(div);
+  setTimeout(function(){ div.scrollIntoView({behavior:'smooth',block:'center'}); }, 80);
+}
+
+function removeItem(id) { var el = document.getElementById('item-'+id); if(el) el.remove(); }
+
+function onProdChange(id) {
+  var prod = document.getElementById('prod-'+id).value;
+  document.getElementById('dir-row-'+id).style.display    = prod==='PVC Door' ? 'block' : 'none';
+  document.getElementById('louver-row-'+id).style.display = prod==='Louver'   ? 'block' : 'none';
+  var measSection = document.getElementById('meas-section-'+id);
+  if (!prod) { measSection.style.display='none'; return; }
+  measSection.style.display='block';
+  document.getElementById('meas-rows-'+id).innerHTML='';
+  addMeasRow(id);
+}
+
+function addMeasRow(itemId) {
+  var prod = document.getElementById('prod-'+itemId).value;
+  var isPVC = prod === 'PVC Door';
+  var rows = document.getElementById('meas-rows-'+itemId);
+  var rowNum = rows.children.length + 1;
+  var rid = itemId + '_' + Date.now();
+  var div = document.createElement('div');
+  div.className = 'meas-row'; div.id = 'mrow-' + rid;
+  if (isPVC) {
+    div.innerHTML =
+      '<span class="meas-num">'+rowNum+'</span>' +
+      '<div class="meas-fields">' +
+        '<div class="meas-grid-3">' +
+          '<input type="text" id="mH-'+rid+'" placeholder="83" inputmode="text" autocomplete="off" spellcheck="false">' +
+          '<span class="meas-sep">×</span>' +
+          '<input type="text" id="mT-'+rid+'" placeholder="4 1/2" inputmode="text" autocomplete="off" spellcheck="false">' +
+          '<span class="meas-sep">×</span>' +
+          '<input type="text" id="mB-'+rid+'" placeholder="(optional)" inputmode="text" autocomplete="off" spellcheck="false" class="meas-middle-optional">' +
+        '</div>' +
+        '<div class="meas-labels meas-labels-3">' +
+          '<span class="fl">H (Height)</span><span class="fl fl-x">×</span><span class="fl">Top</span><span class="fl fl-x">×</span><span class="fl fl-optional">Bottom (opt)</span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn-del-meas" onclick="delMeasRow(\''+rid+'\','+itemId+')">✕</button>';
   } else {
-    showOv('Compressing photos...');
-    var compressed = [], done = 0;
-    activePhotos.forEach(function(file, i) {
-      compressPhoto(file, function(dataUrl) {
-        compressed[i] = { name: file.name, data: dataUrl };
-        done++;
-        if (done === activePhotos.length) {
-          hideOv();
-          doSaveWithPhotos(rows, compressed);
-        }
-      });
+    div.innerHTML =
+      '<span class="meas-num">'+rowNum+'</span>' +
+      '<div class="meas-fields">' +
+        '<div class="meas-grid-2">' +
+          '<input type="text" id="mH-'+rid+'" placeholder="43 3/8" inputmode="text" autocomplete="off" spellcheck="false">' +
+          '<span class="meas-sep">×</span>' +
+          '<input type="text" id="mW-'+rid+'" placeholder="47 1/4" inputmode="text" autocomplete="off" spellcheck="false">' +
+        '</div>' +
+        '<div class="meas-labels meas-labels-2">' +
+          '<span class="fl">H (Height)</span><span class="fl fl-x">×</span><span class="fl">W (Width)</span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn-del-meas" onclick="delMeasRow(\''+rid+'\','+itemId+')">✕</button>';
+  }
+  rows.appendChild(div);
+  div.querySelectorAll('input').forEach(function(inp){ attachMeasInputRules(inp); });
+  setTimeout(function(){ div.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 60);
+}
+
+function delMeasRow(rid, itemId) {
+  var el = document.getElementById('mrow-'+rid); if(el) el.remove();
+  var rows = document.getElementById('meas-rows-'+itemId);
+  if (rows) Array.from(rows.children).forEach(function(r,i){ var n=r.querySelector('.meas-num'); if(n) n.textContent=i+1; });
+}
+
+function ins(frac) {
+  if (!lastFocused) { showToast('Tap a measurement box first'); return; }
+  var el=lastFocused, s=el.selectionStart, e=el.selectionEnd;
+  el.value = el.value.substring(0,s)+frac+el.value.substring(e);
+  el.focus(); el.selectionStart = el.selectionEnd = s+frac.length;
+}
+
+function collectItems() {
+  var items = [];
+  document.querySelectorAll('.item-block').forEach(function(block) {
+    var id = block.id.replace('item-','');
+    var prodEl = document.getElementById('prod-'+id);
+    var prod = prodEl && prodEl.value; if (!prod) return;
+    var isPVC = prod==='PVC Door', isLouver = prod==='Louver';
+    var dirEl = document.getElementById('dir-'+id);
+    var louverEl = document.getElementById('louver-'+id);
+    var dir = isPVC ? (dirEl&&dirEl.value||'') : '';
+    var louverType = isLouver ? (louverEl&&louverEl.value||'') : '';
+    var measurements = [];
+    var measRowsEl = document.getElementById('meas-rows-'+id);
+    if (measRowsEl) measRowsEl.querySelectorAll('.meas-row').forEach(function(row) {
+      var rid = row.id.replace('mrow-','');
+      var hEl=document.getElementById('mH-'+rid), wEl=document.getElementById('mW-'+rid);
+      var tEl=document.getElementById('mT-'+rid), bEl=document.getElementById('mB-'+rid);
+      var h=hEl&&hEl.value.trim()||'', w=wEl&&wEl.value.trim()||'';
+      var t=isPVC&&tEl?tEl.value.trim():'', b=isPVC&&bEl?bEl.value.trim()||'—':'';
+      if (isPVC) { if(h||t) measurements.push({h:h,top:t,bottom:b}); }
+      else { if(h||w) measurements.push({h:h,w:w}); }
     });
+    if (measurements.length) items.push({product:prod, direction:dir, louverType:louverType, measurements:measurements});
+  });
+  return items;
+}
+
+function parseMeasInches(val) {
+  if (!val||val==='—') return 0;
+  val = val.trim(); var parts = val.split(' '), total = 0;
+  parts.forEach(function(p) {
+    if (p.includes('/')) { var f=p.split('/'); if(f.length===2) total+=parseFloat(f[0])/parseFloat(f[1]); }
+    else total += parseFloat(p)||0;
+  });
+  return total;
+}
+
+function savingStep(stepIndex, text) {
+  document.getElementById('saving-step-text').textContent = text;
+  for (var i=0;i<4;i++) {
+    var dot = document.getElementById('sdot-'+i);
+    if (dot) dot.className = 'saving-dot'+(i<stepIndex?' done':i===stepIndex?' active':'');
   }
 }
 
-function doSaveWithPhotos(rows, photos) {
-  showOv('Uploading photos...');
-  var entryId = Date.now().toString();
-  api({ action: 'uploadPhotos', entryId: entryId, photos: photos, folderId: '1JrM2s4dJ8oWK4SuJuiaV_H4gzCbnLtuJ' }, function(err, res) {
-    if (!err && res && res.links && res.links.length) {
-      var photoStr = res.links.join('\n');
-      rows.forEach(function(r){ r.Photos = photoStr; });
-    }
-    doSaveRows(rows, photos);
-  });
-}
+async function submitMeasurement() {
+  // Validate
+  var worker = document.getElementById('m-worker').value;
+  var location = document.getElementById('m-location').value.trim();
+  var wErr = document.getElementById('merr-worker');
+  var lErr = document.getElementById('merr-location');
+  wErr.style.display = worker   ? 'none' : 'block';
+  lErr.style.display = location ? 'none' : 'block';
+  if (!worker || !location) { window.scrollTo({top:0,behavior:'smooth'}); return; }
 
-function doSaveRows(rows, photos) {
-  showOv('Saving to Sheets...');
-  api({ action: 'saveRows', rows: rows }, function(err, res) {
-    hideOv();
-    if (err || !res || res.error) {
-      showToast('Save failed: ' + (res ? res.error : err));
-      return;
-    }
-    showToast('✅ Saved ' + rows.length + ' measurement(s)!');
-    resetForm();
+  var items = collectItems();
+  if (!items.length) { showToast('Add at least one product with measurements'); return; }
 
-    // Auto-create quotation
-    autoCreateQuotation(rows);
-  });
-}
+  document.getElementById('saving-overlay').classList.add('active');
+  savingStep(0, 'Preparing data...');
 
-function autoCreateQuotation(rows) {
-  // Fetch price list then create quotation
-  api({ action: 'getPriceList' }, function(err, res) {
-    if (err || !res || !res.items) return;
-    var priceMap = {};
-    res.items.forEach(function(item) {
-      priceMap[item.Product] = { type: item.Type, rate: parseFloat(item.Rate) || 0 };
+  var gpsLink = (capturedLat&&capturedLng) ? 'https://maps.google.com/?q='+capturedLat+','+capturedLng : '—';
+  var entryId = Date.now();
+  var discountVal = document.getElementById('m-discount').value.trim() || '0';
+  var now = new Date();
+
+  savingStep(1, 'Uploading photos to Drive...');
+  var photoLinks = await uploadPhotosToDrive(entryId);
+
+  var entry = {
+    id: entryId, timestamp: now.toISOString(),
+    worker: worker,
+    date: now.toISOString().split('T')[0],
+    location: location,
+    customer: document.getElementById('m-customer').value.trim() || '—',
+    phone: document.getElementById('m-phone').value.trim() || '—',
+    gpsLink: gpsLink, items: items,
+    notes: document.getElementById('m-notes').value.trim(),
+    photoLinks: photoLinks, discountPct: discountVal
+  };
+
+  savingStep(2, 'Syncing to Google Sheets...');
+  try { await apiAsync({ action:'saveRows', rows: buildMRows(entry) }); } catch(e) {}
+
+  savingStep(3, 'Creating quotation...');
+  var quoteCreated=false, quoteId='', quoteTotal=0;
+  try {
+    var quoteItems = calcQuoteItems(items, discountVal);
+    quoteTotal = quoteItems.reduce(function(s,qi){ return s+qi.total; },0);
+    quoteId = 'Q' + entryId.toString().slice(-10);
+    var qRes = await apiAsync({
+      action:'createQuotation', quoteId:quoteId,
+      date:entry.date, teamMember:entry.worker,
+      location:entry.location, customer:entry.customer, phone:entry.phone,
+      discountPct:discountVal, items:quoteItems
     });
+    if (qRes && qRes.status==='ok') quoteCreated=true;
+  } catch(e) {}
 
-    var items = [];
-    rows.forEach(function(row) {
-      var key = row.Product;
-      var p = priceMap[key] || priceMap[key.split(' (')[0]];
-      if (!p) return;
-      var h = parseFloat(row.Height) || 0;
-      var w = parseFloat(row.Width)  || 0;
-      var sqft = 0, unitPrice = p.rate, total = 0;
-      if (p.type === 'sqft' && h > 0 && w > 0) {
-        sqft = Math.round(((h/12) * (w/12)) * 100) / 100;
-        total = Math.round(sqft * p.rate);
+  document.getElementById('saving-overlay').classList.remove('active');
+  showMSuccess(entry, quoteCreated, quoteId, quoteTotal, discountVal);
+}
+
+function calcQuoteItems(items, discPct) {
+  var disc = parseFloat(discPct)||0;
+  var quoteItems = [];
+  items.forEach(function(item) {
+    var prodKey = item.product;
+    if (prodKey.includes('Louver')) prodKey = 'Louver';
+    var p = PRICE_LIST[prodKey] || {rate:0,type:'fixed'};
+    item.measurements.forEach(function(m) {
+      var sqft=0, dimStr='', cost=0;
+      if (p.type==='sqft') {
+        var h=parseMeasInches(m.h), w=parseMeasInches(m.w||'0');
+        sqft=(h/12)*(w/12);
+        dimStr=m.h+'" x '+m.w+'" / '+sqft.toFixed(2)+' sq ft';
+        cost=sqft*p.rate;
       } else {
-        total = Math.round(p.rate);
+        dimStr=item.product==='PVC Door'
+          ? 'H:'+m.h+' x Top:'+m.top+(m.bottom&&m.bottom!=='—'?' x Bottom:'+m.bottom:'')
+          : (m.h&&m.w?m.h+'" x '+m.w+'"':m.h||'');
+        cost=p.rate;
       }
-      items.push({
-        product: row.Product,
-        dimensions: row.Measurement,
-        sqft: sqft, unitPrice: unitPrice, total: total
+      quoteItems.push({
+        product: item.product+(item.louverType?' ('+item.louverType+')':''),
+        direction: item.direction||'', dimensions: dimStr,
+        sqft: sqft.toFixed(2), unitPrice: p.rate, priceType: p.type,
+        discountPct: disc, total: Math.round(cost*(1-disc/100))
       });
     });
-
-    if (!items.length) return;
-    var quoteId = 'Q' + Date.now().toString().slice(-8);
-    api({
-      action: 'createQuotation',
-      quoteId: quoteId,
-      date: rows[0].Date,
-      teamMember: rows[0].TeamMember,
-      location: rows[0].Location,
-      customer: rows[0].Customer,
-      phone: rows[0].Phone,
-      discountPct: 0,
-      items: items
-    }, function(e, r) {
-      if (!e && r && r.status === 'ok') showToast('📄 Quotation ' + quoteId + ' created!');
-    });
   });
+  return quoteItems;
 }
 
-function resetForm() {
-  document.getElementById('m-team').value     = '';
-  document.getElementById('m-location').value = '';
-  document.getElementById('m-customer').value = '';
-  document.getElementById('m-phone').value    = '';
-  document.getElementById('m-gps').value      = '';
-  document.getElementById('m-notes').value    = '';
-  document.getElementById('products-list').innerHTML = '';
-  document.getElementById('photo-previews').innerHTML = '';
-  photoFiles = [];
-  productCount = 0;
+function buildMRows(entry) {
+  var rows = [];
+  var time = new Date(entry.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var photoCell = (entry.photoLinks&&entry.photoLinks.length) ? entry.photoLinks.join('\n') : '';
+  entry.items.forEach(function(item,ii) {
+    item.measurements.forEach(function(m,mi) {
+      var isPVC = item.product==='PVC Door';
+      var meas = isPVC
+        ? ('H:'+m.h+' x Top:'+m.top+(m.bottom&&m.bottom!=='—'?' x Bottom:'+m.bottom:''))
+        : ('H:'+m.h+' x W:'+m.w);
+      var productLabel = item.louverType ? item.product+' ('+item.louverType+')' : item.product;
+      rows.push({
+        Date:entry.date, Time:time, TeamMember:entry.worker, Location:entry.location,
+        Customer:entry.customer, Phone:entry.phone, GPSLink:entry.gpsLink,
+        Product:productLabel, Direction:item.direction||'—',
+        OpeningNo:ii+1, MeasNo:mi+1, Height:m.h,
+        Width:isPVC?'—':m.w, Top:isPVC?m.top:'—', Bottom:isPVC?(m.bottom||'—'):'—',
+        Measurement:meas, Notes:mi===0&&ii===0?entry.notes:'', Photos:photoCell
+      });
+    });
+  });
+  return rows;
+}
+
+function showMSuccess(entry, quoteCreated, quoteId, quoteTotal, discountVal) {
+  // Hide measurements screen, show success screen
+  document.getElementById('scr-measurements').classList.remove('on');
+  var s = document.getElementById('scr-m-success');
+  s.style.display = 'block'; s.classList.add('on');
+
+  var totalMeas = entry.items.reduce(function(s,i){ return s+i.measurements.length; },0);
+  document.getElementById('m-success-detail').textContent =
+    entry.items.length+' product(s), '+totalMeas+' measurement(s) — '+entry.location+' · '+entry.worker+' · Saved ✓';
+
+  var badge = document.getElementById('quote-badge');
+  if (quoteCreated) {
+    badge.classList.add('show');
+    document.getElementById('quote-badge-sub').textContent =
+      quoteId+' · Rs.'+quoteTotal.toLocaleString('en-IN')+(parseFloat(discountVal)>0?' (after '+discountVal+'% disc)':'')+' · Pending approval';
+  } else { badge.classList.remove('show'); }
+
+  var summary = buildWASummary(entry);
+  document.getElementById('wa-summary').textContent = summary;
+  window._waSummary = summary;
+  try {
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(summary).catch(function(){});
+  } catch(e) {}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildWASummary(e) {
+  var d = new Date(e.timestamp);
+  var timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var lines = [];
+  lines.push('📐 *Smart Doors & Windows — Site Measurement*');
+  lines.push('━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('📅 Date: '+e.date+'   🕐 Time: '+timeStr);
+  lines.push('👤 Team Member: '+e.worker);
+  lines.push('📍 Location: '+e.location);
+  if (e.gpsLink&&e.gpsLink!=='—') lines.push('🗺 Directions: '+e.gpsLink);
+  if (e.customer!=='—') lines.push('🏠 Customer: '+e.customer);
+  if (e.phone!=='—') lines.push('📞 Phone: '+e.phone);
+  lines.push('━━━━━━━━━━━━━━━━━━━━━');
+  e.items.forEach(function(item) {
+    var dirStr = item.direction?' ('+item.direction+')':'';
+    var louverStr = item.louverType?' — '+item.louverType:'';
+    lines.push('\n🪟 *'+item.product+louverStr+dirStr+'*');
+    item.measurements.forEach(function(m,mi) {
+      if (item.product==='PVC Door') {
+        var botStr=m.bottom&&m.bottom!=='—'?'  x  Bottom: '+m.bottom:'';
+        lines.push('  '+(mi+1)+'. H: '+m.h+'  x  Top: '+m.top+botStr);
+      } else { lines.push('  '+(mi+1)+'. H: '+m.h+'  x  W: '+m.w); }
+    });
+  });
+  if (e.notes) { lines.push('\n━━━━━━━━━━━━━━━━━━━━━'); lines.push('📝 Notes: '+e.notes); }
+  if (e.photoLinks&&e.photoLinks.length) {
+    lines.push('📷 Photos ('+e.photoLinks.length+'):');
+    e.photoLinks.forEach(function(link,i){ lines.push('  Photo '+(i+1)+': '+link); });
+  }
+  lines.push('\n━━━━━━━━━━━━━━━━━━━━━');
+  return lines.join('\n');
+}
+
+function copySummary() {
+  var text = document.getElementById('wa-summary').textContent;
+  var confirm = document.getElementById('copy-confirm');
+  var show = function(){ confirm.style.display='block'; setTimeout(function(){ confirm.style.display='none'; },3000); };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(show).catch(function(){ show(); });
+  else show();
+}
+
+function openWhatsApp() {
+  var summary = window._waSummary || document.getElementById('wa-summary').textContent;
+  window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(summary),'_blank');
+}
+
+function resetMForm() {
+  document.getElementById('scr-m-success').style.display = 'none';
+  document.getElementById('scr-m-success').classList.remove('on');
+  document.getElementById('scr-measurements').classList.add('on');
+  ['m-worker','m-location','m-customer','m-phone','m-discount','m-notes'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  capturedLat=null; capturedLng=null; photoDataURLs=[]; photoFileNames=[];
+  document.getElementById('photo-previews').innerHTML='';
+  document.getElementById('photo-upload-status').textContent='';
+  document.getElementById('gps-status').className='gps-status';
+  document.getElementById('gps-status').textContent='Not captured yet';
+  document.getElementById('items-list').innerHTML='';
+  itemCount=0; addItem();
+  mTab('new');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function loadSaved() {
   showOv('Loading entries...');
-  api({ action: 'getRecent', limit: 20 }, function(err, res) {
+  api({ action:'getRecent', limit:20 }, function(err, res) {
     hideOv();
     var list = document.getElementById('saved-list');
     if (err || !res || res.error || !res.rows || !res.rows.length) {
       list.innerHTML = '<div class="empty-state"><div class="emo">📂</div><p>No saved entries yet.</p></div>';
       return;
     }
-    list.innerHTML = res.rows.map(function(e) {
-      var photoTag = e.Photos ? '<span class="ec-photo">📷 Photos attached</span>' : '';
-      return '<div class="entry-card">' +
-        '<div class="ec-date">' + (e.Date || '') + ' · ' + (e.Time || '') + '</div>' +
-        '<div class="ec-loc">' + (e.Location || '—') + '</div>' +
-        '<div class="ec-team">👤 ' + (e.TeamMember || '') + (e.Customer && e.Customer !== '—' ? ' · 🏠 ' + e.Customer : '') + '</div>' +
-        '<div class="ec-products">' + (e.Products || '') + '</div>' +
-        photoTag +
+    window._sheetEntries = res.rows;
+    list.innerHTML = res.rows.map(function(e, idx) {
+      var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
+      var photoInd = photoLinks.length ? '<span style="color:#2563EB;font-size:11px">📷 '+photoLinks.length+' photo(s)</span>' : '';
+      return '<div class="entry-card" onclick="openEntryModal('+idx+')">' +
+        '<div class="ec-header"><span class="ec-worker">👤 '+e.TeamMember+'</span><span class="ec-date">'+e.Date+' · '+e.Time+'</span></div>' +
+        '<div class="ec-meta">📍 '+e.Location+(e.Customer&&e.Customer!=='—'?' · 🏠 '+e.Customer:'')+(e.Phone&&e.Phone!=='—'?' · 📞 '+e.Phone:'')+'</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px">' +
+          '<span style="font-size:11px;color:var(--text3)">'+(e.Products||'')+'</span>'+photoInd+
+        '</div>' +
+        '<div class="ec-tap">Tap to view details →</div>' +
       '</div>';
     }).join('');
   });
+}
+
+function openEntryModal(idx) {
+  var e = window._sheetEntries && window._sheetEntries[idx]; if (!e) return;
+  var lines = [];
+  lines.push('📐 Smart Doors & Windows — Site Measurement');
+  lines.push('━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('📅 Date: '+e.Date+'   🕐 Time: '+e.Time);
+  lines.push('👤 Team Member: '+e.TeamMember);
+  lines.push('📍 Location: '+e.Location);
+  if (e.GPSLink&&e.GPSLink!=='—') lines.push('🗺 Directions: '+e.GPSLink);
+  if (e.Customer&&e.Customer!=='—') lines.push('🏠 Customer: '+e.Customer);
+  if (e.Phone&&e.Phone!=='—') lines.push('📞 Phone: '+e.Phone);
+  lines.push('━━━━━━━━━━━━━━━━━━━━━');
+  if (e.Measurements) e.Measurements.split(' || ').forEach(function(block){ lines.push('\n🪟 '+block.trim()); });
+  if (e.Notes) lines.push('\n📝 Notes: '+e.Notes);
+  lines.push('\n━━━━━━━━━━━━━━━━━━━━━');
+  document.getElementById('modal-summary').textContent = lines.join('\n');
+  document.getElementById('modal-title').textContent = e.TeamMember+' · '+e.Date;
+  var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
+  var photosSection = document.getElementById('modal-photos');
+  if (photoLinks.length) {
+    document.getElementById('modal-photo-links').innerHTML = photoLinks.map(function(link,i){
+      return '<a class="modal-photo-link" href="'+link+'" target="_blank">🖼 View Photo '+(i+1)+'</a>';
+    }).join('');
+    photosSection.style.display='block';
+  } else { photosSection.style.display='none'; }
+  document.getElementById('entry-modal').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal() { document.getElementById('entry-modal').classList.remove('active'); document.body.style.overflow=''; }
+function closeEntryModal(event) { if(event.target===document.getElementById('entry-modal')) closeModal(); }
+function copyModalSummary() {
+  var text = document.getElementById('modal-summary').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(function(){ showToast('Summary copied!'); });
+}
+
+// Auto-add first item when switching to measurements screen
+var _measInitDone = false;
+function initMeasScreen() {
+  if (!_measInitDone) {
+    addItem();
+    _measInitDone = true;
+  }
 }
 
 // ══════════════════════════════
