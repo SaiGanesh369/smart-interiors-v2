@@ -2495,7 +2495,34 @@ function generatePDF(bill) {
 // ══════════════════════════════
 // USERS SCREEN
 // ══════════════════════════════
+function timeAgo(isoStr) {
+  if (!isoStr) return 'Never changed';
+  var then  = new Date(isoStr);
+  var now   = new Date();
+  var diff  = Math.floor((now - then) / 1000); // seconds
+  if (diff < 60)                        return 'Just now';
+  if (diff < 3600)                      return Math.floor(diff/60) + ' minutes ago';
+  if (diff < 86400)                     return Math.floor(diff/3600) + ' hours ago';
+  if (diff < 7 * 86400)                 return Math.floor(diff/86400) + ' days ago';
+  // Older than 7 days — show exact date
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return then.getDate() + ' ' + months[then.getMonth()] + ' ' + then.getFullYear();
+}  
 function loadUsersScreen() {
+  // Always reset form state on entry — prevents split screen
+  var form = document.getElementById('add-user-form');
+  var btn  = document.getElementById('add-user-toggle-btn');
+  if (form) form.style.display = 'none';
+  if (btn)  btn.textContent = '+ Add User';
+  // Clear any leftover input values
+  ['nu-name','nu-user','nu-pass','nu-pin','nu-phone'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var nuRole = document.getElementById('nu-role');
+  if (nuRole) nuRole.value = 'worker';
+  var nuMsg = document.getElementById('nu-msg');
+  if (nuMsg) nuMsg.style.display = 'none';
+
   var list = document.getElementById('users-list');
   list.innerHTML = '<div class="empty-state"><div class="emo">⏳</div><p>Loading...</p></div>';
   api({ action: 'getAllUsers', requestedBy: SESSION.username }, function(err, res) {
@@ -2533,6 +2560,9 @@ function renderUsersList(users) {
     html += '<div style="color:var(--text3);font-size:12px;margin-top:2px">@' + u.username + '</div>';
     if (u.phone) html += '<div style="font-size:12px;color:var(--text2);margin-top:3px">📞 ' + u.phone + '</div>';
     html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">Last login: ' + lastLogin + '</div>';
+    var pwdAgo = timeAgo(u.pwdChanged || '');
+    var pwdColor = !u.pwdChanged ? 'var(--red)' : 'var(--text3)';
+    html += '<div style="font-size:11px;color:' + pwdColor + ';margin-top:2px" title="' + (u.pwdChanged || '') + '">🔒 Password: ' + pwdAgo + '</div>';
     html += '</div>';
     html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">';
     html += '<span style="background:' + roleBadgeBg + ';color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">' + roleLabel + '</span>';
@@ -2626,8 +2656,9 @@ function submitCreateUser() {
   if (!user)               { uMsg(msg,'❌ Username required','red'); return; }
   if (!pass || pass.length < 6) { uMsg(msg,'❌ Password min 6 characters','red'); return; }
   if (!/^\d{4}$/.test(pin)) { uMsg(msg,'❌ PIN must be 4 digits','red'); return; }
-
+  showOv('Creating user...');
   api({ action:'createUser', username:user, password:pass, name:name, role:role, pin:pin, phone:phone }, function(err, res) {
+    hideOv();
     if (res && res.status === 'ok') {
       showToast('✅ User created');
       ['nu-name','nu-user','nu-pass','nu-pin','nu-phone'].forEach(function(id){ document.getElementById(id).value=''; });
