@@ -134,6 +134,15 @@ html, body {
   border-radius: 6px;
 }
 .logout-btn:hover { color: var(--red); background: var(--red-bg); }
+/* Users icon button — owner only */
+.users-icon-btn {
+  display: none;
+  background: none; border: none;
+  font-size: 20px; cursor: pointer;
+  padding: 4px 6px; border-radius: 6px;
+  line-height: 1;
+}
+.users-icon-btn:hover { background: var(--o-bg); }  
 
 /* ══════════════════════════════
    MAIN CONTENT AREA
@@ -727,6 +736,7 @@ html, body {
   </div>
   <div class="top-user">
     <div class="user-avatar" id="user-avatar">S</div>
+    <button class="users-icon-btn" id="users-icon-btn" onclick="goScreen('users')" title="Manage Users">👥</button>
     <button class="logout-btn" onclick="doLogout()">Logout</button>
   </div>
 </div>
@@ -965,13 +975,32 @@ html, body {
   </div>
 
   <!-- ══ USER APPROVALS SCREEN (owner only) ══ -->
+  <!-- ══ USERS SCREEN (owner only) ══ -->
   <div class="screen" id="scr-users">
-    <div class="screen-title">User Approvals</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="screen-title" style="margin-bottom:0">Team Members</div>
+      <button id="add-user-toggle-btn" onclick="toggleAddUserForm()"
+        style="background:var(--o);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+        + Add User
+      </button>
+    </div>
+
+    <!-- Add user form (collapsed by default) -->
+    <div id="add-user-form" style="display:none;background:var(--white);border:1.5px solid var(--o-border);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--o);margin-bottom:12px">New User</div>
+      <div style="margin-bottom:10px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Full Name</label><input type="text" id="nu-name" autocapitalize="words" placeholder="e.g. Raju Kumar" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg)"></div>
+      <div style="margin-bottom:10px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Username</label><input type="text" id="nu-user" autocapitalize="none" placeholder="lowercase, no spaces" oninput="this.value=this.value.toLowerCase()" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg)"></div>
+      <div style="margin-bottom:10px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Password</label><input type="password" id="nu-pass" placeholder="Min 6 characters" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg)"></div>
+      <div style="margin-bottom:10px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">PIN (4 digits)</label><input type="text" id="nu-pin" inputmode="numeric" maxlength="4" placeholder="For password reset" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg)"></div>
+      <div style="margin-bottom:10px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Phone <span style="color:var(--text3)">(optional)</span></label><input type="tel" id="nu-phone" placeholder="e.g. 9876543210" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg)"></div>
+      <div style="margin-bottom:12px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Role</label><select id="nu-role" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg)"><option value="worker">Team Member</option><option value="owner">Admin</option></select></div>
+      <div id="nu-msg" style="display:none;font-size:13px;margin-bottom:8px"></div>
+      <button onclick="submitCreateUser()" style="width:100%;padding:12px;background:var(--o);color:#fff;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Create User</button>
+    </div>
+
+    <!-- User list -->
     <div id="users-list">
-      <div class="empty-state">
-        <div class="emo">✅</div>
-        <p>No pending users to approve.</p>
-      </div>
+      <div class="empty-state"><div class="emo">⏳</div><p>Loading...</p></div>
     </div>
   </div>
 
@@ -1097,7 +1126,7 @@ function goScreen(id) {
 
   // Load data for screen
   if (id === 'dashboard')    loadDashboard();
-  if (id === 'users')        loadPendingUsers();
+  if (id === 'users')        loadUsersScreen();
   if (id === 'measurements') initMeasScreen();
   if (id === 'quotations') loadQuotations();
   if (id === 'sales') loadSales();
@@ -1823,14 +1852,8 @@ function initMeasScreen() {
 
   // For owner: check pending users in background
   if (SESSION.role === 'owner') {
-    api({ action: 'getPendingUsers' }, function(err, res) {
-      if (err || !res || res.error) return;
-      var count = (res.users || []).length;
-      if (count > 0) {
-        document.getElementById('pending-users-section').style.display = 'block';
-        document.getElementById('pending-users-count').textContent = count;
-      }
-    });
+    var usersBtn = document.getElementById('users-icon-btn');
+    if (usersBtn) usersBtn.style.display = 'inline-block';
   }
 })();
   // ══════════════════════════════
@@ -2469,6 +2492,159 @@ function generatePDF(bill) {
   doc.save('Bill_'+bill.BillNo+'.pdf');
   showToast('PDF downloaded!');
 }
+// ══════════════════════════════
+// USERS SCREEN
+// ══════════════════════════════
+function loadUsersScreen() {
+  var list = document.getElementById('users-list');
+  list.innerHTML = '<div class="empty-state"><div class="emo">⏳</div><p>Loading...</p></div>';
+  api({ action: 'getAllUsers', requestedBy: SESSION.username }, function(err, res) {
+    if (err || !res || res.error) {
+      list.innerHTML = '<div class="empty-state"><div class="emo">❌</div><p>' + (res ? res.error : 'Failed to load') + '</p></div>';
+      return;
+    }
+    renderUsersList(res.users || []);
+  });
+}
+
+function renderUsersList(users) {
+  var list = document.getElementById('users-list');
+  if (!users.length) {
+    list.innerHTML = '<div class="empty-state"><div class="emo">👥</div><p>No users found.</p></div>';
+    return;
+  }
+  var html = '';
+  users.forEach(function(u) {
+    var roleLabel    = u.role === 'owner' ? 'Admin' : 'Team Member';
+    var roleBadgeBg  = u.role === 'owner' ? 'var(--o)' : '#607d8b';
+    var activeBadge  = u.isActive
+      ? '<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">Active</span>'
+      : '<span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">Inactive</span>';
+    var lastLogin    = u.lastLogin ? fmtDate(u.lastLogin) : 'Never';
+    var isSelf       = u.username === SESSION.username;
+    var uid          = u.username.replace(/[^a-z0-9]/gi,'_');
+
+    html += '<div style="background:var(--white);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--border)">';
+
+    // Top row: name + badges
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+    html += '<div>';
+    html += '<div style="font-weight:700;font-size:15px;color:var(--text)">' + u.name + '</div>';
+    html += '<div style="color:var(--text3);font-size:12px;margin-top:2px">@' + u.username + '</div>';
+    if (u.phone) html += '<div style="font-size:12px;color:var(--text2);margin-top:3px">📞 ' + u.phone + '</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">Last login: ' + lastLogin + '</div>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">';
+    html += '<span style="background:' + roleBadgeBg + ';color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">' + roleLabel + '</span>';
+    html += activeBadge;
+    html += '</div></div>';
+
+    // Action buttons
+    html += '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">';
+    html += '<button onclick="showRpForm(\'' + uid + '\')" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--o);background:#fff;color:var(--o);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600">🔑 Reset Password</button>';
+    if (!isSelf) {
+      if (u.isActive) {
+        html += '<button onclick="doToggleActive(\'' + u.username + '\',false)" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--red);background:#fff;color:var(--red);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600">Deactivate</button>';
+      } else {
+        html += '<button onclick="doToggleActive(\'' + u.username + '\',true)" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--green);background:#fff;color:var(--green);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600">Activate</button>';
+      }
+    }
+    html += '</div>';
+
+    // Inline reset password form
+    html += '<div id="rp-form-' + uid + '" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+    html += '<div style="margin-bottom:8px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">New Password</label><input type="password" id="rp-pass-' + uid + '" placeholder="Min 6 characters" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>';
+    html += '<div style="margin-bottom:8px"><label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Confirm Password</label><input type="password" id="rp-conf-' + uid + '" placeholder="Repeat password" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></div>';
+    html += '<div id="rp-msg-' + uid + '" style="display:none;font-size:12px;margin-bottom:6px"></div>';
+    html += '<div style="display:flex;gap:8px;align-items:center">';
+    html += '<button onclick="submitResetPw(\'' + u.username + '\',\'' + uid + '\')" style="padding:8px 16px;background:var(--o);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Save</button>';
+    html += '<a href="#" onclick="hideRpForm(\'' + uid + '\');return false;" style="font-size:13px;color:var(--text3)">Cancel</a>';
+    html += '</div></div>';
+
+    html += '</div>'; // end card
+  });
+  list.innerHTML = html;
+}
+
+function showRpForm(uid) {
+  document.querySelectorAll('[id^="rp-form-"]').forEach(function(el){ el.style.display='none'; });
+  var f = document.getElementById('rp-form-' + uid);
+  if (f) f.style.display = 'block';
+}
+function hideRpForm(uid) {
+  var f = document.getElementById('rp-form-' + uid);
+  if (f) f.style.display = 'none';
+}
+
+function submitResetPw(username, uid) {
+  var np  = document.getElementById('rp-pass-' + uid).value;
+  var cf  = document.getElementById('rp-conf-' + uid).value;
+  var msg = document.getElementById('rp-msg-'  + uid);
+  if (!np)           { uMsg(msg,'❌ Enter new password','red'); return; }
+  if (np.length < 6) { uMsg(msg,'❌ Min 6 characters','red'); return; }
+  if (np !== cf)     { uMsg(msg,'❌ Passwords do not match','red'); return; }
+  api({ action:'ownerResetPassword', targetUsername:username, newPassword:np, requestedBy:SESSION.username }, function(err, res) {
+    if (res && res.status === 'ok') {
+      uMsg(msg,'✅ Password reset','green');
+      setTimeout(function(){ hideRpForm(uid); }, 1200);
+    } else {
+      uMsg(msg,'❌ ' + (res ? res.error : 'Failed'),'red');
+    }
+  });
+}
+
+function doToggleActive(username, makeActive) {
+  if (!confirm((makeActive ? 'Activate' : 'Deactivate') + ' @' + username + '?')) return;
+  api({ action:'toggleUserActive', targetUsername:username, isActive:makeActive, requestedBy:SESSION.username }, function(err, res) {
+    if (res && res.status === 'ok') {
+      showToast(makeActive ? '✅ User activated' : '✅ User deactivated');
+      loadUsersScreen();
+    } else {
+      showToast('❌ ' + (res ? res.error : 'Failed'));
+    }
+  });
+}
+
+function toggleAddUserForm() {
+  var form = document.getElementById('add-user-form');
+  var btn  = document.getElementById('add-user-toggle-btn');
+  var open = form.style.display === 'none';
+  form.style.display = open ? 'block' : 'none';
+  btn.textContent    = open ? '✕ Cancel' : '+ Add User';
+}
+
+function submitCreateUser() {
+  var name  = document.getElementById('nu-name').value.trim();
+  var user  = document.getElementById('nu-user').value.trim().toLowerCase();
+  var pass  = document.getElementById('nu-pass').value;
+  var pin   = document.getElementById('nu-pin').value.trim();
+  var phone = document.getElementById('nu-phone').value.trim();
+  var role  = document.getElementById('nu-role').value;
+  var msg   = document.getElementById('nu-msg');
+
+  if (!name)               { uMsg(msg,'❌ Full name required','red'); return; }
+  if (!user)               { uMsg(msg,'❌ Username required','red'); return; }
+  if (!pass || pass.length < 6) { uMsg(msg,'❌ Password min 6 characters','red'); return; }
+  if (!/^\d{4}$/.test(pin)) { uMsg(msg,'❌ PIN must be 4 digits','red'); return; }
+
+  api({ action:'createUser', username:user, password:pass, name:name, role:role, pin:pin, phone:phone }, function(err, res) {
+    if (res && res.status === 'ok') {
+      showToast('✅ User created');
+      ['nu-name','nu-user','nu-pass','nu-pin','nu-phone'].forEach(function(id){ document.getElementById(id).value=''; });
+      document.getElementById('nu-role').value = 'worker';
+      toggleAddUserForm();
+      loadUsersScreen();
+    } else {
+      uMsg(msg,'❌ ' + (res ? res.error : 'Failed'),'red');
+    }
+  });
+}
+
+function uMsg(el, text, color) {
+  el.textContent  = text;
+  el.style.color  = color === 'red' ? 'var(--red)' : 'var(--green)';
+  el.style.display = '';
+}  
 </script>
 </body>
 </html>
