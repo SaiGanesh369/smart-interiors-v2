@@ -1033,7 +1033,31 @@ html, body {
       <div class="empty-state"><div class="emo">⏳</div><p>Loading...</p></div>
     </div>
   </div>
-
+<!-- Payment modal -->
+<div class="pay-modal" id="pay-modal" onclick="closePayModalOutside(event)">
+  <div class="pay-sheet">
+    <div class="pay-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="pay-title" style="margin-bottom:0">Record Payment</div>
+      <button onclick="closePayModal()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;font-size:15px;cursor:pointer;color:var(--text2)">✕</button>
+    </div>
+    <input type="hidden" id="pay-billno">
+    <div class="pay-field">
+      <label>Amount (Rs.) *</label>
+      <input type="number" id="pay-amount" placeholder="e.g. 5000" inputmode="numeric" oninput="validatePayAmount()">
+    </div>
+    <div id="pay-amount-err" style="display:none;background:var(--red-bg);border:1.5px solid #FECACA;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--red);margin-bottom:10px"></div>
+    <div class="pay-field">
+      <label>Payment Date</label>
+      <input type="date" id="pay-date">
+    </div>
+    <div class="pay-field">
+      <label>Note (optional)</label>
+      <input type="text" id="pay-note" placeholder="e.g. Advance, Final payment...">
+    </div>
+    <button class="pay-submit" id="pay-submit-btn" onclick="submitPayment()">✅ Record Payment</button>
+  </div>
+</div>
 </div><!-- /main -->
 <!-- Payment modal -->
 <div class="pay-modal" id="pay-modal">
@@ -2182,6 +2206,7 @@ function loadPricelist() {
       return;
     }
     window._priceItems = res.items;
+    window._priceUpdatedAt = res.lastUpdated || '';
     renderPricelist(res.items);
   });
 }
@@ -2190,11 +2215,12 @@ function renderPricelist(items) {
   var cont = document.getElementById('pl-content');
   var isOwner = SESSION && SESSION.role === 'owner';
 
+  var lastUpdStr = window._priceUpdatedAt ? ' · Last updated: ' + fmtDate(window._priceUpdatedAt) : ' · Never updated';
   var html = '';
   if (isOwner) {
-    html += '<div class="pl-info-bar">💡 Owner: tap any rate to edit it inline. Press <strong>Save Changes</strong> to update all rates at once.</div>';
+    html += '<div class="pl-info-bar">💡 Edit any rate inline, then press <strong>Save Changes</strong>.<br><span style="color:var(--text3);font-size:11px">🕐' + lastUpdStr + '</span></div>';
   } else {
-    html += '<div class="pl-info-bar">📋 Current rates set by the owner. Contact owner to update pricing.</div>';
+    html += '<div class="pl-info-bar">📋 Current rates set by the owner.<br><span style="color:var(--text3);font-size:11px">🕐' + lastUpdStr + '</span></div>';
   }
 
   html += '<div style="background:var(--white);border-radius:var(--radius);border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow)">';
@@ -2244,6 +2270,7 @@ function savePricelist() {
     hideOv();
     if (err || !res || res.error) { showToast('❌ Failed to save'); return; }
     window._priceItems = updated;
+    window._priceUpdatedAt = res.updatedAt || new Date().toISOString();
     showToast('✅ Price list saved!');
     renderPricelist(updated);
   });
@@ -2254,7 +2281,42 @@ function openPayModal(billNo) {
   document.getElementById('pay-amount').value = '';
   document.getElementById('pay-note').value   = '';
   document.getElementById('pay-date').value   = new Date().toISOString().split('T')[0];
+  document.getElementById('pay-amount-err').style.display = 'none';
+  document.getElementById('pay-submit-btn').disabled = false;
+  document.getElementById('pay-submit-btn').style.opacity = '1';
   document.getElementById('pay-modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePayModal() {
+  document.getElementById('pay-modal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function closePayModalOutside(event) {
+  if (event.target === document.getElementById('pay-modal')) closePayModal();
+}
+
+function validatePayAmount() {
+  var billNo  = document.getElementById('pay-billno').value;
+  var amount  = parseFloat(document.getElementById('pay-amount').value) || 0;
+  var errDiv  = document.getElementById('pay-amount-err');
+  var btn     = document.getElementById('pay-submit-btn');
+  var bills   = window._salesBills || [];
+  var bill    = bills.find(function(b){ return b.BillNo === billNo; });
+  if (!bill || amount <= 0) {
+    errDiv.style.display = 'none';
+    btn.disabled = false; btn.style.opacity = '1';
+    return;
+  }
+  if (amount > bill.Balance) {
+    errDiv.textContent = '⚠️ Amount Rs.' + amount.toLocaleString('en-IN') + ' exceeds balance of Rs.' + bill.Balance.toLocaleString('en-IN') + '. Max allowed: Rs.' + bill.Balance.toLocaleString('en-IN');
+    errDiv.style.display = 'block';
+    btn.disabled = true; btn.style.opacity = '0.5';
+  } else {
+    errDiv.style.display = 'none';
+    btn.disabled = false; btn.style.opacity = '1';
+  }
 }
 function togglePayHistory(billNo) {
   var section = document.getElementById('pay-hist-'+billNo);
@@ -2280,14 +2342,11 @@ function submitPayment() {
   if (!amount) { showToast('Enter a valid amount'); return; }
   var bills = window._salesBills || [];
   var bill  = bills.find(function(b){ return b.BillNo === billNo; });
-  if (bill && amount > bill.Balance) {
-    showToast('❌ Amount exceeds balance of Rs.' + bill.Balance.toLocaleString('en-IN'));
-    return;
-  }
+  if (bill && amount > bill.Balance) { return; } // blocked by validatePayAmount already
   showOv('Recording payment...');
   api({ action:'recordPayment', billNo:billNo, amount:amount, paymentDate:date, note:note, recordedBy:SESSION.name }, function(err, res) {
     hideOv();
-    document.getElementById('pay-modal').classList.remove('active');
+    closePayModal();
     if (err || !res || res.error) { showToast('Failed to record payment'); return; }
     showToast('✅ Payment of Rs.'+amount.toLocaleString('en-IN')+' recorded!');
     loadSales();
