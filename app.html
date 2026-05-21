@@ -1022,7 +1022,27 @@ html, body {
   </div>
 
 </div><!-- /main -->
-
+<!-- Payment modal -->
+<div class="pay-modal" id="pay-modal">
+  <div class="pay-sheet">
+    <div class="pay-handle"></div>
+    <div class="pay-title">Record Payment</div>
+    <input type="hidden" id="pay-billno">
+    <div class="pay-field">
+      <label>Amount (Rs.) *</label>
+      <input type="number" id="pay-amount" placeholder="e.g. 5000" inputmode="numeric">
+    </div>
+    <div class="pay-field">
+      <label>Payment Date</label>
+      <input type="date" id="pay-date">
+    </div>
+    <div class="pay-field">
+      <label>Note (optional)</label>
+      <input type="text" id="pay-note" placeholder="e.g. Advance, Final payment...">
+    </div>
+    <button class="pay-submit" onclick="submitPayment()">✅ Record Payment</button>
+  </div>
+</div>
 <!-- Bottom nav -->
 <nav class="bot-nav" id="bot-nav">
   <!-- Populated by JS based on role -->
@@ -2133,6 +2153,7 @@ function loadSales() {
       html += '</div>';
     });
     scr.innerHTML = html;
+    window._salesBills = bills;
   });
 }
 
@@ -2479,26 +2500,23 @@ function generatePDF(bill) {
   doc.text('Balance Due: Rs.'+bill.Balance.toLocaleString('en-IN'), W-M-2, y, {align:'right'});
 
   // ── PAYMENT HISTORY ──
-  y += 12;
-  doc.setDrawColor(238,238,238); doc.setLineWidth(0.3);
-  doc.line(M+2, y-2, W-M, y-2);
-  doc.setFillColor(255,107,0);
-  doc.rect(M+2, y+2, 14, 3, 'F');
-  doc.setTextColor(26,26,46); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
-  doc.text('PAYMENT HISTORY', M+20, y+4);
-  doc.setDrawColor(238,238,238); doc.setLineWidth(0.3);
-  doc.line(M+75, y+3.5, W-M, y+3.5);
-  y += 10;
-
+// ── PAYMENT HISTORY — only if payments exist ──
   var billPayments = bill.Payments || [];
-  var maxRows = 10;
-  var shownPayments = billPayments.slice(0, maxRows);
-
-  if (!shownPayments.length) {
-    doc.setTextColor(180,180,180); doc.setFontSize(8); doc.setFont('helvetica','normal');
-    doc.text('No payments recorded yet.', M+4, y+4);
+  if (billPayments.length > 0) {
+    y += 12;
+    doc.setDrawColor(238,238,238); doc.setLineWidth(0.3);
+    doc.line(M+2, y-2, W-M, y-2);
+    doc.setFillColor(255,107,0);
+    doc.rect(M+2, y+2, 14, 3, 'F');
+    doc.setTextColor(26,26,46); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+    doc.text('PAYMENT HISTORY', M+20, y+4);
+    doc.setDrawColor(238,238,238); doc.setLineWidth(0.3);
+    doc.line(M+75, y+3.5, W-M, y+3.5);
     y += 10;
-  } else {
+
+    var maxRows = 10;
+    var shownPayments = billPayments.slice(0, maxRows);
+
     shownPayments.forEach(function(p, idx) {
       var ts = (p.Timestamp && p.Timestamp.toString().trim()) ? p.Timestamp : (p.PaymentDate || '');
       var displayDate = ts ? fmtDate(ts) : '—';
@@ -2525,6 +2543,7 @@ function generatePDF(bill) {
       doc.line(M+2, y+10, W-M, y+10);
       y += note ? 13 : 11;
     });
+
     if (billPayments.length > maxRows) {
       doc.setTextColor(180,180,180); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
       doc.text('(+' + (billPayments.length - maxRows) + ' more payments not shown)', M+4, y+4);
