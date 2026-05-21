@@ -2261,7 +2261,7 @@ function loadSales() {
     window._salesBillsHTML = {};
     res.bills.forEach(function(b) {
       var balClass = b.Balance > 0 ? 'balance' : 'paid';
-      var billDisplayDate = fmtDate(b.Date) + (b.Time && b.Time !== '—' && b.Time !== 'NA' ? '  ' + b.Time : '');
+      var billDisplayDate = b.Time ? fmtDate(b.Date + ', ' + b.Time) : fmtDate(b.Date);
       var h = '';
       h += '<div class="bill-card">';
       h += '<div class="bill-card-head">';
@@ -2659,11 +2659,7 @@ function generatePDF(bill) {
   var pdfDate = '—';
   if (bill.Date) {
     try {
-      var dateStr = bill.Date.toString().trim();
-      var datePart = fmtDate(dateStr); // Fix 1 handles date-only correctly
-      var timeStr = (bill.Time || '').toString().trim();
-      var skipTime = !timeStr || timeStr === '0' || timeStr === 'NA' || timeStr === '—' || timeStr === '';
-      pdfDate = skipTime ? datePart : (datePart + '  ' + timeStr);
+      pdfDate = bill.Time ? fmtDate(bill.Date + ', ' + bill.Time) : fmtDate(bill.Date);
     } catch(e) {}
   }
 
