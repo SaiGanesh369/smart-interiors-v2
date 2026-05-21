@@ -724,6 +724,20 @@ html, body {
 .pay-field input { width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; color:var(--text); background:var(--bg); }
 .pay-field input:focus { outline:none; border-color:var(--o); background:var(--white); }
 .pay-submit { width:100%; padding:14px; background:var(--o); color:white; border:none; border-radius:12px; font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(255,107,0,0.3); }
+  /* PRICE LIST */
+.pl-table { width:100%; border-collapse:collapse; margin-top:8px; }
+.pl-table th { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; padding:8px 10px; text-align:left; border-bottom:2px solid var(--border); }
+.pl-table td { padding:10px 10px; font-size:13px; border-bottom:1px solid var(--bg); vertical-align:middle; }
+.pl-table tr:last-child td { border-bottom:none; }
+.pl-table tr:hover td { background:var(--o-bg); }
+.pl-type-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; }
+.pl-type-sqft  { background:#EFF6FF; color:#2563EB; }
+.pl-type-fixed { background:var(--green-bg); color:var(--green); }
+.pl-rate-cell  { font-size:14px; font-weight:800; color:var(--text); }
+.pl-rate-input { width:90px; padding:7px 10px; border:1.5px solid var(--o-border); border-radius:8px; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; color:var(--text); background:var(--o-bg); text-align:right; }
+.pl-rate-input:focus { outline:none; border-color:var(--o); background:var(--white); }
+.pl-save-btn { width:100%; margin-top:14px; padding:14px; background:var(--o); color:white; border:none; border-radius:12px; font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(255,107,0,0.25); }
+.pl-info-bar { background:var(--o-bg); border:1.5px solid var(--o-border); border-radius:10px; padding:10px 13px; font-size:12px; color:#92400E; line-height:1.6; margin-bottom:14px; }
 </style>
 </head>
 <body>
@@ -983,11 +997,10 @@ html, body {
   </div>
 
   <!-- ══ PRICE LIST SCREEN (placeholder) ══ -->
-  <div class="screen" id="scr-pricelist">
+<div class="screen" id="scr-pricelist">
     <div class="screen-title">Price List</div>
-    <div class="empty-state">
-      <div class="emo">🏷️</div>
-      <p>Price list coming in Chunk 5.</p>
+    <div id="pl-content">
+      <div class="empty-state"><div class="emo">⏳</div><p>Loading...</p></div>
     </div>
   </div>
 
@@ -1167,6 +1180,7 @@ function goScreen(id) {
   if (id === 'measurements') initMeasScreen();
   if (id === 'quotations') loadQuotations();
   if (id === 'sales') loadSales();
+  if (id === 'pricelist') loadPricelist();
 }
 
 // ══════════════════════════════
@@ -2156,6 +2170,84 @@ function loadSales() {
     window._salesBills = bills;
   });
 }
+  // ══════════════════════════════
+// PRICE LIST
+// ══════════════════════════════
+function loadPricelist() {
+  var cont = document.getElementById('pl-content');
+  cont.innerHTML = '<div class="empty-state"><div class="emo">⏳</div><p>Loading...</p></div>';
+  api({ action: 'getPriceList' }, function(err, res) {
+    if (err || !res || res.error || !res.items) {
+      cont.innerHTML = '<div class="empty-state"><div class="emo">❌</div><p>Could not load price list.</p></div>';
+      return;
+    }
+    window._priceItems = res.items;
+    renderPricelist(res.items);
+  });
+}
+
+function renderPricelist(items) {
+  var cont = document.getElementById('pl-content');
+  var isOwner = SESSION && SESSION.role === 'owner';
+
+  var html = '';
+  if (isOwner) {
+    html += '<div class="pl-info-bar">💡 Owner: tap any rate to edit it inline. Press <strong>Save Changes</strong> to update all rates at once.</div>';
+  } else {
+    html += '<div class="pl-info-bar">📋 Current rates set by the owner. Contact owner to update pricing.</div>';
+  }
+
+  html += '<div style="background:var(--white);border-radius:var(--radius);border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow)">';
+  html += '<table class="pl-table">';
+  html += '<thead><tr><th>Product</th><th>Type</th><th style="text-align:right">Rate</th></tr></thead>';
+  html += '<tbody>';
+
+  items.forEach(function(item, idx) {
+    var typeLabel = item.Type === 'sqft' ? 'Per sq ft' : 'Per unit';
+    var typeClass = item.Type === 'sqft' ? 'pl-type-sqft' : 'pl-type-fixed';
+    var rateSuffix = item.Type === 'sqft' ? '/sqft' : '/unit';
+    html += '<tr>';
+    html += '<td style="font-weight:600;color:var(--text)">' + item.Product + '</td>';
+    html += '<td><span class="pl-type-badge ' + typeClass + '">' + typeLabel + '</span></td>';
+    html += '<td style="text-align:right">';
+    if (isOwner) {
+      html += '<input class="pl-rate-input" type="number" id="pl-rate-' + idx + '" value="' + item.Rate + '" min="0">';
+    } else {
+      html += '<span class="pl-rate-cell">Rs.' + parseFloat(item.Rate).toLocaleString('en-IN') + '<span style="font-size:10px;font-weight:500;color:var(--text3)">' + rateSuffix + '</span></span>';
+    }
+    html += '</td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  if (isOwner) {
+    html += '<button class="pl-save-btn" onclick="savePricelist()">💾 Save Changes</button>';
+  }
+
+  cont.innerHTML = html;
+}
+
+function savePricelist() {
+  var items = window._priceItems || [];
+  var updated = items.map(function(item, idx) {
+    var input = document.getElementById('pl-rate-' + idx);
+    return {
+      Product: item.Product,
+      Type:    item.Type,
+      Rate:    input ? (parseFloat(input.value) || 0).toString() : item.Rate,
+      Notes:   item.Notes || ''
+    };
+  });
+  showOv('Saving price list...');
+  api({ action: 'updatePriceList', items: updated }, function(err, res) {
+    hideOv();
+    if (err || !res || res.error) { showToast('❌ Failed to save'); return; }
+    window._priceItems = updated;
+    showToast('✅ Price list saved!');
+    renderPricelist(updated);
+  });
+}
 
 function openPayModal(billNo) {
   document.getElementById('pay-billno').value = billNo;
@@ -2186,6 +2278,12 @@ function submitPayment() {
   var date   = document.getElementById('pay-date').value;
   var note   = document.getElementById('pay-note').value.trim();
   if (!amount) { showToast('Enter a valid amount'); return; }
+  var bills = window._salesBills || [];
+  var bill  = bills.find(function(b){ return b.BillNo === billNo; });
+  if (bill && amount > bill.Balance) {
+    showToast('❌ Amount exceeds balance of Rs.' + bill.Balance.toLocaleString('en-IN'));
+    return;
+  }
   showOv('Recording payment...');
   api({ action:'recordPayment', billNo:billNo, amount:amount, paymentDate:date, note:note, recordedBy:SESSION.name }, function(err, res) {
     hideOv();
