@@ -1139,10 +1139,19 @@ function showToast(msg) {
   t.classList.add('on');
   setTimeout(function(){ t.classList.remove('on'); }, 2500);
 }
+// Fix 1: Date-only strings (YYYY-MM-DD) must not show a time — UTC midnight parses to wrong IST time
 function fmtDate(d) {
   if (!d) return '—';
-  var dt = new Date(d);
-  if (isNaN(dt)) return d;
+  var s = d.toString().trim();
+  if (!s) return '—';
+  // If date-only string, return formatted date with no time
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    var parts = s.split('-');
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return parseInt(parts[2],10) + ' ' + months[parseInt(parts[1],10)-1] + ' ' + parts[0];
+  }
+  var dt = new Date(s);
+  if (isNaN(dt)) return s;
   var opts = {timeZone:'Asia/Kolkata'};
   return dt.toLocaleDateString('en-IN',Object.assign({day:'numeric',month:'short',year:'numeric'},opts)) +
     ', ' + dt.toLocaleTimeString('en-IN',Object.assign({hour:'2-digit',minute:'2-digit',hour12:true},opts));
@@ -1834,7 +1843,7 @@ function resetMForm() {
 
 function loadSaved() {
   showOv('Loading entries...');
-  api({ action:'getRecent', limit:20 }, function(err, res) {
+  api({ action:'getRecent', limit:100 }, function(err, res) {
     hideOv();
     var list = document.getElementById('saved-list');
     if (err || !res || res.error || !res.rows || !res.rows.length) {
@@ -1842,19 +1851,131 @@ function loadSaved() {
       return;
     }
     window._sheetEntries = res.rows;
-    list.innerHTML = res.rows.map(function(e, idx) {
-      var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
-      var photoInd = photoLinks.length ? '<span style="color:#2563EB;font-size:11px">📷 '+photoLinks.length+' photo(s)</span>' : '';
-      return '<div class="entry-card" onclick="openEntryModal('+idx+')">' +
-        '<div class="ec-header"><span class="ec-worker">👤 '+e.TeamMember+'</span><span class="ec-date">'+fmtDate(e.Date)+'</span></div>' +
-        '<div class="ec-meta">📍 '+e.Location+(e.Customer&&e.Customer!=='—'?' · 🏠 '+e.Customer:'')+(e.Phone&&e.Phone!=='—'?' · 📞 '+e.Phone:'')+'</div>' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px">' +
-          '<span style="font-size:11px;color:var(--text3)">'+(e.Products||'')+'</span>'+photoInd+
+
+    // Inject filter bar + empty container for entries
+    list.innerHTML =
+      '<div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' +
+          '<button class="m-tab on" id="sf-today"  onclick="setSavedDateFilter(\'today\')">Today</button>' +
+          '<button class="m-tab"   id="sf-5"       onclick="setSavedDateFilter(\'5\')">Last 5 Days</button>' +
+          '<button class="m-tab"   id="sf-20"      onclick="setSavedDateFilter(\'20\')">Last 20 Days</button>' +
+          '<button class="m-tab"   id="sf-custom"  onclick="setSavedDateFilter(\'custom\')">Custom</button>' +
+          '<button class="m-tab"   id="sf-all"     onclick="setSavedDateFilter(\'all\')" style="color:var(--text3)">All</button>' +
         '</div>' +
-        '<div class="ec-tap">Tap to view details →</div>' +
-      '</div>';
-    }).join('');
+        '<div id="sf-custom-input" style="display:none;margin-bottom:8px">' +
+          '<input type="date" id="sf-custom-date" onchange="filterSavedEntries()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:14px;background:var(--bg);color:var(--text)">' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<select id="sf-worker" onchange="filterSavedEntries()" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--bg);color:var(--text)">' +
+            '<option value="">All Members</option>' +
+          '</select>' +
+          '<input type="text" id="sf-phone" placeholder="Filter by phone..." oninput="filterSavedEntries()" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--bg);color:var(--text)">' +
+        '</div>' +
+        '<button onclick="clearSavedFilters()" style="margin-top:8px;width:100%;padding:7px;border:none;background:var(--bg);color:var(--text3);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;font-weight:600;cursor:pointer">✕ Clear Filters</button>' +
+      '</div>' +
+      '<div id="saved-entries-list"></div>';
+
+    // Populate worker dropdown with unique names from data
+    var workerSel = document.getElementById('sf-worker');
+    var names = [];
+    res.rows.forEach(function(e) {
+      if (e.TeamMember && names.indexOf(e.TeamMember) === -1) names.push(e.TeamMember);
+    });
+    names.sort().forEach(function(n) {
+      workerSel.innerHTML += '<option value="'+n+'">'+n+'</option>';
+    });
+
+    // Default to Today filter
+    window._savedDateFilter = 'today';
+    filterSavedEntries();
   });
+}
+  function setSavedDateFilter(val) {
+  window._savedDateFilter = val;
+  var map = {today:'sf-today','5':'sf-5','20':'sf-20',custom:'sf-custom',all:'sf-all'};
+  Object.keys(map).forEach(function(k) {
+    var el = document.getElementById(map[k]);
+    if (el) el.classList.toggle('on', k === val);
+  });
+  var customInput = document.getElementById('sf-custom-input');
+  if (customInput) customInput.style.display = val === 'custom' ? 'block' : 'none';
+  filterSavedEntries();
+}
+
+function getISTDateStr(daysAgo) {
+  // Returns YYYY-MM-DD for today-in-IST minus daysAgo
+  var now = new Date();
+  var ist = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
+  ist.setDate(ist.getDate() - (daysAgo || 0));
+  var y = ist.getFullYear();
+  var m = ('0'+(ist.getMonth()+1)).slice(-2);
+  var d = ('0'+ist.getDate()).slice(-2);
+  return y+'-'+m+'-'+d;
+}
+
+function toYMD(val) {
+  // Normalize any Sheets date value to YYYY-MM-DD string
+  if (!val) return '';
+  var s = val.toString().trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  var dt = new Date(s);
+  if (isNaN(dt)) return s;
+  return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);
+}
+
+function filterSavedEntries() {
+  var entries = window._sheetEntries || [];
+  var dateFilter  = window._savedDateFilter || 'all';
+  var workerFilter = (document.getElementById('sf-worker') || {value:''}).value;
+  var phoneFilter  = ((document.getElementById('sf-phone') || {value:''}).value || '').trim().toLowerCase();
+  var todayYMD = getISTDateStr(0);
+
+  var filtered = entries.filter(function(e) {
+    var eDate = toYMD(e.Date);
+    var dateOk = true;
+    if (dateFilter === 'today') {
+      dateOk = eDate === todayYMD;
+    } else if (dateFilter === '5') {
+      dateOk = eDate >= getISTDateStr(4) && eDate <= todayYMD;
+    } else if (dateFilter === '20') {
+      dateOk = eDate >= getISTDateStr(19) && eDate <= todayYMD;
+    } else if (dateFilter === 'custom') {
+      var cd = (document.getElementById('sf-custom-date') || {value:''}).value;
+      dateOk = cd ? eDate === cd : true;
+    }
+    var workerOk = !workerFilter || e.TeamMember === workerFilter;
+    var phoneOk  = !phoneFilter  || (e.Phone || '').toLowerCase().indexOf(phoneFilter) !== -1;
+    return dateOk && workerOk && phoneOk;
+  });
+
+  var container = document.getElementById('saved-entries-list');
+  if (!container) return;
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty-state"><div class="emo">🔍</div><p>No entries match the selected filters.</p></div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(function(e) {
+    var idx = (window._sheetEntries || []).indexOf(e); // original index for modal
+    var photoLinks = e.Photos ? e.Photos.split('\n').filter(Boolean) : [];
+    var photoInd = photoLinks.length ? '<span style="color:#2563EB;font-size:11px">📷 '+photoLinks.length+' photo(s)</span>' : '';
+    return '<div class="entry-card" onclick="openEntryModal('+idx+')">' +
+      '<div class="ec-header"><span class="ec-worker">👤 '+e.TeamMember+'</span><span class="ec-date">'+fmtDate(e.Date)+'</span></div>' +
+      '<div class="ec-meta">📍 '+e.Location+(e.Customer&&e.Customer!=='—'?' · 🏠 '+e.Customer:'')+(e.Phone&&e.Phone!=='—'?' · 📞 '+e.Phone:'')+'</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px">' +
+        '<span style="font-size:11px;color:var(--text3)">'+(e.Products||'')+'</span>'+photoInd+
+      '</div>' +
+      '<div class="ec-tap">Tap to view details →</div>' +
+    '</div>';
+  }).join('');
+}
+
+function clearSavedFilters() {
+  var w = document.getElementById('sf-worker');    if (w) w.value = '';
+  var p = document.getElementById('sf-phone');     if (p) p.value = '';
+  var c = document.getElementById('sf-custom-date'); if (c) c.value = '';
+  setSavedDateFilter('all');
 }
 
 function openEntryModal(idx) {
@@ -2097,6 +2218,7 @@ function toggleBillDetail(billNo) {
   }
 }
   // ══════════════════════════════
+// ══════════════════════════════
 // SALES
 // ══════════════════════════════
 function loadSales() {
@@ -2107,92 +2229,179 @@ function loadSales() {
       scr.innerHTML = '<div class="screen-title">Sales</div><div class="empty-state"><div class="emo">💰</div><p>No bills yet.<br>Approve a quotation to generate a bill.</p></div>';
       return;
     }
-    var bills = res.bills;
-    var totalBilled = bills.reduce(function(s,b){ return s+b.Total; },0);
-    var totalPaid   = bills.reduce(function(s,b){ return s+b.Paid; },0);
-    var totalBal    = bills.reduce(function(s,b){ return s+b.Balance; },0);
+    window._salesBills = res.bills;
+    window._salesDateFilter = 'all';
 
     var html = '<div class="screen-title">Sales</div>';
-    html += '<div class="sales-summary">';
-    html += '<div class="sales-card orange"><div class="sc-label">Total Billed</div><div class="sc-val">Rs.'+totalBilled.toLocaleString('en-IN')+'</div></div>';
-    html += '<div class="sales-card green"><div class="sc-label">Collected</div><div class="sc-val">Rs.'+totalPaid.toLocaleString('en-IN')+'</div></div>';
-    html += '<div class="sales-card"><div class="sc-label">Pending</div><div class="sc-val">Rs.'+totalBal.toLocaleString('en-IN')+'</div></div>';
-    html += '<div class="sales-card"><div class="sc-label">Bills</div><div class="sc-val">'+bills.length+'</div></div>';
+    html += '<div id="sales-summary-area"></div>';
+
+    // Filter bar
+    html += '<div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
+    html += '<button class="m-tab" id="ssf-today" onclick="setSalesDateFilter(\'today\')">Today</button>';
+    html += '<button class="m-tab" id="ssf-5"     onclick="setSalesDateFilter(\'5\')">Last 5 Days</button>';
+    html += '<button class="m-tab" id="ssf-20"    onclick="setSalesDateFilter(\'20\')">Last 20 Days</button>';
+    html += '<button class="m-tab" id="ssf-custom" onclick="setSalesDateFilter(\'custom\')">Custom</button>';
+    html += '<button class="m-tab on" id="ssf-all" onclick="setSalesDateFilter(\'all\')">All</button>';
+    html += '</div>';
+    html += '<div id="ssf-custom-input" style="display:none;margin-bottom:8px"><input type="date" id="ssf-custom-date" onchange="filterSalesBills()" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:14px;background:var(--bg);color:var(--text)"></div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<input type="text" id="ssf-customer" placeholder="Filter by customer name..." oninput="filterSalesBills()" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--bg);color:var(--text)">';
+    html += '<input type="text" id="ssf-phone" placeholder="Filter by phone..." oninput="filterSalesBills()" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--bg);color:var(--text)">';
+    html += '</div>';
+    html += '<button onclick="clearSalesFilters()" style="margin-top:8px;width:100%;padding:7px;border:none;background:var(--bg);color:var(--text3);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;font-weight:600;cursor:pointer">✕ Clear Filters</button>';
     html += '</div>';
 
     html += '<div class="section-label">All Bills</div>';
-    bills.forEach(function(b) {
+    html += '<div id="sales-bills-list"></div>';
+
+    scr.innerHTML = html;
+
+    // Pre-build each bill card HTML and store by BillNo for fast filtering
+    window._salesBillsHTML = {};
+    res.bills.forEach(function(b) {
       var balClass = b.Balance > 0 ? 'balance' : 'paid';
-      html += '<div class="bill-card">';
-      html += '<div class="bill-card-head">';
-      html += '<div><div class="bill-no-lbl">'+b.BillNo+'</div><div class="bill-cust-name">'+(b.Customer||'—')+'</div><div class="bill-card-meta">'+fmtDate(b.Date)+' · '+b.Location+'</div></div>';
-      html += '<span class="badge '+(b.Balance>0?'badge-orange':'badge-green')+'">'+(b.Balance>0?'Pending':'Paid')+'</span>';
-      html += '</div>';
-      html += '<div class="bill-amounts">';
-      html += '<div class="bill-amt-col"><div class="ba-label">Total</div><div class="ba-val">Rs.'+b.Total.toLocaleString('en-IN')+'</div></div>';
-      html += '<div class="bill-amt-col paid"><div class="ba-label">Paid</div><div class="ba-val">Rs.'+b.Paid.toLocaleString('en-IN')+'</div></div>';
-      html += '<div class="bill-amt-col '+balClass+'"><div class="ba-label">Balance</div><div class="ba-val">Rs.'+b.Balance.toLocaleString('en-IN')+'</div></div>';
-      html += '</div>';
-      html += '<div id="bill-detail-'+b.BillNo+'" style="display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">';
-      html += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">ITEMS</div>';
+      var billDisplayDate = fmtDate(b.Date) + (b.Time && b.Time !== '—' && b.Time !== 'NA' ? '  ' + b.Time : '');
+      var h = '';
+      h += '<div class="bill-card">';
+      h += '<div class="bill-card-head">';
+      h += '<div><div class="bill-no-lbl">'+b.BillNo+'</div><div class="bill-cust-name">'+(b.Customer||'—')+'</div><div class="bill-card-meta">'+billDisplayDate+' · '+b.Location+'</div></div>';
+      h += '<span class="badge '+(b.Balance>0?'badge-orange':'badge-green')+'">'+(b.Balance>0?'Pending':'Paid')+'</span>';
+      h += '</div>';
+      h += '<div class="bill-amounts">';
+      h += '<div class="bill-amt-col"><div class="ba-label">Total</div><div class="ba-val">Rs.'+b.Total.toLocaleString('en-IN')+'</div></div>';
+      h += '<div class="bill-amt-col paid"><div class="ba-label">Paid</div><div class="ba-val">Rs.'+b.Paid.toLocaleString('en-IN')+'</div></div>';
+      h += '<div class="bill-amt-col '+balClass+'"><div class="ba-label">Balance</div><div class="ba-val">Rs.'+b.Balance.toLocaleString('en-IN')+'</div></div>';
+      h += '</div>';
+      h += '<div id="bill-detail-'+b.BillNo+'" style="display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">';
+      h += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">ITEMS</div>';
       (b.Items||[]).forEach(function(item){
         var isAddon = (item.Product||'').toLowerCase().indexOf('add-on') !== -1;
         var addonNote = (item.AddonNote && item.AddonNote.toString().trim() !== 'NA' && item.AddonNote.toString().trim() !== '') ? item.AddonNote.toString().trim() : '';
-        html += '<div style="padding:6px 0;border-bottom:1px solid var(--bg)">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center">';
-        html += '<span style="color:'+(isAddon?'var(--o)':'var(--text)')+';font-weight:600;font-size:12px">'+(item.Product||'')+'</span>';
-        html += '<span style="font-weight:700;color:'+(isAddon?'var(--o)':'var(--text)')+';font-size:12px">Rs.'+(parseFloat(item.FinalAmount)||0).toLocaleString('en-IN')+'</span>';
-        html += '</div>';
+        h += '<div style="padding:6px 0;border-bottom:1px solid var(--bg)">';
+        h += '<div style="display:flex;justify-content:space-between;align-items:center">';
+        h += '<span style="color:'+(isAddon?'var(--o)':'var(--text)')+';font-weight:600;font-size:12px">'+(item.Product||'')+'</span>';
+        h += '<span style="font-weight:700;color:'+(isAddon?'var(--o)':'var(--text)')+';font-size:12px">Rs.'+(parseFloat(item.FinalAmount)||0).toLocaleString('en-IN')+'</span>';
+        h += '</div>';
         if (isAddon && addonNote) {
-          html += '<div style="font-size:11px;color:#92400E;background:#FFF7ED;border-radius:6px;padding:3px 8px;margin-top:3px;display:inline-block">📝 '+addonNote+'</div>';
+          h += '<div style="font-size:11px;color:#92400E;background:#FFF7ED;border-radius:6px;padding:3px 8px;margin-top:3px;display:inline-block">📝 '+addonNote+'</div>';
         } else if (!isAddon && item.Dimensions) {
-          html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+item.Dimensions+'</div>';
+          h += '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+item.Dimensions+'</div>';
         }
-        html += '</div>';
+        h += '</div>';
       });
-      html += '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;font-weight:800">';
-      html += '<span>Total</span><span style="color:var(--o)">Rs.'+b.Total.toLocaleString('en-IN')+'</span>';
-      html += '</div>';
-      html += '</div>';
-      html += '<div style="text-align:center;margin-top:8px">';
-      html += '<button onclick="toggleBillDetail(\''+b.BillNo+'\')" id="bill-toggle-'+b.BillNo+'" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:600">▼ Show details</button>';
-      html += '</div>';
-      html += '<div class="bill-actions">';
-      html += '<button class="bill-btn bill-btn-pdf" onclick="downloadPDF(\''+b.BillNo+'\')">📄 PDF</button>';
-      html += '<button class="bill-btn bill-btn-pay-hist" id="pay-hist-btn-'+b.BillNo+'" onclick="togglePayHistory(\''+b.BillNo+'\')">💰 Payment History ▼</button>';
-      html += '</div>';
-      html += '<div id="pay-hist-'+b.BillNo+'" class="pay-history-section" style="display:none">';
-      html += '<div class="pay-history-heading">PAYMENT HISTORY</div>';
+      h += '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;font-weight:800">';
+      h += '<span>Total</span><span style="color:var(--o)">Rs.'+b.Total.toLocaleString('en-IN')+'</span>';
+      h += '</div></div>';
+      h += '<div style="text-align:center;margin-top:8px">';
+      h += '<button onclick="toggleBillDetail(\''+b.BillNo+'\')" id="bill-toggle-'+b.BillNo+'" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;font-family:\'Plus Jakarta Sans\',sans-serif;font-weight:600">▼ Show details</button>';
+      h += '</div>';
+      h += '<div class="bill-actions">';
+      h += '<button class="bill-btn bill-btn-pdf" onclick="downloadPDF(\''+b.BillNo+'\')">📄 PDF</button>';
+      h += '<button class="bill-btn bill-btn-pay-hist" id="pay-hist-btn-'+b.BillNo+'" onclick="togglePayHistory(\''+b.BillNo+'\')">💰 Payment History ▼</button>';
+      h += '</div>';
+      h += '<div id="pay-hist-'+b.BillNo+'" class="pay-history-section" style="display:none">';
+      h += '<div class="pay-history-heading">PAYMENT HISTORY</div>';
       var payments = b.Payments || [];
       if (!payments.length) {
-        html += '<div class="pay-history-empty">No payments recorded yet.</div>';
+        h += '<div class="pay-history-empty">No payments recorded yet.</div>';
       } else {
-        payments.forEach(function(p, idx) {
+        payments.forEach(function(p, pidx) {
           var ts = (p.Timestamp && p.Timestamp.toString().trim()) ? p.Timestamp : (p.PaymentDate || '');
           var displayDate = ts ? fmtDate(ts) : '—';
           var note = (p.Note && p.Note.toString().trim()) ? p.Note.toString().trim() : '';
-          html += '<div class="pay-history-row">';
-          html += '<div class="phr-num">#'+(idx+1)+'</div>';
-          html += '<div class="phr-info"><div class="phr-ts">'+displayDate+'</div>';
-          if (note) html += '<div class="phr-note">'+note+'</div>';
-          html += '</div>';
-          html += '<div class="phr-amt">Rs.'+(parseFloat(p.Amount)||0).toLocaleString('en-IN')+'</div>';
-          html += '</div>';
+          h += '<div class="pay-history-row">';
+          h += '<div class="phr-num">#'+(pidx+1)+'</div>';
+          h += '<div class="phr-info"><div class="phr-ts">'+displayDate+'</div>';
+          if (note) h += '<div class="phr-note">'+note+'</div>';
+          h += '</div>';
+          h += '<div class="phr-amt">Rs.'+(parseFloat(p.Amount)||0).toLocaleString('en-IN')+'</div>';
+          h += '</div>';
         });
       }
       var balLabel = b.Balance < 0 ? ('Advance: Rs.'+Math.abs(b.Balance).toLocaleString('en-IN')) : (b.Balance === 0 ? '✅ Fully Paid' : 'Balance Due: Rs.'+b.Balance.toLocaleString('en-IN'));
-      var balClass = b.Balance <= 0 ? 'phs-balance zero' : 'phs-balance';
-      html += '<div class="pay-history-summary">';
-      html += '<span class="phs-paid">Total Paid: Rs.'+b.Paid.toLocaleString('en-IN')+'</span>';
-      html += '<span class="'+balClass+'">'+balLabel+'</span>';
-      html += '</div>';
-      html += '<button class="add-pay-btn" onclick="openPayModal(\''+b.BillNo+'\')">+ Add Payment</button>';
-      html += '</div>';
-      html += '</div>';
+      var balClassPhs = b.Balance <= 0 ? 'phs-balance zero' : 'phs-balance';
+      h += '<div class="pay-history-summary">';
+      h += '<span class="phs-paid">Total Paid: Rs.'+b.Paid.toLocaleString('en-IN')+'</span>';
+      h += '<span class="'+balClassPhs+'">'+balLabel+'</span>';
+      h += '</div>';
+      h += '<button class="add-pay-btn" onclick="openPayModal(\''+b.BillNo+'\')">+ Add Payment</button>';
+      h += '</div></div>';
+      window._salesBillsHTML[b.BillNo] = h;
     });
-    scr.innerHTML = html;
-    window._salesBills = bills;
+
+    // Default: show all
+    filterSalesBills();
   });
+}
+
+function setSalesDateFilter(val) {
+  window._salesDateFilter = val;
+  var map = {today:'ssf-today','5':'ssf-5','20':'ssf-20',custom:'ssf-custom',all:'ssf-all'};
+  Object.keys(map).forEach(function(k) {
+    var el = document.getElementById(map[k]);
+    if (el) el.classList.toggle('on', k === val);
+  });
+  var ci = document.getElementById('ssf-custom-input');
+  if (ci) ci.style.display = val === 'custom' ? 'block' : 'none';
+  filterSalesBills();
+}
+
+function filterSalesBills() {
+  var bills = window._salesBills || [];
+  var dateFilter  = window._salesDateFilter || 'all';
+  var custFilter  = ((document.getElementById('ssf-customer')||{value:''}).value||'').trim().toLowerCase();
+  var phoneFilter = ((document.getElementById('ssf-phone')||{value:''}).value||'').trim().toLowerCase();
+  var todayYMD = getISTDateStr(0);
+
+  var filtered = bills.filter(function(b) {
+    var bDate = toYMD(b.Date);
+    var dateOk = true;
+    if (dateFilter === 'today') {
+      dateOk = bDate === todayYMD;
+    } else if (dateFilter === '5') {
+      dateOk = bDate >= getISTDateStr(4) && bDate <= todayYMD;
+    } else if (dateFilter === '20') {
+      dateOk = bDate >= getISTDateStr(19) && bDate <= todayYMD;
+    } else if (dateFilter === 'custom') {
+      var cd = (document.getElementById('ssf-custom-date')||{value:''}).value;
+      dateOk = cd ? bDate === cd : true;
+    }
+    var custOk  = !custFilter  || (b.Customer||'').toLowerCase().indexOf(custFilter)  !== -1;
+    var phoneOk = !phoneFilter || (b.Phone||'').toLowerCase().indexOf(phoneFilter) !== -1;
+    return dateOk && custOk && phoneOk;
+  });
+
+  // Recalc summary for filtered subset only
+  var totalBilled = filtered.reduce(function(s,b){ return s+b.Total; },0);
+  var totalPaid   = filtered.reduce(function(s,b){ return s+b.Paid; },0);
+  var totalBal    = filtered.reduce(function(s,b){ return s+b.Balance; },0);
+  var summaryArea = document.getElementById('sales-summary-area');
+  if (summaryArea) {
+    var sumHtml = '<div class="sales-summary">';
+    sumHtml += '<div class="sales-card orange"><div class="sc-label">Total Billed</div><div class="sc-val">Rs.'+totalBilled.toLocaleString('en-IN')+'</div></div>';
+    sumHtml += '<div class="sales-card green"><div class="sc-label">Collected</div><div class="sc-val">Rs.'+totalPaid.toLocaleString('en-IN')+'</div></div>';
+    sumHtml += '<div class="sales-card"><div class="sc-label">Pending</div><div class="sc-val">Rs.'+totalBal.toLocaleString('en-IN')+'</div></div>';
+    sumHtml += '<div class="sales-card"><div class="sc-label">Bills</div><div class="sc-val">'+filtered.length+'</div></div>';
+    sumHtml += '</div>';
+    summaryArea.innerHTML = sumHtml;
+  }
+
+  var listEl = document.getElementById('sales-bills-list');
+  if (!listEl) return;
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="empty-state"><div class="emo">🔍</div><p>No bills match the selected filters.</p></div>';
+    return;
+  }
+  var htmlMap = window._salesBillsHTML || {};
+  listEl.innerHTML = filtered.map(function(b){ return htmlMap[b.BillNo] || ''; }).join('');
+}
+
+function clearSalesFilters() {
+  var c = document.getElementById('ssf-customer'); if(c) c.value='';
+  var p = document.getElementById('ssf-phone');    if(p) p.value='';
+  var d = document.getElementById('ssf-custom-date'); if(d) d.value='';
+  setSalesDateFilter('all');
 }
   // ══════════════════════════════
 // PRICE LIST
@@ -2219,6 +2428,9 @@ function renderPricelist(items) {
   var html = '';
   if (isOwner) {
     html += '<div class="pl-info-bar">💡 Edit any rate inline, then press <strong>Save Changes</strong>.<br><span style="color:var(--text3);font-size:11px">🕐' + lastUpdStr + '</span></div>';
+    html += '<div style="display:flex;justify-content:flex-end;margin-bottom:10px">';
+    html += '<button onclick="addNewPriceRow()" style="background:var(--o);color:white;border:none;border-radius:9px;padding:8px 14px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(255,107,0,0.25)">+ Add Product</button>';
+    html += '</div>';
   } else {
     html += '<div class="pl-info-bar">📋 Current rates set by the owner.<br><span style="color:var(--text3);font-size:11px">🕐' + lastUpdStr + '</span></div>';
   }
@@ -2229,8 +2441,8 @@ function renderPricelist(items) {
   html += '<tbody>';
 
   items.forEach(function(item, idx) {
-    var typeLabel = item.Type === 'sqft' ? 'Per sq ft' : 'Per unit';
-    var typeClass = item.Type === 'sqft' ? 'pl-type-sqft' : 'pl-type-fixed';
+    var typeLabel  = item.Type === 'sqft' ? 'Per sq ft' : 'Per unit';
+    var typeClass  = item.Type === 'sqft' ? 'pl-type-sqft' : 'pl-type-fixed';
     var rateSuffix = item.Type === 'sqft' ? '/sqft' : '/unit';
     var rowUpdated = item.UpdatedAt ? fmtDate(item.UpdatedAt) : '—';
     html += '<tr>';
@@ -2242,22 +2454,59 @@ function renderPricelist(items) {
     } else {
       html += '<span class="pl-rate-cell">Rs.' + parseFloat(item.Rate).toLocaleString('en-IN') + '<span style="font-size:10px;font-weight:500;color:var(--text3)">' + rateSuffix + '</span></span>';
     }
-    html += '</td>';
-    html += '</tr>';
+    html += '</td></tr>';
   });
 
   html += '</tbody></table></div>';
+  html += '<div id="pl-new-rows"></div>';
 
   if (isOwner) {
     html += '<button class="pl-save-btn" onclick="savePricelist()">💾 Save Changes</button>';
   }
 
   cont.innerHTML = html;
+  window._newPriceRows = [];
+}
+function addNewPriceRow() {
+  var container = document.getElementById('pl-new-rows');
+  if (!container) return;
+  var rowId = 'nr-' + Date.now();
+  var div = document.createElement('div');
+  div.id = rowId;
+  div.style.cssText = 'background:var(--o-bg);border:1.5px solid var(--o-border);border-radius:10px;padding:12px;margin-top:8px';
+  div.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+      '<span style="font-size:11px;font-weight:700;color:var(--o);text-transform:uppercase;letter-spacing:0.5px">New Product</span>' +
+      '<button onclick="document.getElementById(\''+rowId+'\').remove()" style="background:var(--red-bg);color:var(--red);border:none;border-radius:6px;padding:4px 9px;font-size:12px;font-weight:700;cursor:pointer">✕ Remove</button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+      '<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase">Product Name *</label>' +
+        '<input type="text" id="'+rowId+'-prod" placeholder="e.g. UPVC Partition" style="width:100%;padding:8px 10px;border:1.5px solid var(--o-border);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--white);color:var(--text)"></div>' +
+      '<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase">Type *</label>' +
+        '<select id="'+rowId+'-type" onchange="updateNewRowNotes(\''+rowId+'\')" style="width:100%;padding:8px 10px;border:1.5px solid var(--o-border);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--white);color:var(--text)">' +
+          '<option value="sqft">Per sq ft</option><option value="fixed">Per unit</option>' +
+        '</select></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+      '<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase">Rate (Rs.) *</label>' +
+        '<input type="number" id="'+rowId+'-rate" placeholder="e.g. 400" min="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--o-border);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--white);color:var(--text)"></div>' +
+      '<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase">Notes</label>' +
+        '<input type="text" id="'+rowId+'-notes" value="Per sq ft" style="width:100%;padding:8px 10px;border:1.5px solid var(--o-border);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13px;background:var(--white);color:var(--text)"></div>' +
+    '</div>';
+  container.appendChild(div);
+}
+
+function updateNewRowNotes(rowId) {
+  var typeEl  = document.getElementById(rowId+'-type');
+  var notesEl = document.getElementById(rowId+'-notes');
+  if (typeEl && notesEl) notesEl.value = typeEl.value === 'sqft' ? 'Per sq ft' : 'Per unit';
 }
 
 function savePricelist() {
   var items = window._priceItems || [];
   var now = new Date().toISOString();
+
+  // Collect existing rows
   var updated = items.map(function(item, idx) {
     var input = document.getElementById('pl-rate-' + idx);
     var newRate = input ? (parseFloat(input.value) || 0).toString() : item.Rate;
@@ -2270,6 +2519,35 @@ function savePricelist() {
       UpdatedAt: changed ? now : (item.UpdatedAt || '')
     };
   });
+
+  // Collect new rows and validate
+  var newRowContainer = document.getElementById('pl-new-rows');
+  if (newRowContainer) {
+    var newRowDivs = newRowContainer.children;
+    for (var i = 0; i < newRowDivs.length; i++) {
+      var rowId   = newRowDivs[i].id;
+      var prodEl  = document.getElementById(rowId+'-prod');
+      var typeEl  = document.getElementById(rowId+'-type');
+      var rateEl  = document.getElementById(rowId+'-rate');
+      var notesEl = document.getElementById(rowId+'-notes');
+      var prodVal  = prodEl  ? prodEl.value.trim()         : '';
+      var typeVal  = typeEl  ? typeEl.value                : 'sqft';
+      var rateVal  = rateEl  ? parseFloat(rateEl.value)||0 : 0;
+      var notesVal = notesEl ? notesEl.value.trim()        : '';
+      if (!prodVal) {
+        if (prodEl) prodEl.style.border = '1.5px solid var(--red)';
+        showToast('Fill all product fields before saving');
+        return;
+      }
+      if (rateVal <= 0) {
+        if (rateEl) rateEl.style.border = '1.5px solid var(--red)';
+        showToast('Rate must be a positive number');
+        return;
+      }
+      updated.push({ Product:prodVal, Type:typeVal, Rate:rateVal.toString(), Notes:notesVal, UpdatedAt:now });
+    }
+  }
+
   showOv('Saving price list...');
   api({ action: 'updatePriceList', items: updated }, function(err, res) {
     hideOv();
@@ -2376,16 +2654,16 @@ function generatePDF(bill) {
   var doc = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
   var W = 210, M = 16, y = 0;
 
-  // ── DATE + TIME ──
+  // Fix 2: Use bill.Date for date + bill.Time (from Billing sheet Time column) for time
+  // bill.Date is date-only string; parse it without UTC shift using manual split
   var pdfDate = '—';
   if (bill.Date) {
     try {
-      var dt = new Date(bill.Date.toString().trim());
-      if (!isNaN(dt)) {
-        var datePart = dt.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Kolkata'});
-        var timePart = dt.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Kolkata'});
-        pdfDate = datePart + '  ' + timePart;
-      }
+      var dateStr = bill.Date.toString().trim();
+      var datePart = fmtDate(dateStr); // Fix 1 handles date-only correctly
+      var timeStr = (bill.Time || '').toString().trim();
+      var skipTime = !timeStr || timeStr === '0' || timeStr === 'NA' || timeStr === '—' || timeStr === '';
+      pdfDate = skipTime ? datePart : (datePart + '  ' + timeStr);
     } catch(e) {}
   }
 
