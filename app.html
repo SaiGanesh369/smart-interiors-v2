@@ -1424,8 +1424,25 @@ var VR = {
   'WPVC Frame':        { mode:'qty',      rates:{'3pc_4x3':5500,'4pc_4x3':6500,'3pc_3x2.5':4500,'4pc_3x2.5':5500}, logic:'qty_fixed' },
   'Wood Door':         { mode:'hw',       rates:{'Laminate':{mode:'sft',rate:180},'Sunmica':{mode:'sft',rate:250},'Teak Plain':{mode:'fixed',price:11000},'Teak Carving':{mode:'fixed',price:14500}}, logic:'wood_door' },
   'Aluminum Partition':{ mode:'sft',      rate:500,   logic:'direct_sft' },
-  'Aluminum Cupboard': { mode:'cupboard', rates:{'Box':1500,'Frame_Normal':750,'Frame_Medium':780,'Frame_High':950}, logic:'section_sft' },
-  'Wood Cupboard':     { mode:'cupboard', rates:{'Box':1200,'Frame_Normal':650,'Frame_Medium':650,'Frame_High':650}, logic:'section_sft' },
+  'Aluminum Cupboard': {
+    mode: 'cupboard',
+    // Type applied by owner — rates per type
+    // typeRates used in quotation screen, not measurement form
+    typeRates: {
+      'Standard':       { Frame: 750,  Box: 1500 },
+      'Profile':        { Frame: 780,  Box: 1560 },
+      'Sheet Moulding': { Frame: 950,  Box: 1900 }
+    },
+    // Measurement form: price always 0, type not selected yet
+    rates: { 'Box': 0, 'Frame': 0 },
+    logic: 'section_sft'
+  },
+  'Wood Cupboard': {
+    mode: 'cupboard',
+    // Wood: no type selection — fixed rates
+    rates: { 'Box': 1150, 'Frame': 650 },
+    logic: 'section_sft'
+  },
   'Cupboard':          { mode:'cupboard_picker', logic:'picker' },
   'Louver':            { mode:'hw',       rates:{'With Fan':2500,'Without Fan':2000}, logic:'louver_fixed' }
 };
@@ -1437,9 +1454,9 @@ var ROOM_OPTIONS = [
 ];
 
 var ROOM_DESC_MAP = {
-  'Master Bedroom':     ['Sliding Wardrobe','Swing Wardrobe','Top Loft','Side Loft','Dressing Unit'],
-  "Children's Bedroom": ['Sliding Wardrobe','Swing Wardrobe','Top Loft','Side Loft','Dressing Unit'],
-  'Guest Bedroom':      ['Sliding Wardrobe','Swing Wardrobe','Top Loft','Side Loft','Dressing Unit'],
+  'Master Bedroom':     ['Sliding Wardrobe','Open Wardrobe','Top Loft','Side Loft','Dressing Unit'],
+  "Children's Bedroom": ['Sliding Wardrobe','Open Wardrobe','Top Loft','Side Loft','Dressing Unit'],
+  'Guest Bedroom':      ['Sliding Wardrobe','Open Wardrobe','Top Loft','Side Loft','Dressing Unit'],
   'Living Room':        ['TV Unit','Storage Unit','Inverter Unit'],
   'Kitchen':            ['Bottom Cabinet','Middle Cabinet','Top Loft'],
   'Utility Area':       ['Storage Cabinet','Washing Area Unit'],
@@ -1888,25 +1905,60 @@ function buildVariantFields(id, prod) {
 
 function addMeasRow(itemId) {
   var prod = document.getElementById('prod-' + itemId).value;
-  var rows = document.getElementById('meas-rows-' + itemId);
+  // Resolve cupboard picker to actual product
+  if (prod === 'Cupboard') {
+    var block = document.getElementById('item-' + itemId);
+    prod = (block && block.getAttribute('data-cupboard-type')) || 'Aluminum Cupboard';
+  }
+  var isPVC = prod === 'PVC Door';
+  var rows  = document.getElementById('meas-rows-' + itemId);
   if (!rows) return;
   var rowNum = rows.children.length + 1;
-  var rid = itemId + '_' + Date.now();
-  var div = document.createElement('div');
-  div.className = 'meas-row'; div.id = 'mrow-' + rid;
-  div.innerHTML =
-    '<span class="meas-num">' + rowNum + '</span>' +
-    '<div class="meas-fields">' +
-      '<div class="meas-grid-2">' +
-        '<input type="text" id="mH-' + rid + '" placeholder="43 3/8" inputmode="text" autocomplete="off" spellcheck="false" oninput="updatePricePreview(' + itemId + ')">' +
-        '<span class="meas-sep">×</span>' +
-        '<input type="text" id="mW-' + rid + '" placeholder="47 1/4" inputmode="text" autocomplete="off" spellcheck="false" oninput="updatePricePreview(' + itemId + ')">' +
+  var rid    = itemId + '_' + Date.now();
+  var div    = document.createElement('div');
+  div.className = 'meas-row';
+  div.id        = 'mrow-' + rid;
+
+  if (isPVC) {
+    // H × Top × Bottom(optional) — original PVC Door layout
+    div.innerHTML =
+      '<span class="meas-num">' + rowNum + '</span>' +
+      '<div class="meas-fields">' +
+        '<div class="meas-grid-3">' +
+          '<input type="text" id="mH-' + rid + '" placeholder="83" inputmode="text" autocomplete="off" spellcheck="false" oninput="updatePricePreview(' + itemId + ')">' +
+          '<span class="meas-sep">×</span>' +
+          '<input type="text" id="mT-' + rid + '" placeholder="4 1/2" inputmode="text" autocomplete="off" spellcheck="false" oninput="updatePricePreview(' + itemId + ')">' +
+          '<span class="meas-sep">×</span>' +
+          '<input type="text" id="mB-' + rid + '" placeholder="(optional)" inputmode="text" autocomplete="off" spellcheck="false" class="meas-middle-optional" oninput="updatePricePreview(' + itemId + ')">' +
+        '</div>' +
+        '<div class="meas-labels meas-labels-3">' +
+          '<span class="fl">H (Height)</span>' +
+          '<span class="fl fl-x">×</span>' +
+          '<span class="fl">Top</span>' +
+          '<span class="fl fl-x">×</span>' +
+          '<span class="fl fl-optional">Bottom (opt)</span>' +
+        '</div>' +
       '</div>' +
-      '<div class="meas-labels meas-labels-2">' +
-        '<span class="fl">H (Height)</span><span class="fl fl-x">×</span><span class="fl">W (Width)</span>' +
+      '<button class="btn-del-meas" onclick="delMeasRow(\'' + rid + '\',' + itemId + ')">✕</button>';
+  } else {
+    // Standard H×W for all other hw-mode products
+    div.innerHTML =
+      '<span class="meas-num">' + rowNum + '</span>' +
+      '<div class="meas-fields">' +
+        '<div class="meas-grid-2">' +
+          '<input type="text" id="mH-' + rid + '" placeholder="43 3/8" inputmode="text" autocomplete="off" spellcheck="false" oninput="updatePricePreview(' + itemId + ')">' +
+          '<span class="meas-sep">×</span>' +
+          '<input type="text" id="mW-' + rid + '" placeholder="47 1/4" inputmode="text" autocomplete="off" spellcheck="false" oninput="updatePricePreview(' + itemId + ')">' +
+        '</div>' +
+        '<div class="meas-labels meas-labels-2">' +
+          '<span class="fl">H (Height)</span>' +
+          '<span class="fl fl-x">×</span>' +
+          '<span class="fl">W (Width)</span>' +
+        '</div>' +
       '</div>' +
-    '</div>' +
-    '<button class="btn-del-meas" onclick="delMeasRow(\'' + rid + '\',' + itemId + ')">✕</button>';
+      '<button class="btn-del-meas" onclick="delMeasRow(\'' + rid + '\',' + itemId + ')">✕</button>';
+  }
+
   rows.appendChild(div);
   div.querySelectorAll('input').forEach(function(inp) { attachMeasInputRules(inp); });
   setTimeout(function() { div.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
@@ -1982,14 +2034,7 @@ function addCupboardLine(itemId) {
       '<button type="button" class="chip" onclick="selectChipLine(\'' + lid + '\',\'Frame\',this,' + itemId + ')" data-val="Frame">Frame Work</button>' +
     '</div>' +
 
-    '<div id="frame-quality-' + lid + '" style="display:none;margin-top:8px">' +
-      '<label class="mlabel">Frame Quality</label>' +
-      '<div class="chip-row" id="chips-frameQuality-' + lid + '">' +
-        '<button type="button" class="chip chip-3" onclick="selectChipQuality(\'' + lid + '\',this,' + itemId + ')" data-val="Normal">Standard<br><span style="font-size:10px;font-weight:500;opacity:0.8">Basic</span></button>' +
-        '<button type="button" class="chip chip-3" onclick="selectChipQuality(\'' + lid + '\',this,' + itemId + ')" data-val="Medium">Profile<br><span style="font-size:10px;font-weight:500;opacity:0.8">Mid-range</span></button>' +
-        '<button type="button" class="chip chip-3" onclick="selectChipQuality(\'' + lid + '\',this,' + itemId + ')" data-val="High">Sheet Moulding<br><span style="font-size:10px;font-weight:500;opacity:0.8">Premium</span></button>' +
-      '</div>' +
-    '</div>' +
+    '<div id="frame-quality-' + lid + '" style="display:none"></div>' +
 
     '<div class="cupboard-hw-row" style="margin-top:10px">' +
       '<input type="number" id="cW-' + lid + '" placeholder="W (ft)" inputmode="decimal" step="0.5" min="0" oninput="updatePricePreview(' + itemId + ')">' +
@@ -2053,8 +2098,6 @@ function selectChipLine(lid, workType, btn, itemId) {
   if (row) row.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('on'); });
   btn.classList.add('on');
   // Show frame quality only for Frame work
-  var qualDiv = document.getElementById('frame-quality-' + lid);
-  if (qualDiv) qualDiv.style.display = workType === 'Frame' ? 'block' : 'none';
   updatePricePreview(itemId);
 }
 
@@ -2215,7 +2258,7 @@ function calcPriceFrontend(prod, variants, measurements) {
         room:         roomVal,
         description:  descVal,
         workType:     wtVal,
-        frameQuality: fqVal,
+        frameQuality: '',
         width:        parseFloat((document.getElementById('cW-' + lid) || {}).value) || 0,
         height:       parseFloat((document.getElementById('cH-' + lid) || {}).value) || 0
       });
@@ -2254,12 +2297,19 @@ function collectItems() {
     var measurements = [];
 
     if (rule.mode === 'hw') {
-      var rows = document.getElementById('meas-rows-' + id);
+      var isPVC = prod === 'PVC Door';
+      var rows  = document.getElementById('meas-rows-' + id);
       if (rows) rows.querySelectorAll('.meas-row').forEach(function(row) {
         var rid = row.id.replace('mrow-', '');
-        var h = (document.getElementById('mH-' + rid) || {}).value || '';
-        var w = (document.getElementById('mW-' + rid) || {}).value || '';
-        if (h || w) measurements.push({ h: h.trim(), w: w.trim() });
+        var h   = (document.getElementById('mH-' + rid) || {}).value || '';
+        if (isPVC) {
+          var top = (document.getElementById('mT-' + rid) || {}).value || '';
+          var bot = (document.getElementById('mB-' + rid) || {}).value || '';
+          if (h || top) measurements.push({ h: h.trim(), top: top.trim(), bottom: bot.trim() || '—' });
+        } else {
+          var w = (document.getElementById('mW-' + rid) || {}).value || '';
+          if (h || w) measurements.push({ h: h.trim(), w: w.trim() });
+        }
       });
     }
 
@@ -2306,25 +2356,33 @@ function collectVariants(prod, id) {
     v.sft = sftEl ? (parseFloat(sftEl.value) || 0) : 0;
   }
   if (prod === 'Aluminum Cupboard' || prod === 'Wood Cupboard' || prod === 'Cupboard') {
-    // For Cupboard picker, fall back to Aluminum Cupboard rates for preview
-    if (prod === 'Cupboard') rule = VR['Aluminum Cupboard'];
-    v.lines = [];
-    var container = document.getElementById('cupboard-lines-' + id);
-    if (container) container.querySelectorAll('.cupboard-line').forEach(function(line) {
-      var lid  = line.id.replace('cline-', '');
-      var wt   = (line.querySelector('.chip.on[data-val]') || {}).getAttribute ? line.querySelector('[id^="chips-workType"] .chip.on') : null;
-      var wtVal = wt ? (wt.getAttribute('data-val') || '') : '';
-      var fqBtn = line.querySelector('[id^="chips-frameQuality"] .chip.on');
-      var fqVal = fqBtn ? (fqBtn.getAttribute('data-val') || 'Normal') : 'Normal';
-      v.lines.push({
-        room:         (document.getElementById('croom-' + lid) || {}).value || '',
-        description:  (document.getElementById('cdesc-' + lid) || {}).value || '',
-        workType:     wtVal,
-        frameQuality: fqVal,
-        width:        parseFloat((document.getElementById('cW-' + lid) || {}).value) || 0,
-        height:       parseFloat((document.getElementById('cH-' + lid) || {}).value) || 0
-      });
+    var actualProd = prod;
+    if (prod === 'Cupboard') {
+      // Try to get resolved type from DOM
+      var block = document.querySelector('[id^="item-"]');
+      actualProd = 'Aluminum Cupboard'; // safe fallback
+    }
+    rule = VR[actualProd] || VR['Aluminum Cupboard'];
+
+    // Aluminum Cupboard: always pending, price = 0 until owner selects type
+    if (actualProd === 'Aluminum Cupboard' || prod === 'Cupboard') {
+      return { price: 0, ready: false, variantPending: true,
+               note: 'Owner to select cupboard type' };
+    }
+
+    // Wood Cupboard: calculate immediately with fixed rates
+    var lines = variants.lines || [];
+    var total  = 0;
+    var allOk  = true;
+    lines.forEach(function(l) {
+      if (!l.room || !l.workType || !l.description || !l.width || !l.height) {
+        allOk = false; return;
+      }
+      var rateKey = l.workType === 'Box' ? 'Box' : 'Frame';
+      var sft     = (parseFloat(l.width) || 0) * (parseFloat(l.height) || 0);
+      total += Math.round(sft * (rule.rates[rateKey] || 0));
     });
+    return { price: total, ready: lines.length > 0 && allOk, variantPending: !allOk };
   }
   if (prod === 'Louver') {
     v.louverType = getChipVal('louverType', id);
@@ -2522,7 +2580,9 @@ function buildMRows(entry) {
     // For all other products — one row per measurement
     var measList = meas.length ? meas : [{}];
     measList.forEach(function(m, mi) {
-      var measStr = (m.h && m.w) ? ('H:' + m.h + ' × W:' + m.w) :
+      var measStr = m.top
+        ? ('H:' + m.h + ' × Top:' + m.top + (m.bottom && m.bottom !== '—' ? ' × Bottom:' + m.bottom : ''))
+        : (m.h && m.w) ? ('H:' + m.h + ' × W:' + m.w) :
                    (variants.sft ? variants.sft + ' sqft' :
                    (variants.qty ? variants.pieceCount + ' × ' + variants.qty + ' sets' : '—'));
       rows.push({
