@@ -832,6 +832,83 @@ html, body {
   font-size: 22px; font-weight: 800; color: var(--text);
   min-width: 40px; text-align: center;
 }
+  /* ── PENDING OWNER VARIANT FILL UI ── */
+.pending-item-wrap {
+  background: #FFFBF2;
+  border: 1.5px solid #FDE68A;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.pending-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.pending-item-prod {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.pending-item-dim {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.pending-price-tag {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--o);
+  white-space: nowrap;
+}
+.pending-price-tag.zero {
+  color: var(--text3);
+}
+.pending-variant-fields {
+  border-top: 1px solid #FDE68A;
+  padding-top: 10px;
+  margin-top: 8px;
+}
+.pending-variant-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #B45309;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+/* Cupboard type selector in quotation */
+.cupboard-type-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #FDE68A;
+  border-radius: 9px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--white);
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: 4px;
+}
+.cupboard-type-select:focus {
+  outline: none;
+  border-color: var(--o);
+}
+/* Item row with pending indicator */
+.q-item-row.pending-row {
+  opacity: 0.6;
+}
+.q-item-row .pending-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: #F59E0B;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
 </style>
 </head>
 <body>
@@ -2949,64 +3026,369 @@ function loadQuotations() {
 }
 
 function renderQuotes(all, filterStatus, scr) {
-  var filtered = all.filter(function(q){ return filterStatus === 'ALL' || q.Status === filterStatus; });
-  var tabs = ['DRAFT','APPROVED','DENIED','ALL'];
+  var filtered = all.filter(function(q) {
+    return filterStatus === 'ALL' || q.Status === filterStatus;
+  });
+
+  // Tab counts — PENDING_OWNER shown under its own tab
+  var tabs = ['DRAFT', 'PENDING_OWNER', 'APPROVED', 'DENIED', 'ALL'];
+  var tabLabels = {
+    'DRAFT': 'Ready',
+    'PENDING_OWNER': 'Pending',
+    'APPROVED': 'Approved',
+    'DENIED': 'Denied',
+    'ALL': 'All'
+  };
   var counts = {};
-  tabs.forEach(function(t){ counts[t] = t==='ALL' ? all.length : all.filter(function(q){ return q.Status===t; }).length; });
+  tabs.forEach(function(t) {
+    counts[t] = t === 'ALL'
+      ? all.length
+      : all.filter(function(q) { return q.Status === t; }).length;
+  });
 
   var html = '<div class="screen-title">Quotations</div>';
   html += '<div class="q-tabs">';
-  tabs.forEach(function(t){
-    html += '<button class="q-tab'+(t===filterStatus?' on':'')+'" onclick="qFilter(\''+t+'\')">' +
-      t + (counts[t]?' <span class="q-count">'+counts[t]+'</span>':'') + '</button>';
+  tabs.forEach(function(t) {
+    html += '<button class="q-tab' + (t === filterStatus ? ' on' : '') + '" onclick="qFilter(\'' + t + '\')">' +
+      tabLabels[t] +
+      (counts[t] ? ' <span class="q-count">' + counts[t] + '</span>' : '') +
+      '</button>';
   });
   html += '</div>';
 
   if (!filtered.length) {
-    html += '<div class="empty-state"><div class="emo">📭</div><p>No '+filterStatus+' quotations.</p></div>';
+    html += '<div class="empty-state"><div class="emo">📭</div><p>No ' + (tabLabels[filterStatus] || filterStatus) + ' quotations.</p></div>';
   } else {
     filtered.forEach(function(q) {
-      var statusClass = q.Status==='APPROVED'?'badge-green':q.Status==='DENIED'?'badge-red':'badge-orange';
-      html += '<div class="q-card" id="qcard-'+q.QuoteID+'">';
+      var isPending  = q.Status === 'PENDING_OWNER';
+      var isDraft    = q.Status === 'DRAFT';
+      var isApproved = q.Status === 'APPROVED';
+      var isDenied   = q.Status === 'DENIED';
+      var statusClass = isApproved ? 'badge-green' : isDenied ? 'badge-red' : isPending ? 'badge-orange' : 'badge-orange';
+      var statusLabel = isPending ? '⏳ Pending' : q.Status;
+
+      html += '<div class="q-card" id="qcard-' + q.QuoteID + '">';
+
+      // ── Card header ──
       html += '<div class="q-card-head">';
-      html += '<div><div class="q-id">'+q.QuoteID+'</div><div class="q-cust">'+(q.Customer||'—')+'</div><div class="q-meta">'+fmtDate(q.Date)+' · '+q.Location+'</div></div>';
-      html += '<span class="badge '+statusClass+'">'+q.Status+'</span>';
+      html += '<div>';
+      html += '<div class="q-id">' + q.QuoteID + '</div>';
+      html += '<div class="q-cust">' + (q.Customer || '—') + '</div>';
+      html += '<div class="q-meta">' + fmtDate(q.Date) + ' · ' + q.Location + '</div>';
       html += '</div>';
+      html += '<span class="badge ' + statusClass + '">' + statusLabel + '</span>';
+      html += '</div>';
+
+      // ── Items list ──
       html += '<div class="q-items">';
-      (q.Items||[]).forEach(function(item){
-        html += '<div class="q-item-row"><span>'+item.product+'</span><span>'+item.dimensions+'</span><span class="q-item-amt">Rs.'+Math.round(item.total).toLocaleString('en-IN')+'</span></div>';
+      (q.Items || []).forEach(function(item) {
+        var isPendingItem = item.variantPending;
+        html += '<div class="q-item-row' + (isPendingItem ? ' pending-row' : '') + '">';
+        html += '<span>' + (isPendingItem ? '<span class="pending-dot"></span>' : '') + item.product + '</span>';
+        html += '<span>' + item.dimensions + '</span>';
+        html += '<span class="q-item-amt">' +
+          (item.total > 0 ? 'Rs.' + Math.round(item.total).toLocaleString('en-IN') : '⏳ TBD') +
+          '</span>';
+        html += '</div>';
       });
       html += '</div>';
-      html += '<div class="q-total-row"><span>Total</span><span class="q-total-amt">Rs.'+Math.round(q.Total).toLocaleString('en-IN')+'</span></div>';
 
-      if (q.Status === 'DRAFT') {
+      // ── Total row ──
+      var totalVal = Math.round(q.Total);
+      html += '<div class="q-total-row">';
+      html += '<span>Total</span>';
+      html += '<span class="q-total-amt" id="live-total-' + q.QuoteID + '">' +
+        (totalVal > 0 ? 'Rs.' + totalVal.toLocaleString('en-IN') : '⏳ Pending confirmation') +
+        '</span>';
+      html += '</div>';
+
+      // ── Action panel — shown for DRAFT and PENDING_OWNER ──
+      if (isDraft || isPending) {
         html += '<div style="background:var(--o-bg);border:1.5px solid var(--o-border);border-radius:10px;padding:12px;margin-top:12px">';
+
+        // PENDING_OWNER: show variant fill section for each pending item
+        if (isPending) {
+          html += '<div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">⏳ Complete Missing Details</div>';
+          (q.Items || []).forEach(function(item, iIdx) {
+            if (!item.variantPending) return;
+            html += renderPendingItemVariants(q.QuoteID, iIdx, item);
+          });
+          html += '<div style="border-top:1px solid var(--o-border);margin:10px 0"></div>';
+        }
+
+        // Discount row
         html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
         html += '<label class="q-edit-label">Discount %</label>';
-        html += '<input class="q-edit-input" type="number" id="disc-'+q.QuoteID+'" value="'+(q.DiscountPct||0)+'" min="0" max="100" oninput="recalcQuoteTotal(\''+q.QuoteID+'\')" style="max-width:80px">';
+        html += '<input class="q-edit-input" type="number" id="disc-' + q.QuoteID + '" value="' + (q.DiscountPct || 0) + '" min="0" max="100" oninput="recalcQuoteTotal(\'' + q.QuoteID + '\')" style="max-width:80px">';
         html += '<span style="font-size:12px;color:var(--text2);margin-left:4px">off items total</span>';
         html += '</div>';
+
+        // Addons
         html += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase">Add-ons</div>';
-        html += '<div id="addons-list-'+q.QuoteID+'"></div>';
-        html += '<button onclick="addAddonRow(\''+q.QuoteID+'\')" style="width:100%;padding:8px;border:1.5px dashed var(--o-border);background:none;color:var(--o);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">+ Add Addon</button>';
+        html += '<div id="addons-list-' + q.QuoteID + '"></div>';
+        html += '<button onclick="addAddonRow(\'' + q.QuoteID + '\')" style="width:100%;padding:8px;border:1.5px dashed var(--o-border);background:none;color:var(--o);border-radius:8px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">+ Add Addon</button>';
+
+        // Final total
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1.5px solid var(--o-border)">';
         html += '<span style="font-size:13px;font-weight:700;color:var(--text)">Final Total</span>';
-        html += '<span id="live-total-'+q.QuoteID+'" style="font-size:18px;font-weight:800;color:var(--o)">Rs.'+Math.round(q.Total).toLocaleString('en-IN')+'</span>';
+        html += '<span id="live-total-action-' + q.QuoteID + '" style="font-size:18px;font-weight:800;color:var(--o)">Rs.' + (totalVal > 0 ? totalVal.toLocaleString('en-IN') : '0') + '</span>';
         html += '</div>';
         html += '</div>';
+
+        // Approve / Deny buttons
         html += '<div class="q-actions">';
-        html += '<button class="q-btn q-deny"  onclick="denyQuote(\''+q.QuoteID+'\')">✕ Deny</button>';
-        html += '<button class="q-btn q-approve" onclick="approveQuote(\''+q.QuoteID+'\')">✓ Approve</button>';
+        html += '<button class="q-btn q-deny" onclick="denyQuote(\'' + q.QuoteID + '\')">✕ Deny</button>';
+        html += '<button class="q-btn q-approve" id="approve-btn-' + q.QuoteID + '" onclick="approveQuote(\'' + q.QuoteID + '\')">' +
+          (isPending ? '✓ Confirm & Approve' : '✓ Approve') + '</button>';
         html += '</div>';
       }
-      html += '</div>';
+
+      html += '</div>'; // end q-card
     });
   }
+
   scr.innerHTML = html;
-  window._allQuotes = all;
-  window._qFilterStatus = filterStatus;
-  window._quoteItemsMap = {};
-  all.forEach(function(q){ window._quoteItemsMap[q.QuoteID] = q.Items; });
+  window._allQuotes      = all;
+  window._qFilterStatus  = filterStatus;
+  window._quoteItemsMap  = {};
+  window._pendingVariants = {}; // stores owner-filled variants per quoteId+itemIdx
+
+  all.forEach(function(q) {
+    window._quoteItemsMap[q.QuoteID] = q.Items;
+    window._pendingVariants[q.QuoteID] = {};
+  });
+}
+  // Renders the missing variant fill UI for one pending item
+// Called only for PENDING_OWNER items — owner fills missing fields here
+function renderPendingItemVariants(quoteId, iIdx, item) {
+  var html = '<div class="pending-item-wrap" id="pitem-' + quoteId + '-' + iIdx + '">';
+  html += '<div class="pending-item-header">';
+  html += '<div>';
+  html += '<div class="pending-item-prod">' + item.product + '</div>';
+  html += '<div class="pending-item-dim">' + (item.dimensions || '—') + '</div>';
+  html += '</div>';
+  html += '<div class="pending-price-tag zero" id="pitem-price-' + quoteId + '-' + iIdx + '">⏳ TBD</div>';
+  html += '</div>';
+
+  html += '<div class="pending-variant-fields">';
+  html += '<div class="pending-variant-label">Complete Details</div>';
+
+  var prod = (item.product || '').split(' (')[0]; // strip variant label suffix
+
+  // ── PVC Door — Thickness + Type ──
+  if (prod === 'PVC Door') {
+    html += '<label class="mlabel" style="margin-top:0;font-size:11px">Thickness</label>';
+    html += '<div class="chip-row" id="pchips-thickness-' + quoteId + '-' + iIdx + '">';
+    ['20mm', '30mm'].forEach(function(v) {
+      var pre = item.thickness === v ? ' on' : '';
+      html += '<button type="button" class="chip' + pre + '" ' +
+        'onclick="selectPendingChip(\'' + quoteId + '\',' + iIdx + ',\'thickness\',\'' + v + '\',this)" ' +
+        'data-val="' + v + '">' + v + '</button>';
+    });
+    html += '</div>';
+    html += '<label class="mlabel" style="font-size:11px">Type</label>';
+    html += '<div class="chip-row" id="pchips-type-' + quoteId + '-' + iIdx + '">';
+    ['Standard', 'Digital'].forEach(function(v) {
+      var pre = item.type === v ? ' on' : '';
+      html += '<button type="button" class="chip' + pre + '" ' +
+        'onclick="selectPendingChip(\'' + quoteId + '\',' + iIdx + ',\'type\',\'' + v + '\',this)" ' +
+        'data-val="' + v + '">' + v + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // ── WPVC Door — Color ──
+  if (prod === 'WPVC Door') {
+    html += '<label class="mlabel" style="margin-top:0;font-size:11px">Color</label>';
+    html += '<div class="chip-row" id="pchips-color-' + quoteId + '-' + iIdx + '">';
+    ['Ivory', 'Brown', 'Digital'].forEach(function(v) {
+      var pre = item.color === v ? ' on' : '';
+      html += '<button type="button" class="chip' + (pre ? pre : '') + '" ' +
+        'onclick="selectPendingChip(\'' + quoteId + '\',' + iIdx + ',\'color\',\'' + v + '\',this)" ' +
+        'data-val="' + v + '">' + v + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // ── WPVC Frame — Size ──
+  if (prod === 'WPVC Frame') {
+    html += '<label class="mlabel" style="margin-top:0;font-size:11px">Frame Size</label>';
+    html += '<div class="chip-row" id="pchips-size-' + quoteId + '-' + iIdx + '">';
+    [{ val: '4x3', label: '4×3 ft' }, { val: '3x2.5', label: '3×2.5 ft' }].forEach(function(opt) {
+      var pre = item.size === opt.val ? ' on' : '';
+      html += '<button type="button" class="chip' + pre + '" ' +
+        'onclick="selectPendingChip(\'' + quoteId + '\',' + iIdx + ',\'size\',\'' + opt.val + '\',this)" ' +
+        'data-val="' + opt.val + '">' + opt.label + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // ── Wood Door — Finish ──
+  if (prod === 'Wood Door') {
+    html += '<label class="mlabel" style="margin-top:0;font-size:11px">Finish Type</label>';
+    html += '<div class="chip-row" id="pchips-finish-' + quoteId + '-' + iIdx + '" style="flex-wrap:wrap">';
+    ['Laminate', 'Sunmica', 'Teak Plain', 'Teak Carving'].forEach(function(v) {
+      var pre = item.finish === v ? ' on' : '';
+      html += '<button type="button" class="chip' + pre + '" style="flex:0 0 calc(50% - 4px)" ' +
+        'onclick="selectPendingChip(\'' + quoteId + '\',' + iIdx + ',\'finish\',\'' + v + '\',this)" ' +
+        'data-val="' + v + '">' + v + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // ── Aluminum Cupboard — Type selection ──
+  if (prod === 'Aluminum Cupboard') {
+    html += '<label class="mlabel" style="margin-top:0;font-size:11px">Cupboard Type</label>';
+    html += '<select class="cupboard-type-select" id="pcupboard-type-' + quoteId + '-' + iIdx + '" ' +
+      'onchange="onCupboardTypeChange(\'' + quoteId + '\',' + iIdx + ')">';
+    html += '<option value="">-- Select Type --</option>';
+    ['Standard', 'Profile', 'Sheet Moulding'].forEach(function(t) {
+      html += '<option value="' + t + '">' + t + '</option>';
+    });
+    html += '</select>';
+    // Show section breakdown after type is selected
+    html += '<div id="pcupboard-breakdown-' + quoteId + '-' + iIdx + '" style="margin-top:8px"></div>';
+  }
+
+  html += '</div>'; // end pending-variant-fields
+  html += '</div>'; // end pending-item-wrap
+  return html;
+}
+  // Called when owner taps a chip in the pending variant section
+function selectPendingChip(quoteId, iIdx, field, val, btn) {
+  // Update chip UI
+  var rowId = 'pchips-' + field + '-' + quoteId + '-' + iIdx;
+  var row   = document.getElementById(rowId);
+  if (row) row.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('on'); });
+  btn.classList.add('on');
+
+  // Store in pending variants map
+  if (!window._pendingVariants[quoteId]) window._pendingVariants[quoteId] = {};
+  if (!window._pendingVariants[quoteId][iIdx]) window._pendingVariants[quoteId][iIdx] = {};
+  window._pendingVariants[quoteId][iIdx][field] = val;
+
+  // Recalculate this item's price and update total
+  recalcPendingItem(quoteId, iIdx);
+  recalcQuoteTotal(quoteId);
+}
+
+// Called when owner selects Aluminum Cupboard type
+function onCupboardTypeChange(quoteId, iIdx) {
+  var sel  = document.getElementById('pcupboard-type-' + quoteId + '-' + iIdx);
+  var type = sel ? sel.value : '';
+  if (!type) return;
+
+  if (!window._pendingVariants[quoteId]) window._pendingVariants[quoteId] = {};
+  if (!window._pendingVariants[quoteId][iIdx]) window._pendingVariants[quoteId][iIdx] = {};
+  window._pendingVariants[quoteId][iIdx]['cupboardType'] = type;
+
+  // Get line items for this cupboard from the stored quote items
+  var items    = (window._quoteItemsMap[quoteId] || []);
+  var item     = items[iIdx];
+  var typeRates = VR['Aluminum Cupboard'].typeRates[type];
+
+  // Show section breakdown
+  var breakdownEl = document.getElementById('pcupboard-breakdown-' + quoteId + '-' + iIdx);
+  if (!breakdownEl || !typeRates) return;
+
+  // Parse dimensions string to get section info
+  // Dimensions stored as "N section(s)" — we need lineResults from recalc
+  // Use stored item data to rebuild breakdown
+  var lines = item._lines || []; // _lines attached by getPendingQuotations if available
+  var breakdownHtml = '';
+  var total = 0;
+
+  if (lines.length) {
+    breakdownHtml += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Section Breakdown</div>';
+    lines.forEach(function(line, li) {
+      var rateKey = line.workType === 'Box' ? 'Box' : 'Frame';
+      var rate    = typeRates[rateKey] || 0;
+      var sft     = (parseFloat(line.width) || 0) * (parseFloat(line.height) || 0);
+      var amt     = Math.round(sft * rate);
+      total      += amt;
+      breakdownHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #FDE68A">';
+      breakdownHtml += '<span style="color:var(--text2)">' + (line.room || '') + ' — ' + (line.description || '') + ' (' + line.workType + ')</span>';
+      breakdownHtml += '<span style="font-weight:700;color:var(--text)">' + sft.toFixed(1) + ' sqft × Rs.' + rate + ' = Rs.' + amt.toLocaleString('en-IN') + '</span>';
+      breakdownHtml += '</div>';
+    });
+    breakdownHtml += '<div style="display:flex;justify-content:space-between;margin-top:6px;font-weight:800;font-size:13px">';
+    breakdownHtml += '<span>Subtotal</span><span style="color:var(--o)">Rs.' + total.toLocaleString('en-IN') + '</span>';
+    breakdownHtml += '</div>';
+  } else {
+    // Fallback: show simple price
+    breakdownHtml += '<div style="font-size:12px;color:var(--text2)">Type selected: ' + type + ' · Frame: Rs.' + typeRates.Frame + '/sqft · Box: Rs.' + typeRates.Box + '/sqft</div>';
+    // Estimate from stored sqft if available
+    if (item.sqft && parseFloat(item.sqft) > 0) {
+      var sft  = parseFloat(item.sqft);
+      total = Math.round(sft * typeRates.Frame); // rough estimate
+      breakdownHtml += '<div style="font-size:12px;margin-top:4px;color:var(--text3)">Approx: Rs.' + total.toLocaleString('en-IN') + ' (based on total sqft)</div>';
+    }
+  }
+  breakdownEl.innerHTML = breakdownHtml;
+
+  // Store calculated price
+  if (!window._pendingVariants[quoteId][iIdx]) window._pendingVariants[quoteId][iIdx] = {};
+  window._pendingVariants[quoteId][iIdx]['_calcPrice'] = total;
+
+  // Update price tag and total
+  var priceTag = document.getElementById('pitem-price-' + quoteId + '-' + iIdx);
+  if (priceTag) {
+    priceTag.className = 'pending-price-tag';
+    priceTag.textContent = 'Rs.' + total.toLocaleString('en-IN');
+  }
+  recalcQuoteTotal(quoteId);
+}
+
+// Recalculates price for a single pending item after variant selection
+function recalcPendingItem(quoteId, iIdx) {
+  var items    = window._quoteItemsMap[quoteId] || [];
+  var item     = items[iIdx];
+  if (!item) return;
+
+  var prod     = (item.product || '').split(' (')[0];
+  var filled   = (window._pendingVariants[quoteId] || {})[iIdx] || {};
+
+  // Merge existing item variants with newly filled ones
+  var merged = {
+    series:      item.series      || filled.series      || '',
+    track:       item.track       || filled.track       || '',
+    frame:       item.frame       || filled.frame       || '',
+    thickness:   item.thickness   || filled.thickness   || '',
+    type:        item.doorType    || filled.type        || '',
+    color:       item.color       || filled.color       || '',
+    pieceCount:  item.pieceCount  || filled.pieceCount  || '',
+    size:        item.size        || filled.size        || '',
+    finish:      item.finish      || filled.finish      || '',
+    louverType:  item.louverType  || filled.louverType  || '',
+    fanType:     item.fanType     || filled.fanType     || '',
+    sft:         item.sqft        || 0,
+    direction:   item.doorType    || ''
+  };
+
+  var meas = [];
+  if (item.dimensions) {
+    // Parse dimension string like "83" × "36" / 20.75 sqft"
+    var dimMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
+    if (dimMatch) meas = [{ h: dimMatch[1].trim(), w: dimMatch[2].trim() }];
+  }
+
+  var result = calcPriceFrontend(prod, merged, meas);
+  if (!result) return;
+
+  // Store calculated price in pending variants
+  window._pendingVariants[quoteId][iIdx]['_calcPrice'] = result.price || 0;
+
+  // Update price tag
+  var priceTag = document.getElementById('pitem-price-' + quoteId + '-' + iIdx);
+  if (priceTag) {
+    if (result.price > 0) {
+      priceTag.className = 'pending-price-tag';
+      priceTag.textContent = 'Rs.' + Math.round(result.price).toLocaleString('en-IN');
+    } else {
+      priceTag.className = 'pending-price-tag zero';
+      priceTag.textContent = '⏳ TBD';
+    }
+  }
 }
 
 function qFilter(status) {
@@ -3040,38 +3422,103 @@ function getAddonRows(quoteId) {
 }
 
 function recalcQuoteTotal(quoteId) {
-  var disc = parseFloat((document.getElementById('disc-'+quoteId)||{}).value) || 0;
-  var addons = getAddonRows(quoteId);
-  var addonTotal = addons.reduce(function(s,a){ return s+a.amt; }, 0);
-  var items = window._quoteItemsMap ? window._quoteItemsMap[quoteId] : null;
-  var baseSubtotal = 0;
-  if (items) {
-    items.forEach(function(item){
-      // Use subtotal (pre-discount) to recalculate correctly
-      baseSubtotal += parseFloat(item.subtotal)||parseFloat(item.total)||0;
-    });
-  }
-  var afterDisc = Math.round(baseSubtotal * (1 - disc/100));
+  var disc       = parseFloat((document.getElementById('disc-' + quoteId) || {}).value) || 0;
+  var addons     = getAddonRows(quoteId);
+  var addonTotal = addons.reduce(function(s, a) { return s + a.amt; }, 0);
+  var items      = (window._quoteItemsMap || {})[quoteId] || [];
+  var baseTotal  = 0;
+
+  items.forEach(function(item, iIdx) {
+    if (item.variantPending) {
+      // Use owner-filled price if available
+      var filled = ((window._pendingVariants || {})[quoteId] || {})[iIdx] || {};
+      var filledPrice = filled['_calcPrice'] || 0;
+      baseTotal += filledPrice;
+    } else {
+      // Use stored subtotal (pre-discount)
+      baseTotal += parseFloat(item.subtotal) || parseFloat(item.total) || 0;
+    }
+  });
+
+  var afterDisc  = Math.round(baseTotal * (1 - disc / 100));
   var finalTotal = afterDisc + addonTotal;
-  var el = document.getElementById('live-total-'+quoteId);
-  if (el) el.textContent = 'Rs.' + finalTotal.toLocaleString('en-IN');
+
+  // Update both total displays (card total + action panel total)
+  var el1 = document.getElementById('live-total-' + quoteId);
+  var el2 = document.getElementById('live-total-action-' + quoteId);
+  var txt = 'Rs.' + finalTotal.toLocaleString('en-IN');
+  if (el1) el1.textContent = txt;
+  if (el2) el2.textContent = txt;
 }
 
 function approveQuote(quoteId) {
-  var disc = document.getElementById('disc-'+quoteId);
-  var addons = getAddonRows(quoteId);
-  var totalAddon = addons.reduce(function(s,a){ return s+a.amt; },0);
-  var addonNotes = addons.map(function(a){ return a.note + ': Rs.' + a.amt; }).join(' | ');
+  var disc      = document.getElementById('disc-' + quoteId);
+  var addons    = getAddonRows(quoteId);
+  var totalAddon = addons.reduce(function(s, a) { return s + a.amt; }, 0);
+  var addonNotes = addons.map(function(a) { return a.note + ': Rs.' + a.amt; }).join(' | ');
+  var items     = (window._quoteItemsMap || {})[quoteId] || [];
+  var filled    = (window._pendingVariants || {})[quoteId] || {};
+
+  // Check if all pending items have been resolved
+  var unresolved = [];
+  items.forEach(function(item, iIdx) {
+    if (!item.variantPending) return;
+    var f     = filled[iIdx] || {};
+    var prod  = (item.product || '').split(' (')[0];
+    var price = f['_calcPrice'] || 0;
+    if (price === 0) unresolved.push(item.product);
+  });
+
+  if (unresolved.length) {
+    showToast('⚠️ Complete details for: ' + unresolved.join(', '));
+    return;
+  }
+
+  // Build resolved items — merge stored item with owner-filled variants
+  var resolvedItems = items.map(function(item, iIdx) {
+    if (!item.variantPending) return item;
+    var f    = filled[iIdx] || {};
+    var prod = (item.product || '').split(' (')[0];
+    return {
+      product:       item.product,
+      dimensions:    item.dimensions,
+      sqft:          item.sqft,
+      unitPrice:     f['_calcPrice'] || item.unitPrice,
+      subtotal:      f['_calcPrice'] || item.subtotal,
+      total:         f['_calcPrice'] || item.total,
+      variantPending: false,
+      priceNote:     item.priceNote,
+      series:        item.series      || f.series      || '',
+      track:         item.track       || f.track       || '',
+      frame:         item.frame       || f.frame       || '',
+      thickness:     item.thickness   || f.thickness   || '',
+      doorType:      item.doorType    || f.type        || '',
+      color:         item.color       || f.color       || '',
+      pieceCount:    item.pieceCount  || f.pieceCount  || '',
+      size:          item.size        || f.size        || '',
+      finish:        item.finish      || f.finish      || '',
+      workType:      item.workType    || '',
+      frameQuality:  f.cupboardType   || item.frameQuality || '',
+      louverType:    item.louverType  || '',
+      fanType:       item.fanType     || ''
+    };
+  });
+
   showOv('Approving...');
   api({
-    action: 'approveQuotation', quoteId: quoteId,
-    editedDisc: disc ? parseFloat(disc.value)||0 : null,
-    addonAmt: totalAddon,
-    addonNote: addonNotes || ''
+    action:        'approveQuotation',
+    quoteId:       quoteId,
+    editedDisc:    disc ? parseFloat(disc.value) || 0 : null,
+    addonAmt:      totalAddon,
+    addonNote:     addonNotes || '',
+    resolvedItems: resolvedItems  // sent so backend can update totals
   }, function(err, res) {
     hideOv();
-    if (err || !res || res.error) { showToast('Failed: '+(res?res.error:err)); return; }
-    showToast('✅ Approved! Bill No: '+res.billNo);
+    if (err || !res || res.error) {
+      showToast('Failed: ' + (res ? res.error : err));
+      return;
+    }
+    showToast('✅ Approved! Bill No: ' + res.billNo);
     loadQuotations();
   });
 }
