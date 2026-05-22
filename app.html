@@ -2312,11 +2312,22 @@ function calcPriceFrontend(prod, variants, measurements) {
     return { price:Math.round(sft*rule.rate), ready:sft>0, variantPending:false };
   }
   if (prod === 'Cupboard' || prod === 'Aluminum Cupboard' || prod === 'Wood Cupboard') {
-    v.lines = [];
-    var container = document.getElementById('cupboard-lines-' + id);
-    if (container) container.querySelectorAll('.cupboard-line').forEach(function(line) {
-      var lid      = line.id.replace('cline-', '');
-      var roomEl   = document.getElementById('croom-' + lid);
+    if (prod !== 'Wood Cupboard') {
+      return { price: 0, ready: false, variantPending: true,
+               note: 'Owner to select cupboard type' };
+    }
+    var lines = variants.lines || [];
+    var total = 0, allOk = true;
+    lines.forEach(function(l) {
+      if (!l.room || !l.workType || !l.description || !l.width || !l.height) {
+        allOk = false; return;
+      }
+      var rk = l.workType === 'Box' ? 'Box' : 'Frame';
+      var sft = (parseFloat(l.width) || 0) * (parseFloat(l.height) || 0);
+      total += Math.round(sft * (rule.rates[rk] || 0));
+    });
+    return { price: total, ready: lines.length > 0 && allOk, variantPending: !allOk };
+  }
       var roomVal  = roomEl ? roomEl.value : '';
       var descSel  = document.getElementById('cdesc-' + lid);
       var descVal  = descSel ? descSel.value : '';
@@ -2433,33 +2444,32 @@ function collectVariants(prod, id) {
     v.sft = sftEl ? (parseFloat(sftEl.value) || 0) : 0;
   }
   if (prod === 'Aluminum Cupboard' || prod === 'Wood Cupboard' || prod === 'Cupboard') {
-    var actualProd = prod;
-    if (prod === 'Cupboard') {
-      // Try to get resolved type from DOM
-      var block = document.querySelector('[id^="item-"]');
-      actualProd = 'Aluminum Cupboard'; // safe fallback
+    v.lines = [];
+    var container = document.getElementById('cupboard-lines-' + id);
+    if (container) {
+      container.querySelectorAll('.cupboard-line').forEach(function(line) {
+        var lid     = line.id.replace('cline-', '');
+        var roomEl  = document.getElementById('croom-' + lid);
+        var roomVal = roomEl ? roomEl.value : '';
+        var descSel = document.getElementById('cdesc-' + lid);
+        var descVal = descSel ? descSel.value : '';
+        if (descVal === 'Extra') {
+          var freeEl = document.getElementById('cdesc-text-' + lid);
+          descVal = freeEl ? freeEl.value.trim() : '';
+        }
+        var wtRow = document.getElementById('chips-workType-' + lid);
+        var wtBtn = wtRow ? wtRow.querySelector('.chip.on') : null;
+        var wtVal = wtBtn ? (wtBtn.getAttribute('data-val') || '') : '';
+        v.lines.push({
+          room:         roomVal,
+          description:  descVal,
+          workType:     wtVal,
+          frameQuality: '',
+          width:        parseFloat((document.getElementById('cW-' + lid) || {}).value) || 0,
+          height:       parseFloat((document.getElementById('cH-' + lid) || {}).value) || 0
+        });
+      });
     }
-    rule = VR[actualProd] || VR['Aluminum Cupboard'];
-
-    // Aluminum Cupboard: always pending, price = 0 until owner selects type
-    if (actualProd === 'Aluminum Cupboard' || prod === 'Cupboard') {
-      return { price: 0, ready: false, variantPending: true,
-               note: 'Owner to select cupboard type' };
-    }
-
-    // Wood Cupboard: calculate immediately with fixed rates
-    var lines = variants.lines || [];
-    var total  = 0;
-    var allOk  = true;
-    lines.forEach(function(l) {
-      if (!l.room || !l.workType || !l.description || !l.width || !l.height) {
-        allOk = false; return;
-      }
-      var rateKey = l.workType === 'Box' ? 'Box' : 'Frame';
-      var sft     = (parseFloat(l.width) || 0) * (parseFloat(l.height) || 0);
-      total += Math.round(sft * (rule.rates[rateKey] || 0));
-    });
-    return { price: total, ready: lines.length > 0 && allOk, variantPending: !allOk };
   }
   if (prod === 'Louver') {
     v.louverType = getChipVal('louverType', id);
