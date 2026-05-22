@@ -1231,26 +1231,6 @@ html, body {
 </div>
 </div><!-- /main -->
 <!-- Payment modal -->
-<div class="pay-modal" id="pay-modal">
-  <div class="pay-sheet">
-    <div class="pay-handle"></div>
-    <div class="pay-title">Record Payment</div>
-    <input type="hidden" id="pay-billno">
-    <div class="pay-field">
-      <label>Amount (Rs.) *</label>
-      <input type="number" id="pay-amount" placeholder="e.g. 5000" inputmode="numeric">
-    </div>
-    <div class="pay-field">
-      <label>Payment Date</label>
-      <input type="date" id="pay-date">
-    </div>
-    <div class="pay-field">
-      <label>Note (optional)</label>
-      <input type="text" id="pay-note" placeholder="e.g. Advance, Final payment...">
-    </div>
-    <button class="pay-submit" onclick="submitPayment()">✅ Record Payment</button>
-  </div>
-</div>
 <!-- Bottom nav -->
 <nav class="bot-nav" id="bot-nav">
   <!-- Populated by JS based on role -->
@@ -2327,30 +2307,6 @@ function calcPriceFrontend(prod, variants, measurements) {
       total += Math.round(sft * (rule.rates[rk] || 0));
     });
     return { price: total, ready: lines.length > 0 && allOk, variantPending: !allOk };
-  }
-      var roomVal  = roomEl ? roomEl.value : '';
-      var descSel  = document.getElementById('cdesc-' + lid);
-      var descVal  = descSel ? descSel.value : '';
-      // If "Extra" selected, use free text instead
-      if (descVal === 'Extra') {
-        var freeEl = document.getElementById('cdesc-text-' + lid);
-        descVal = freeEl ? freeEl.value.trim() : '';
-      }
-      var wtRow  = document.getElementById('chips-workType-' + lid);
-      var wtBtn  = wtRow ? wtRow.querySelector('.chip.on') : null;
-      var wtVal  = wtBtn ? (wtBtn.getAttribute('data-val') || '') : '';
-      var fqRow  = document.getElementById('chips-frameQuality-' + lid);
-      var fqBtn  = fqRow ? fqRow.querySelector('.chip.on') : null;
-      var fqVal  = fqBtn ? (fqBtn.getAttribute('data-val') || 'Normal') : 'Normal';
-      v.lines.push({
-        room:         roomVal,
-        description:  descVal,
-        workType:     wtVal,
-        frameQuality: '',
-        width:        parseFloat((document.getElementById('cW-' + lid) || {}).value) || 0,
-        height:       parseFloat((document.getElementById('cH-' + lid) || {}).value) || 0
-      });
-    });
   }
   if (prod === 'Louver') {
     if (!variants.louverType||!variants.fanType) return { price:0, ready:false, variantPending:false };
