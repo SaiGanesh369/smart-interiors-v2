@@ -3469,9 +3469,17 @@ function approveQuote(quoteId) {
   // Check if all pending items have been resolved
   var unresolved = [];
   items.forEach(function(item, iIdx) {
-    if (!item.variantPending) return;
+    var p = (item.product || '').split(' (')[0];
+    var needsFill = item.variantPending;
+    if (!needsFill) {
+      if (p === 'PVC Door')          needsFill = !item.thickness || !item.type;
+      if (p === 'WPVC Door')         needsFill = !item.color;
+      if (p === 'WPVC Frame')        needsFill = !item.size;
+      if (p === 'Wood Door')         needsFill = !item.finish;
+      if (p === 'Aluminum Cupboard') needsFill = true;
+    }
+    if (!needsFill) return;
     var f     = filled[iIdx] || {};
-    var prod  = (item.product || '').split(' (')[0];
     var price = f['_calcPrice'] || 0;
     if (price === 0) unresolved.push(item.product);
   });
@@ -3483,9 +3491,18 @@ function approveQuote(quoteId) {
 
   // Build resolved items — merge stored item with owner-filled variants
   var resolvedItems = items.map(function(item, iIdx) {
-    if (!item.variantPending) return item;
+    var p2 = (item.product || '').split(' (')[0];
+    var needsFill2 = item.variantPending;
+    if (!needsFill2) {
+      if (p2 === 'PVC Door')          needsFill2 = !item.thickness || !item.type;
+      if (p2 === 'WPVC Door')         needsFill2 = !item.color;
+      if (p2 === 'WPVC Frame')        needsFill2 = !item.size;
+      if (p2 === 'Wood Door')         needsFill2 = !item.finish;
+      if (p2 === 'Aluminum Cupboard') needsFill2 = true;
+    }
+    if (!needsFill2) return item;
     var f    = filled[iIdx] || {};
-    var prod = (item.product || '').split(' (')[0];
+    var prod = p2;
     return {
       product:       item.product,
       dimensions:    item.dimensions,
