@@ -2531,9 +2531,14 @@ function calcQuoteItems(items, discPct) {
     var unitRate       = result.unitRate || 0;
 
     // Build dimension string per product
+    // Build dimension string per product
     var dimStr = '';
     var rule   = VR[prod];
-    if (rule && rule.mode === 'hw' && meas[0]) {
+    if (prod === 'PVC Door' && meas[0]) {
+      // PVC Door: H × Top × Bottom — no W field
+      var botPart = (meas[0].bottom && meas[0].bottom !== '—') ? ' × Bottom:' + meas[0].bottom : '';
+      dimStr = 'H:' + meas[0].h + ' × Top:' + (meas[0].top || '—') + botPart;
+    } else if (rule && rule.mode === 'hw' && meas[0]) {
       dimStr = meas[0].h + '" × ' + meas[0].w + '"';
       if (sqft) dimStr += ' / ' + sqft.toFixed(2) + ' sqft';
     } else if (rule && rule.mode === 'sft') {
@@ -2628,6 +2633,7 @@ function buildMRows(entry) {
         : (m.h && m.w) ? ('H:' + m.h + ' × W:' + m.w) :
                    (variants.sft ? variants.sft + ' sqft' :
                    (variants.qty ? variants.pieceCount + ' × ' + variants.qty + ' sets' : '—'));
+    var isPVCRow = prod === 'PVC Door';
       rows.push({
         Date: entry.date, Time: time, TeamMember: entry.worker,
         Location: entry.location, Customer: entry.customer, Phone: entry.phone,
@@ -2635,8 +2641,9 @@ function buildMRows(entry) {
         Product: prod, Direction: variants.direction || '—',
         OpeningNo: ii + 1, MeasNo: mi + 1,
         Height:  m.h || variants.sft || '',
-        Width:   m.w || '',
-        Top: '—', Bottom: '—',
+        Width:   isPVCRow ? '—' : (m.w || ''),
+        Top:     isPVCRow ? (m.top    || '—') : '—',
+        Bottom:  isPVCRow ? (m.bottom && m.bottom !== '—' ? m.bottom : '—') : '—',
         Measurement: measStr,
         Notes: mi === 0 && ii === 0 ? entry.notes : '',
         Photos: photoCell,
@@ -3332,7 +3339,9 @@ function recalcPendingItem(quoteId, iIdx) {
   };
 
   var meas = [];
-  if (item.dimensions) {
+  // PVC Door: pricing is variant_fixed (Frame+Thickness+Type lookup), not dimension-based
+  // Dimension string format "H:83 × Top:4.5" will not match h×w regex — skip parsing
+  if (prod !== 'PVC Door' && item.dimensions) {
     // Parse dimension string like "83" × "36" / 20.75 sqft"
     var dimMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
     if (dimMatch) meas = [{ h: dimMatch[1].trim(), w: dimMatch[2].trim() }];
