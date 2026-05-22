@@ -3350,7 +3350,7 @@ function recalcPendingItem(quoteId, iIdx) {
     track:       item.track       || filled.track       || '',
     frame:       item.frame       || filled.frame       || '',
     thickness:   item.thickness   || filled.thickness   || '',
-    type:        item.doorType    || filled.type        || '',
+    type:        filled.type      || '',
     color:       item.color       || filled.color       || '',
     pieceCount:  item.pieceCount  || filled.pieceCount  || '',
     size:        item.size        || filled.size        || '',
@@ -3358,7 +3358,7 @@ function recalcPendingItem(quoteId, iIdx) {
     louverType:  item.louverType  || filled.louverType  || '',
     fanType:     item.fanType     || filled.fanType     || '',
     sft:         item.sqft        || 0,
-    direction:   item.doorType    || ''
+    direction:   item.doorType    || filled.direction   || ''
   };
 
   var meas = [];
