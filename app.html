@@ -3079,11 +3079,34 @@ function renderQuotes(all, filterStatus, scr) {
       if (isDraft || isPending) {
         html += '<div style="background:var(--o-bg);border:1.5px solid var(--o-border);border-radius:10px;padding:12px;margin-top:12px">';
 
-        // PENDING_OWNER: show variant fill section for each pending item
-        if (isPending) {
+// Show variant fill section for items with missing variants
+        // Works for both PENDING_OWNER and DRAFT — uses product-aware detection
+        // as fallback for old rows that didn't store VariantPending correctly
+        var pendingItems = (q.Items || []).filter(function(item) {
+          if (item.variantPending) return true;
+          // Fallback: detect missing variants by product type
+          var p = (item.product || '').split(' (')[0];
+          if (p === 'PVC Door')          return !item.thickness || !item.type;
+          if (p === 'WPVC Door')         return !item.color;
+          if (p === 'WPVC Frame')        return !item.size;
+          if (p === 'Wood Door')         return !item.finish;
+          if (p === 'Aluminum Cupboard') return true; // always needs type
+          return false;
+        });
+        if (pendingItems.length) {
           html += '<div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">⏳ Complete Missing Details</div>';
           (q.Items || []).forEach(function(item, iIdx) {
-            if (!item.variantPending) return;
+            var p = (item.product || '').split(' (')[0];
+            var needsVariant = item.variantPending;
+            if (!needsVariant) {
+              // Fallback detection for old data
+              if (p === 'PVC Door')          needsVariant = !item.thickness || !item.type;
+              if (p === 'WPVC Door')         needsVariant = !item.color;
+              if (p === 'WPVC Frame')        needsVariant = !item.size;
+              if (p === 'Wood Door')         needsVariant = !item.finish;
+              if (p === 'Aluminum Cupboard') needsVariant = true;
+            }
+            if (!needsVariant) return;
             html += renderPendingItemVariants(q.QuoteID, iIdx, item);
           });
           html += '<div style="border-top:1px solid var(--o-border);margin:10px 0"></div>';
@@ -3404,7 +3427,16 @@ function recalcQuoteTotal(quoteId) {
   var baseTotal  = 0;
 
   items.forEach(function(item, iIdx) {
-    if (item.variantPending) {
+    var p = (item.product || '').split(' (')[0];
+    var isPendingItem = item.variantPending;
+    if (!isPendingItem) {
+      if (p === 'PVC Door')          isPendingItem = !item.thickness || !item.type;
+      if (p === 'WPVC Door')         isPendingItem = !item.color;
+      if (p === 'WPVC Frame')        isPendingItem = !item.size;
+      if (p === 'Wood Door')         isPendingItem = !item.finish;
+      if (p === 'Aluminum Cupboard') isPendingItem = true;
+    }
+    if (isPendingItem) {
       // Use owner-filled price if available
       var filled = ((window._pendingVariants || {})[quoteId] || {})[iIdx] || {};
       var filledPrice = filled['_calcPrice'] || 0;
