@@ -2563,10 +2563,10 @@ function calcQuoteItems(items, discPct) {
 
     var afterDisc = Math.round(price * (1 - disc / 100));
 
-    quoteItems.push({
+      quoteItems.push({
       product:        prod + (varLabel ? ' (' + varLabel + ')' : ''),
       dimensions:     dimStr,
-      lines:          (rule && rule.mode === 'cupboard') ? (variants.lines || []) :
+      lines:          (rule && rule.mode === 'cupboard') ? (variants.lines || []) : [],
       sqft:           sqft,
       unitPrice:      unitRate || price,
       subtotal:       price,
