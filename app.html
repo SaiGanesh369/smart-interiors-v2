@@ -2546,14 +2546,12 @@ function calcQuoteItems(items, discPct) {
     } else if (rule && rule.mode === 'qty') {
       dimStr = variants.pieceCount + ' × ' + (variants.qty || 1) + ' sets';
     } else if (rule && rule.mode === 'cupboard') {
-      // Store section lines as JSON so quotation screen can recalculate per type
       if (variants.lines && variants.lines.length) {
-        dimStr = JSON.stringify(variants.lines);
+        dimStr = variants.lines.length + ' section(s)';
       } else {
         dimStr = '0 section(s)';
       }
     }
-
     // Variant label for product display
     var varLabel = '';
     if (variants.series && variants.track) varLabel = variants.series + ' / ' + variants.track;
@@ -2568,6 +2566,7 @@ function calcQuoteItems(items, discPct) {
     quoteItems.push({
       product:        prod + (varLabel ? ' (' + varLabel + ')' : ''),
       dimensions:     dimStr,
+      lines:          (rule && rule.mode === 'cupboard') ? (variants.lines || []) :
       sqft:           sqft,
       unitPrice:      unitRate || price,
       subtotal:       price,
@@ -3330,8 +3329,9 @@ function onCupboardTypeChange(quoteId, iIdx) {
       var amt = Math.round(sft * rate);
       total  += amt;
       breakdownHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #FDE68A">';
-      breakdownHtml += '<span style="color:var(--text2)">' + (line.description || line.workType) + '</span>';
-      breakdownHtml += '<span style="font-weight:700;color:var(--text)">' + sft.toFixed(1) + ' sqft × Rs.' + rate + ' = Rs.' + amt.toLocaleString('en-IN') + '</span>';
+      var lineLabel = line.workType + ' ' + line.width + '" × ' + line.height + '"';
+      breakdownHtml += '<span style="color:var(--text2)">' + lineLabel + '</span>';
+      breakdownHtml += '<span style="font-weight:700;color:var(--text)">' + sft.toFixed(2) + ' sqft × Rs.' + rate + ' = Rs.' + amt.toLocaleString('en-IN') + '</span>';
       breakdownHtml += '</div>';
     });
     breakdownHtml += '<div style="display:flex;justify-content:space-between;margin-top:6px;font-weight:800;font-size:13px">';
