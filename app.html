@@ -3547,7 +3547,8 @@ function approveQuote(quoteId) {
       size:          item.size        || f.size        || '',
       finish:        item.finish      || f.finish      || '',
       workType:      item.workType    || '',
-      frameQuality:  f.cupboardType   || item.frameQuality || '',
+      frameQuality:  item.frameQuality  || '',
+      cupboardType:  f.cupboardType     || '',
       louverType:    item.louverType  || '',
       fanType:       item.fanType     || ''
     };
