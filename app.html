@@ -3274,6 +3274,7 @@ function selectPendingChip(quoteId, iIdx, field, val, btn) {
 }
 
 // Called when owner selects Aluminum Cupboard type
+// Called when owner selects Aluminum Cupboard type
 function onCupboardTypeChange(quoteId, iIdx) {
   var sel  = document.getElementById('pcupboard-type-' + quoteId + '-' + iIdx);
   var type = sel ? sel.value : '';
@@ -3283,38 +3284,47 @@ function onCupboardTypeChange(quoteId, iIdx) {
   if (!window._pendingVariants[quoteId][iIdx]) window._pendingVariants[quoteId][iIdx] = {};
   window._pendingVariants[quoteId][iIdx]['cupboardType'] = type;
 
-  // Get line items for this cupboard from the stored quote items
-  var items    = (window._quoteItemsMap[quoteId] || []);
-  var item     = items[iIdx];
+  var allItems  = window._quoteItemsMap[quoteId] || [];
+  var item      = allItems[iIdx];
   var typeRates = VR['Aluminum Cupboard'].typeRates[type];
-
-  // Show section breakdown
   var breakdownEl = document.getElementById('pcupboard-breakdown-' + quoteId + '-' + iIdx);
   if (!breakdownEl || !typeRates) return;
 
-  // Parse dimensions string to get section info
-  // Dimensions stored as "N section(s)" — we need lineResults from recalc
-  // Use stored item data to rebuild breakdown
-  var lines = item._lines || []; // _lines attached by getPendingQuotations if available
+  // ── Build lines: try _lines first, then fall back to collecting all
+  //    Aluminum Cupboard items in this quote (each item = one section row)
+  var lines = (item && item._lines && item._lines.length) ? item._lines : [];
+
+  if (!lines.length) {
+    // Fallback: each Aluminum Cupboard item in the map IS a line section
+    // Height/Width are stored in the item from getPendingQuotations row fields
+    allItems.forEach(function(it) {
+      if ((it.product || '').indexOf('Aluminum Cupboard') === -1) return;
+      // Parse height and width from item fields or dimensions string
+      var w = parseFloat(it.width)  || parseFloat(it.dimensions && it.dimensions.match(/W:([\d.]+)/i) && it.dimensions.match(/W:([\d.]+)/i)[1]) || 0;
+      var h = parseFloat(it.height) || parseFloat(it.dimensions && it.dimensions.match(/H:([\d.]+)/i) && it.dimensions.match(/H:([\d.]+)/i)[1]) || 0;
+      var wt = it.workType || 'Box';
+      if (w > 0 && h > 0) {
+        lines.push({ room: it.location || '', description: it.dimensions || '', workType: wt, frameQuality: it.frameQuality || '', width: w, height: h });
+      }
+    });
+  }
+
   var breakdownHtml = '';
   var total = 0;
 
   if (lines.length) {
     breakdownHtml += '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Section Breakdown</div>';
-    lines.forEach(function(line, li) {
-      var rateKey = line.workType === 'Box' ? 'Box' : 'Frame';
+    lines.forEach(function(line) {
+      var rateKey = (line.workType === 'Box') ? 'Box' : 'Frame';
       var rate    = typeRates[rateKey] || 0;
-      // Width and Height are in feet for cupboard lines (stored as ft in buildMRows)
-      // Measurement string is "W:32ft × H:32ft" — values are already in feet
-      // REPLACE WITH:
       // Width/Height stored in inches — convert to sqft
       var wIn = parseFloat(line.width)  || 0;
       var hIn = parseFloat(line.height) || 0;
       var sft = (wIn / 12) * (hIn / 12);
-      var amt     = Math.round(sft * rate);
-      total      += amt;
+      var amt = Math.round(sft * rate);
+      total  += amt;
       breakdownHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #FDE68A">';
-      breakdownHtml += '<span style="color:var(--text2)">' + (line.room || '') + ' — ' + (line.description || '') + ' (' + line.workType + ')</span>';
+      breakdownHtml += '<span style="color:var(--text2)">' + (line.description || line.workType) + '</span>';
       breakdownHtml += '<span style="font-weight:700;color:var(--text)">' + sft.toFixed(1) + ' sqft × Rs.' + rate + ' = Rs.' + amt.toLocaleString('en-IN') + '</span>';
       breakdownHtml += '</div>';
     });
@@ -3322,27 +3332,30 @@ function onCupboardTypeChange(quoteId, iIdx) {
     breakdownHtml += '<span>Subtotal</span><span style="color:var(--o)">Rs.' + total.toLocaleString('en-IN') + '</span>';
     breakdownHtml += '</div>';
   } else {
-    // Fallback: show simple price
-    breakdownHtml += '<div style="font-size:12px;color:var(--text2)">Type selected: ' + type + ' · Frame: Rs.' + typeRates.Frame + '/sqft · Box: Rs.' + typeRates.Box + '/sqft</div>';
-    // Estimate from stored sqft if available
-    if (item.sqft && parseFloat(item.sqft) > 0) {
-      var sft  = parseFloat(item.sqft);
-      total = Math.round(sft * typeRates.Frame); // rough estimate
-      breakdownHtml += '<div style="font-size:12px;margin-top:4px;color:var(--text3)">Approx: Rs.' + total.toLocaleString('en-IN') + ' (based on total sqft)</div>';
-    }
+    breakdownHtml += '<div style="font-size:12px;color:var(--o)">⚠️ No section data found. Please re-save this measurement.</div>';
   }
+
   breakdownEl.innerHTML = breakdownHtml;
 
-  // Store calculated price
-  if (!window._pendingVariants[quoteId][iIdx]) window._pendingVariants[quoteId][iIdx] = {};
+  // Store total on ALL Aluminum Cupboard item indices — because the quote
+  // has multiple items (one per section) but only one dropdown shown
+  if (!window._pendingVariants[quoteId]) window._pendingVariants[quoteId] = {};
+  allItems.forEach(function(it, idx) {
+    if ((it.product || '').indexOf('Aluminum Cupboard') === -1) return;
+    if (!window._pendingVariants[quoteId][idx]) window._pendingVariants[quoteId][idx] = {};
+    window._pendingVariants[quoteId][idx]['cupboardType'] = type;
+    window._pendingVariants[quoteId][idx]['_calcPrice']   = 0; // zero out individual sections
+  });
+  // Store full total only on iIdx (the one item shown) — recalcQuoteTotal reads all
   window._pendingVariants[quoteId][iIdx]['_calcPrice'] = total;
 
-  // Update price tag and total
+  // Update price tag
   var priceTag = document.getElementById('pitem-price-' + quoteId + '-' + iIdx);
   if (priceTag) {
-    priceTag.className = 'pending-price-tag';
-    priceTag.textContent = 'Rs.' + total.toLocaleString('en-IN');
+    priceTag.className  = total > 0 ? 'pending-price-tag' : 'pending-price-tag zero';
+    priceTag.textContent = total > 0 ? 'Rs.' + total.toLocaleString('en-IN') : '⏳ TBD';
   }
+
   recalcQuoteTotal(quoteId);
 }
 
