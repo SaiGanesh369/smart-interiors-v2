@@ -3373,23 +3373,27 @@ function recalcPendingItem(quoteId, iIdx) {
   if (prod === 'PVC Door') {
     // price = Frame+Thickness+Type lookup only, meas not used
 
-  // Wood Door: may need H×W for Laminate/Sunmica sqft calc
+// Wood Door: may need H×W for Laminate/Sunmica sqft calc
   } else if (prod === 'Wood Door' && item.dimensions) {
-    var wdMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
+    // Dimension stored as '22" × 47"' — strip inch symbols before parsing
+    var wdClean = item.dimensions.replace(/[""'']/g, '').trim();
+    var wdMatch = wdClean.match(/^([\d\s\/]+)[×x]([\d\s\/]+)/);
     if (wdMatch) meas = [{ h: wdMatch[1].trim(), w: wdMatch[2].trim() }];
 
   // WPVC Door: needs H×W for nearest-size calc
   } else if (prod === 'WPVC Door' && item.dimensions) {
-    var wpMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
+    var wpClean = item.dimensions.replace(/[""'']/g, '').trim();
+    var wpMatch = wpClean.match(/^([\d\s\/]+)[×x]([\d\s\/]+)/);
     if (wpMatch) meas = [{ h: wpMatch[1].trim(), w: wpMatch[2].trim() }];
 
   // Aluminum Cupboard: handled entirely by onCupboardTypeChange, skip here
   } else if (prod === 'Aluminum Cupboard') {
     return;
 
-  // All other hw products
+// All other hw products
   } else if (item.dimensions) {
-    var dimMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
+    var dimClean = item.dimensions.replace(/[""'']/g, '').trim();
+    var dimMatch = dimClean.match(/^([\d\s\/]+)[×x]([\d\s\/]+)/);
     if (dimMatch) meas = [{ h: dimMatch[1].trim(), w: dimMatch[2].trim() }];
   }
 
