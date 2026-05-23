@@ -3304,7 +3304,13 @@ function onCupboardTypeChange(quoteId, iIdx) {
     lines.forEach(function(line, li) {
       var rateKey = line.workType === 'Box' ? 'Box' : 'Frame';
       var rate    = typeRates[rateKey] || 0;
-      var sft     = (parseFloat(line.width) || 0) * (parseFloat(line.height) || 0);
+      // Width and Height are in feet for cupboard lines (stored as ft in buildMRows)
+      // Measurement string is "W:32ft × H:32ft" — values are already in feet
+      // REPLACE WITH:
+      // Width/Height stored in inches — convert to sqft
+      var wIn = parseFloat(line.width)  || 0;
+      var hIn = parseFloat(line.height) || 0;
+      var sft = (wIn / 12) * (hIn / 12);
       var amt     = Math.round(sft * rate);
       total      += amt;
       breakdownHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #FDE68A">';
