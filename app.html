@@ -3166,7 +3166,13 @@ function renderPendingItemVariants(quoteId, iIdx, item) {
   html += '<div class="pending-item-header">';
   html += '<div>';
   html += '<div class="pending-item-prod">' + item.product + '</div>';
-  html += '<div class="pending-item-dim">' + (item.dimensions || '—') + '</div>';
+  var dimDisplay = item.dimensions || '—';
+  if ((item.product || '').indexOf('Aluminum Cupboard') !== -1 && item._lines && item._lines.length > 0) {
+    dimDisplay = item._lines.length + ' section(s): ' + item._lines.map(function(l) {
+      return l.workType + ' ' + l.width + '"×' + l.height + '"';
+    }).join(', ');
+  }
+  html += '<div class="pending-item-dim">' + dimDisplay + '</div>';
   html += '</div>';
   html += '<div class="pending-price-tag zero" id="pitem-price-' + quoteId + '-' + iIdx + '">⏳ TBD</div>';
   html += '</div>';
@@ -3534,43 +3540,42 @@ function approveQuote(quoteId) {
   }
 
   // Build resolved items — merge stored item with owner-filled variants
-  var resolvedItems = items.map(function(item, iIdx) {
-    var p2 = (item.product || '').split(' (')[0];
-    var needsFill2 = item.variantPending;
-    if (!needsFill2) {
-      if (p2 === 'PVC Door')          needsFill2 = !item.thickness || !item.type;
-      if (p2 === 'WPVC Door')         needsFill2 = !item.color;
-      if (p2 === 'WPVC Frame')        needsFill2 = !item.size;
-      if (p2 === 'Wood Door')         needsFill2 = !item.finish;
-      if (p2 === 'Aluminum Cupboard') needsFill2 = true;
+  var resolvedItems = [];
+  items.forEach(function(item, iIdx) {
+    if (!item.variantPending) {
+      resolvedItems.push(item);
+      return;
     }
-    if (!needsFill2) return item;
     var f    = filled[iIdx] || {};
-    var prod = p2;
-    return {
-      product:       item.product,
-      dimensions:    item.dimensions,
-      sqft:          item.sqft,
-      unitPrice:     f['_calcPrice'] || item.unitPrice,
-      subtotal:      f['_calcPrice'] || item.subtotal,
-      total:         f['_calcPrice'] || item.total,
-      variantPending: false,
-      priceNote:     item.priceNote,
-      series:        item.series      || f.series      || '',
-      track:         item.track       || f.track       || '',
-      frame:         item.frame       || f.frame       || '',
-      thickness:     item.thickness   || f.thickness   || '',
-      doorType:      item.doorType    || f.type        || '',
-      color:         item.color       || f.color       || '',
-      pieceCount:    item.pieceCount  || f.pieceCount  || '',
-      size:          item.size        || f.size        || '',
-      finish:        item.finish      || f.finish      || '',
-      workType:      item.workType    || '',
-      frameQuality:  item.frameQuality  || '',
-      cupboardType:  f.cupboardType     || '',
-      louverType:    item.louverType  || '',
-      fanType:       item.fanType     || ''
-    };
+    var rowCount = item._rowCount || 1; // cupboard has multiple sheet rows
+
+    // Build one resolved entry per backend row
+    // For cupboard: total split evenly across rows (backend writes each row)
+    var totalPrice = f['_calcPrice'] || 0;
+    var perRowPrice = rowCount > 1 ? Math.round(totalPrice / rowCount) : totalPrice;
+
+    for (var ri = 0; ri < rowCount; ri++) {
+      resolvedItems.push({
+        product:       item.product,
+        dimensions:    item.dimensions,
+        sqft:          item.sqft,
+        unitPrice:     0,
+        subtotal:      ri === 0 ? totalPrice : 0, // full total on first row only
+        total:         ri === 0 ? totalPrice : 0,
+        variantPending: false,
+        priceNote:     '',
+        frame:         item.frame         || f.frame         || '',
+        thickness:     item.thickness     || f.thickness     || '',
+        doorType:      item.doorType      || f.type          || '',
+        color:         item.color         || f.color         || '',
+        size:          item.size          || f.size          || '',
+        finish:        item.finish        || f.finish        || '',
+        frameQuality:  item.frameQuality  || '',
+        cupboardType:  f.cupboardType     || '',
+        louverType:    item.louverType    || '',
+        fanType:       item.fanType       || ''
+      });
+    }
   });
 
   showOv('Approving...');
