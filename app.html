@@ -2545,8 +2545,13 @@ function calcQuoteItems(items, discPct) {
       dimStr = sqft + ' sqft';
     } else if (rule && rule.mode === 'qty') {
       dimStr = variants.pieceCount + ' × ' + (variants.qty || 1) + ' sets';
-    } else if (rule && rule.mode === 'cupboard' && result.lineResults) {
-      dimStr = result.lineResults.length + ' section(s)';
+    } else if (rule && rule.mode === 'cupboard') {
+      // Store section lines as JSON so quotation screen can recalculate per type
+      if (variants.lines && variants.lines.length) {
+        dimStr = JSON.stringify(variants.lines);
+      } else {
+        dimStr = '0 section(s)';
+      }
     }
 
     // Variant label for product display
@@ -3337,35 +3342,53 @@ function onCupboardTypeChange(quoteId, iIdx) {
 
 // Recalculates price for a single pending item after variant selection
 function recalcPendingItem(quoteId, iIdx) {
-  var items    = window._quoteItemsMap[quoteId] || [];
-  var item     = items[iIdx];
+  var items  = window._quoteItemsMap[quoteId] || [];
+  var item   = items[iIdx];
   if (!item) return;
 
-  var prod     = (item.product || '').split(' (')[0];
-  var filled   = (window._pendingVariants[quoteId] || {})[iIdx] || {};
+  var prod   = (item.product || '').split(' (')[0];
+  var filled = (window._pendingVariants[quoteId] || {})[iIdx] || {};
 
-  // Merge existing item variants with newly filled ones
+  // filled always wins for owner-selected fields
+  // stored values used for worker-filled mandatory fields (frame, direction, series, track)
   var merged = {
-    series:      item.series      || filled.series      || '',
-    track:       item.track       || filled.track       || '',
-    frame:       item.frame       || filled.frame       || '',
-    thickness:   item.thickness   || filled.thickness   || '',
-    type:        filled.type      || '',
-    color:       item.color       || filled.color       || '',
-    pieceCount:  item.pieceCount  || filled.pieceCount  || '',
-    size:        item.size        || filled.size        || '',
-    finish:      item.finish      || filled.finish      || '',
-    louverType:  item.louverType  || filled.louverType  || '',
-    fanType:     item.fanType     || filled.fanType     || '',
-    sft:         item.sqft        || 0,
-    direction:   item.doorType    || filled.direction   || ''
+    series:     item.series     || filled.series     || '',
+    track:      item.track      || filled.track      || '',
+    frame:      item.frame      || filled.frame      || '',
+    direction:  item.doorType   || '',
+    thickness:  filled.thickness  || item.thickness  || '',
+    type:       filled.type       || '',
+    color:      filled.color      || item.color      || '',
+    size:       filled.size       || item.size       || '',
+    finish:     filled.finish     || item.finish     || '',
+    pieceCount: item.pieceCount || filled.pieceCount || '',
+    louverType: item.louverType || filled.louverType || '',
+    fanType:    item.fanType    || filled.fanType    || '',
+    sft:        parseFloat(item.sqft) || 0
   };
 
   var meas = [];
-  // PVC Door: pricing is variant_fixed (Frame+Thickness+Type lookup), not dimension-based
-  // Dimension string format "H:83 × Top:4.5" will not match h×w regex — skip parsing
-  if (prod !== 'PVC Door' && item.dimensions) {
-    // Parse dimension string like "83" × "36" / 20.75 sqft"
+
+  // PVC Door: variant_fixed — no dimension parsing needed
+  if (prod === 'PVC Door') {
+    // price = Frame+Thickness+Type lookup only, meas not used
+
+  // Wood Door: may need H×W for Laminate/Sunmica sqft calc
+  } else if (prod === 'Wood Door' && item.dimensions) {
+    var wdMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
+    if (wdMatch) meas = [{ h: wdMatch[1].trim(), w: wdMatch[2].trim() }];
+
+  // WPVC Door: needs H×W for nearest-size calc
+  } else if (prod === 'WPVC Door' && item.dimensions) {
+    var wpMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
+    if (wpMatch) meas = [{ h: wpMatch[1].trim(), w: wpMatch[2].trim() }];
+
+  // Aluminum Cupboard: handled entirely by onCupboardTypeChange, skip here
+  } else if (prod === 'Aluminum Cupboard') {
+    return;
+
+  // All other hw products
+  } else if (item.dimensions) {
     var dimMatch = item.dimensions.match(/^([\d\s\/]+)[""×x]([\d\s\/]+)/);
     if (dimMatch) meas = [{ h: dimMatch[1].trim(), w: dimMatch[2].trim() }];
   }
@@ -3373,10 +3396,8 @@ function recalcPendingItem(quoteId, iIdx) {
   var result = calcPriceFrontend(prod, merged, meas);
   if (!result) return;
 
-  // Store calculated price in pending variants
   window._pendingVariants[quoteId][iIdx]['_calcPrice'] = result.price || 0;
 
-  // Update price tag
   var priceTag = document.getElementById('pitem-price-' + quoteId + '-' + iIdx);
   if (priceTag) {
     if (result.price > 0) {
